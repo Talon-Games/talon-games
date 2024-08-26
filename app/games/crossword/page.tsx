@@ -64,32 +64,52 @@ export default function Crossword() {
 
     let tempData = data.map((row) => row.map((box) => ({ ...box })));
 
-    //TODO: make this go from origin (x, y) so we can stop it at a block
     for (let i = 0; i < tempData.length; i++) {
       for (let j = 0; j < tempData[i].length; j++) {
         if (tempData[i][j].state == "black") {
           continue;
         }
+        tempData[i][j].state = "normal";
+      }
+    }
 
-        if (i == y && j == x) {
-          tempData[i][j].state = "selected";
-        } else if (
-          i != y &&
-          j == x &&
-          (highlightMode == "across" || highlightMode == "both")
-        ) {
-          tempData[i][j].state = "highlighted";
-        } else if (
-          i == y &&
-          j != x &&
-          (highlightMode == "down" || highlightMode == "both")
-        ) {
-          tempData[i][j].state = "highlighted";
+    if (highlightMode == "across" || highlightMode == "both") {
+      for (let i = x; i >= 0; i--) {
+        if (tempData[y][i].state == "black") {
+          break;
         } else {
-          tempData[i][j].state = "normal";
+          tempData[y][i].state = "highlighted";
+        }
+      }
+
+      for (let i = x; i < width; i++) {
+        if (tempData[y][i].state == "black") {
+          break;
+        } else {
+          tempData[y][i].state = "highlighted";
         }
       }
     }
+
+    if (highlightMode == "down" || highlightMode == "both") {
+      for (let i = y; i >= 0; i--) {
+        if (tempData[i][x].state == "black") {
+          break;
+        } else {
+          tempData[i][x].state = "highlighted";
+        }
+      }
+
+      for (let i = y; i < height; i++) {
+        if (tempData[i][x].state == "black") {
+          break;
+        } else {
+          tempData[i][x].state = "highlighted";
+        }
+      }
+    }
+
+    tempData[y][x].state = "selected";
 
     setData(tempData);
   };
@@ -197,6 +217,16 @@ export default function Crossword() {
 
   const takeAction = (x: number, y: number) => {
     if (mode == "play") {
+      if (data == null) {
+        return;
+      }
+
+      if (data[y][x].next == "down") {
+        setHighlightMode("down");
+      } else if (data[y][x].next == "across") {
+        setHighlightMode("across");
+      }
+
       highlight(x, y);
     } else {
       if (editMode == "select") {
