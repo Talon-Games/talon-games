@@ -19,6 +19,9 @@ export default function Crossword() {
   const [highlightMode, setHighlightMode] = useState<
     "down" | "across" | "both"
   >("both");
+  const [editMode, setEditMode] = useState<
+    "select" | "editBlack" | "placeNumbers" | "placeLetters"
+  >("select");
 
   useEffect(() => {
     let table: CrossWordBoxData[][] = [];
@@ -161,6 +164,50 @@ export default function Crossword() {
     setData(tempData);
   };
 
+  const editModeSelector = (
+    mode: "select" | "editBlack" | "placeNumbers" | "placeLetters",
+  ) => {
+    setEditMode(mode);
+  };
+
+  const toggleBlack = (x: number, y: number) => {
+    if (data == null) {
+      return;
+    }
+
+    let tempData = data.map((row) => row.map((box) => ({ ...box })));
+
+    if (
+      tempData[y][x].letter != "" ||
+      tempData[y][x].number != undefined ||
+      tempData[y][x].next != undefined
+    ) {
+      return;
+    }
+
+    if (tempData[y][x].state == "black") {
+      tempData[y][x].state = "normal";
+    } else {
+      tempData[y][x].state = "black";
+    }
+
+    setData(tempData);
+  };
+
+  const takeAction = (x: number, y: number) => {
+    if (mode == "play") {
+      highlight(x, y);
+    } else {
+      if (editMode == "select") {
+        highlight(x, y);
+      } else if (editMode == "editBlack") {
+        toggleBlack(x, y);
+      } else if (editMode == "placeNumbers") {
+      } else if (editMode == "placeLetters") {
+      }
+    }
+  };
+
   return (
     <main className="py-2">
       <section className="flex justify-center gap-2">
@@ -170,7 +217,7 @@ export default function Crossword() {
               {row.map((box: CrossWordBoxData, x) => (
                 <div
                   key={x}
-                  onClick={() => highlight(x, y)}
+                  onClick={() => takeAction(x, y)}
                   className={`w-[50px] h-[50px] border border-black cursor-pointer ${
                     box.state == "highlighted" ? "border-secondary-500" : null
                   } ${
@@ -230,6 +277,52 @@ export default function Crossword() {
                 >
                   Clear Associations
                 </button>
+              </div>
+              <div className="flex flex-col gap-2 mt-2">
+                <div
+                  className="flex gap-2 items-center cursor-pointer"
+                  onClick={() => editModeSelector("select")}
+                >
+                  <div
+                    className={`w-[30px] h-[30px] rounded-lg border border-secondary-300 ${
+                      editMode == "select" ? "bg-secondary-300" : null
+                    } hover:bg-secondary-200 transition-all duration-200 ease-in-out`}
+                  ></div>
+                  <p>Select Mode</p>
+                </div>
+                <div
+                  className="flex gap-2 items-center cursor-pointer"
+                  onClick={() => editModeSelector("editBlack")}
+                >
+                  <div
+                    className={`w-[30px] h-[30px] rounded-lg border border-secondary-300 ${
+                      editMode == "editBlack" ? "bg-secondary-300" : null
+                    } hover:bg-secondary-200 transition-all duration-200 ease-in-out`}
+                  ></div>
+                  <p>Edit Black Mode</p>
+                </div>
+                <div
+                  className="flex gap-2 items-center cursor-pointer"
+                  onClick={() => editModeSelector("placeNumbers")}
+                >
+                  <div
+                    className={`w-[30px] h-[30px] rounded-lg border border-secondary-300 ${
+                      editMode == "placeNumbers" ? "bg-secondary-300" : null
+                    } hover:bg-secondary-200 transition-all duration-200 ease-in-out`}
+                  ></div>
+                  <p>Place Numbers</p>
+                </div>
+                <div
+                  className="flex gap-2 items-center cursor-pointer"
+                  onClick={() => editModeSelector("placeLetters")}
+                >
+                  <div
+                    className={`w-[30px] h-[30px] rounded-lg border border-secondary-300 ${
+                      editMode == "placeLetters" ? "bg-secondary-300" : null
+                    } hover:bg-secondary-200 transition-all duration-200 ease-in-out`}
+                  ></div>
+                  <p>Place Letters</p>
+                </div>
               </div>
             </section>
           ) : null}
