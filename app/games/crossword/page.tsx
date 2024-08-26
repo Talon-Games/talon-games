@@ -64,8 +64,13 @@ export default function Crossword() {
 
     let tempData = data.map((row) => row.map((box) => ({ ...box })));
 
+    //TODO: make this go from origin (x, y) so we can stop it at a block
     for (let i = 0; i < tempData.length; i++) {
       for (let j = 0; j < tempData[i].length; j++) {
+        if (tempData[i][j].state == "black") {
+          continue;
+        }
+
         if (i == y && j == x) {
           tempData[i][j].state = "selected";
         } else if (
@@ -81,11 +86,7 @@ export default function Crossword() {
         ) {
           tempData[i][j].state = "highlighted";
         } else {
-          if (tempData[i][j].state == "black") {
-            continue;
-          } else {
-            tempData[i][j].state = "normal";
-          }
+          tempData[i][j].state = "normal";
         }
       }
     }
@@ -288,7 +289,7 @@ export default function Crossword() {
                       editMode == "select" ? "bg-secondary-300" : null
                     } hover:bg-secondary-200 transition-all duration-200 ease-in-out`}
                   ></div>
-                  <p>Select Mode</p>
+                  <p>Select</p>
                 </div>
                 <div
                   className="flex gap-2 items-center cursor-pointer"
@@ -299,7 +300,7 @@ export default function Crossword() {
                       editMode == "editBlack" ? "bg-secondary-300" : null
                     } hover:bg-secondary-200 transition-all duration-200 ease-in-out`}
                   ></div>
-                  <p>Edit Black Mode</p>
+                  <p>Edit Black</p>
                 </div>
                 <div
                   className="flex gap-2 items-center cursor-pointer"
