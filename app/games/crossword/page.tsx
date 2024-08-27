@@ -36,6 +36,9 @@ export default function Crossword() {
   >();
   const [currentSelectionNumberXY, setCurrentSelectionNumberXY] =
     useState<[number, number]>();
+  const [currentTrend, setCurrentTrend] = useState<
+    "down" | "across" | undefined
+  >(undefined);
 
   const triggerNotification = (
     title: string,
@@ -157,32 +160,87 @@ export default function Crossword() {
 
     const tempData = data.map((row) => row.map((box) => ({ ...box })));
 
+    const startX = location[0];
+    const startY = location[1];
     if (direction == "across") {
-      for (let i = location[0]; i < width; i++) {
-        if (tempData[location[1]][i].state == "black") {
-          tempData[location[1]][i - 1].next = undefined;
-          break;
-        }
-        let belongsTo = tempData[location[1]][i].belongsTo;
+      for (let x = startX; x < width; x++) {
+        const getNextBlock = () => {
+          if (x + 1 != width) {
+            return tempData[startY][x + 1];
+          } else {
+            return undefined;
+          }
+        };
+
+        const getCurrentState = (): "down" | "across" | undefined => {
+          const nextBlock = getNextBlock();
+
+          if (nextBlock == undefined) {
+            return undefined;
+          }
+
+          if (nextBlock.state == "black") {
+            if (tempData[startY][x].next == "down") {
+              return "down";
+            } else {
+              return undefined;
+            }
+          }
+
+          return "across";
+        };
+
+        let currentState = getCurrentState();
+
+        let belongsTo = tempData[startY][x].belongsTo;
         belongsTo.push(currentEditNumber);
-        tempData[location[1]][i].belongsTo = belongsTo;
-        tempData[location[1]][i].next = "across";
-        if (i == width - 1) {
-          tempData[location[1]][i].next = undefined;
+        tempData[startY][x].belongsTo = belongsTo;
+
+        if (currentState == undefined) {
+          console.log("x: ", x);
+          break;
+        } else {
+          tempData[startY][x].next = currentState;
         }
       }
     } else {
-      for (let i = location[1]; i < height; i++) {
-        if (tempData[i][location[0]].state == "black") {
-          tempData[i - 1][location[0]].next = undefined;
-          break;
-        }
-        let belongsTo = tempData[i][location[0]].belongsTo;
+      for (let y = startY; y < height; y++) {
+        const getNextBlock = () => {
+          if (y + 1 != height) {
+            return tempData[y + 1][startX];
+          } else {
+            return undefined;
+          }
+        };
+
+        const getCurrentState = (): "down" | "across" | undefined => {
+          const nextBlock = getNextBlock();
+
+          if (nextBlock == undefined) {
+            return undefined;
+          }
+
+          if (nextBlock.state == "black") {
+            if (tempData[y][startX].next == "across") {
+              return "across";
+            } else {
+              return undefined;
+            }
+          }
+
+          return "down";
+        };
+
+        let currentState = getCurrentState();
+
+        let belongsTo = tempData[y][startX].belongsTo;
         belongsTo.push(currentEditNumber);
-        tempData[i][location[0]].belongsTo = belongsTo;
-        tempData[i][location[0]].next = "down";
-        if (i == height - 1) {
-          tempData[i][location[0]].next = undefined;
+        tempData[y][startX].belongsTo = belongsTo;
+
+        if (currentState == undefined) {
+          break;
+        } else {
+          tempData[y][startX].next = currentState;
         }
       }
     }
@@ -361,12 +419,59 @@ export default function Crossword() {
   };
 
   const startLetterPlacer = (x: number, y: number) => {
+    if (!data) {
+      triggerNotification(
+        "Failed to start letter placer",
+        "error",
+        "Data not found",
+      );
+      return;
+    }
+
+    if (data[y][x].state == "black") {
+      triggerNotification(
+        "Failed to start letter placer",
+        "warning",
+        "Cant place letters on black squares",
+      );
+      return;
+    }
+
+    if (data[y][x].belongsTo.length == 0) {
+      triggerNotification(
+        "Failed to start letter placer",
+        "warning",
+        "Cant place letter on a square without an association",
+      );
+      return;
+    }
+
+    setCurrentTrend(data[y][x].next);
+
     clearHighlightAndSelection();
     selectCurrent(x, y);
     setCurrentSelectionNumberXY([x, y]);
   };
 
   const startNumberPlacer = (x: number, y: number) => {
+    if (!data) {
+      triggerNotification(
+        "Failed to start number placer",
+        "error",
+        "Data not found",
+      );
+      return;
+    }
+
+    if (data[y][x].state == "black") {
+      triggerNotification(
+        "Failed to start number placer",
+        "warning",
+        "Cant place numbers on black squares",
+      );
+      return;
+    }
+
     clearHighlightAndSelection();
     selectCurrent(x, y);
     setCurrentSelectionNumberXY([x, y]);
@@ -403,6 +508,12 @@ export default function Crossword() {
           }
           break;
         case "Backspace":
+          if (
+            (mode == "build" && editMode == "placeLetters") ||
+            mode == "play"
+          ) {
+            //TODO: handle delete chars
+          }
           console.log("Backspace key pressed");
           break;
         default:
@@ -417,7 +528,46 @@ export default function Crossword() {
     };
   }, [mode, editMode, currentSelectionNumberXY, highlightMode, data]);
 
-  const handleKeyPressForLetterPlace = (key: string) => {};
+  const handleKeyPressForLetterPlace = (key: string) => {
+    if (!data) {
+      triggerNotification("Failed to place letter", "error", "Data not found");
+      return;
+    }
+
+    let location = currentSelectionNumberXY;
+    if (!location) {
+      triggerNotification("Failed to place letter", "error", "Data not found");
+      return;
+    }
+
+    let tempData = data.map((row) => row.map((box) => ({ ...box })));
+
+    let block = tempData[location[1]][location[0]];
+
+    if (block.belongsTo.length == 0 || block.state == "black") {
+      triggerNotification(
+        "Failed to place letter",
+        "warning",
+        "Letters can only be placed on squares associated with a number",
+      );
+      return;
+    }
+    //TODO: improve this, follow next if not start on number, if start on number, follow trend
+    tempData[location[1]][location[0]].letter = key;
+    tempData[location[1]][location[0]].state = "normal";
+
+    if (currentTrend && tempData[location[1]][location[0]].next) {
+      if (currentTrend == "across") {
+        tempData[location[1]][location[0] + 1].state = "selected";
+        setCurrentSelectionNumberXY([location[0] + 1, location[1]]);
+      } else {
+        tempData[location[1] + 1][location[0]].state = "selected";
+        setCurrentSelectionNumberXY([location[0], location[1] + 1]);
+      }
+    }
+
+    setData(tempData);
+  };
 
   const handleEnterForNumberPlace = () => {
     clearHighlightAndSelection();
@@ -471,7 +621,7 @@ export default function Crossword() {
                 <div
                   key={x}
                   onClick={() => takeAction(x, y)}
-                  className={`w-[40px] h-[40px] border border-black cursor-pointer ${
+                  className={`w-[40px] h-[40px] border border-black cursor-pointer flex items-center justify-center relative ${
                     box.state == "highlighted" ? "border-secondary-500" : null
                   } ${
                     box.state == "selected"
@@ -481,7 +631,10 @@ export default function Crossword() {
                     box.state == "black" ? "bg-accent-900 cursor-default" : null
                   }`}
                 >
-                  <p className="relative top-1 left-1">{box.number}</p>
+                  <p className="absolute text-sm top-[1px] left-1">
+                    {box.number}
+                  </p>
+                  <p>{box.letter}</p>
                 </div>
               ))}
             </div>
