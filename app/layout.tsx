@@ -22,7 +22,13 @@ export default function RootLayout({
         <h1 className="font-heading text-8xl text-accent-800">Talon Games</h1>
         <div className="w-5/6 ml-auto mr-auto">{children}</div>
         <footer className="bg-accent-100 rounded-xl p-5 mb-4 w-5/6 flex justify-between">
-          <p>Copyright © 2024</p>{" "}
+          <a
+            href="https://github.com/cqb13/talon-games/blob/main/LICENSE"
+            className="hover:text-secondary-600 transition-all duration-200 ease-in-out"
+            target="_blank"
+          >
+            Copyright © 2024
+          </a>
           <a
             href="https://maksimstraus.dev"
             className="hover:text-secondary-600 transition-all duration-200 ease-in-out"

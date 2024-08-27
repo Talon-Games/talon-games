@@ -1,6 +1,7 @@
 "use client";
 // To the person who next works on this, im sorry
 import { useState, useEffect } from "react";
+import Notification from "@/components/general/notification";
 
 type CrossWordBoxData = {
   letter: string;
@@ -14,6 +15,13 @@ export default function Crossword() {
   const width = 15;
   const height = 15;
 
+  const [notification, setNotification] = useState(false);
+  const [notificationTitle, setNotificationTitle] = useState("");
+  const [notificationType, setNotificationType] = useState<
+    "success" | "error" | "warning"
+  >("success");
+  const [notificationMessage, setNotificationMessage] = useState("");
+
   const [data, setData] = useState<CrossWordBoxData[][]>();
   const [mode, setMode] = useState<"play" | "build">("build");
   const [highlightMode, setHighlightMode] = useState<
@@ -26,8 +34,19 @@ export default function Crossword() {
   const [currentEditDirection, setCurrentEditDirection] = useState<
     "down" | "across"
   >();
-  const [currentEditNumberXY, setCurrentEditNumberXY] =
+  const [currentSelectionNumberXY, setCurrentSelectionNumberXY] =
     useState<[number, number]>();
+
+  const triggerNotification = (
+    title: string,
+    type: "success" | "error" | "warning",
+    message: string,
+  ) => {
+    setNotification(true);
+    setNotificationTitle(title);
+    setNotificationType(type);
+    setNotificationMessage(message);
+  };
 
   useEffect(() => {
     let table: CrossWordBoxData[][] = [];
@@ -111,13 +130,30 @@ export default function Crossword() {
   };
 
   const setNumber = () => {
-    if (!data) return;
+    if (!data) {
+      triggerNotification("Failed to set number", "error", "Data not found");
+      return;
+    }
 
     let direction = currentEditDirection;
-    if (!direction) return;
+    if (!direction) {
+      triggerNotification(
+        "Failed to set number",
+        "error",
+        "Direction not found",
+      );
+      return;
+    }
 
-    let location = currentEditNumberXY;
-    if (!location) return;
+    let location = currentSelectionNumberXY;
+    if (!location) {
+      triggerNotification(
+        "Failed to set number",
+        "error",
+        "Location not found",
+      );
+      return;
+    }
 
     const tempData = data.map((row) => row.map((box) => ({ ...box })));
 
@@ -157,7 +193,14 @@ export default function Crossword() {
   };
 
   const fillNoneLettersBlack = () => {
-    if (!data) return;
+    if (!data) {
+      triggerNotification(
+        "Failed to fill non-letters black",
+        "error",
+        "Data not found",
+      );
+      return;
+    }
     const tempData = data.map((row) =>
       row.map((box) => ({
         ...box,
@@ -169,7 +212,10 @@ export default function Crossword() {
   };
 
   const fillBlackEmpty = () => {
-    if (!data) return;
+    if (!data) {
+      triggerNotification("Failed to clear black", "error", "Data not found");
+      return;
+    }
     const tempData = data.map((row) =>
       row.map((box) => ({
         ...box,
@@ -180,7 +226,10 @@ export default function Crossword() {
   };
 
   const clearLetters = () => {
-    if (!data) return;
+    if (!data) {
+      triggerNotification("Failed to clear letters", "error", "Data not found");
+      return;
+    }
     const tempData = data.map((row) =>
       row.map((box) => ({
         ...box,
@@ -191,7 +240,14 @@ export default function Crossword() {
   };
 
   const clearAssociations = () => {
-    if (!data) return;
+    if (!data) {
+      triggerNotification(
+        "Failed to clear associations",
+        "error",
+        "Data not found",
+      );
+      return;
+    }
     const tempData = data.map((row) =>
       row.map((box) => ({
         ...box,
@@ -205,7 +261,14 @@ export default function Crossword() {
   };
 
   const clearHighlightAndSelection = () => {
-    if (!data) return;
+    if (!data) {
+      triggerNotification(
+        "Failed to clear highlight and selection",
+        "error",
+        "Data not found",
+      );
+      return;
+    }
     const tempData = data.map((row) =>
       row.map((box) => ({
         ...box,
@@ -219,10 +282,14 @@ export default function Crossword() {
   };
 
   const selectCurrent = (x: number, y: number) => {
-    if (data == null) {
+    if (!data) {
+      triggerNotification(
+        "Failed to select current",
+        "error",
+        "Data not found",
+      );
       return;
     }
-
     let tempData = data.map((row) => row.map((box) => ({ ...box })));
 
     tempData[y][x].state = "selected";
@@ -238,7 +305,8 @@ export default function Crossword() {
   };
 
   const toggleBlack = (x: number, y: number) => {
-    if (data == null) {
+    if (!data) {
+      triggerNotification("Failed to toggle black", "error", "Data not found");
       return;
     }
 
@@ -247,8 +315,13 @@ export default function Crossword() {
     if (
       tempData[y][x].letter != "" ||
       tempData[y][x].number != undefined ||
-      tempData[y][x].next != undefined
+      tempData[y][x].belongsTo.length != 0
     ) {
+      triggerNotification(
+        "Failed to toggle black",
+        "error",
+        "Letter, Number, or Belonging is already set",
+      );
       return;
     }
 
@@ -265,6 +338,7 @@ export default function Crossword() {
     clearHighlightAndSelection();
     if (mode == "play") {
       if (data == null) {
+        triggerNotification("Failed to take action", "error", "Data not found");
         return;
       }
 
@@ -281,36 +355,55 @@ export default function Crossword() {
       } else if (editMode == "placeNumbers") {
         startNumberPlacer(x, y);
       } else if (editMode == "placeLetters") {
+        startLetterPlacer(x, y);
       }
     }
+  };
+
+  const startLetterPlacer = (x: number, y: number) => {
+    clearHighlightAndSelection();
+    selectCurrent(x, y);
+    setCurrentSelectionNumberXY([x, y]);
   };
 
   const startNumberPlacer = (x: number, y: number) => {
     clearHighlightAndSelection();
     selectCurrent(x, y);
-    setCurrentEditNumberXY([x, y]);
+    setCurrentSelectionNumberXY([x, y]);
   };
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      switch (event.key) {
+      const key = event.key;
+
+      if (key >= "a" && key <= "z") {
+        if ((mode == "build" && editMode == "placeLetters") || mode == "play") {
+          event.preventDefault();
+          handleKeyPressForLetterPlace(key.toUpperCase());
+        }
+      }
+
+      switch (key) {
         case "ArrowRight":
           if (mode == "build" && editMode == "placeNumbers") {
+            event.preventDefault();
             handleRightKeyForNumberPlacer();
           }
           break;
         case "ArrowDown":
           if (mode == "build" && editMode == "placeNumbers") {
+            event.preventDefault();
             handleDownKeyForNumberPlacer();
           }
           break;
         case "Enter":
           if (mode == "build" && editMode == "placeNumbers") {
+            event.preventDefault();
             handleEnterForNumberPlace();
           }
           break;
-        case "Escape":
-          console.log("Escape key pressed");
+        case "Backspace":
+          console.log("Backspace key pressed");
           break;
         default:
           break;
@@ -322,19 +415,27 @@ export default function Crossword() {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [mode, editMode, currentEditNumberXY, highlightMode, data]);
+  }, [mode, editMode, currentSelectionNumberXY, highlightMode, data]);
+
+  const handleKeyPressForLetterPlace = (key: string) => {};
 
   const handleEnterForNumberPlace = () => {
     clearHighlightAndSelection();
     setNumber();
     setCurrentEditDirection(undefined);
     setCurrentEditNumber(currentEditNumber + 1);
-    setCurrentEditNumberXY(undefined);
+    setCurrentSelectionNumberXY(undefined);
+    //TODO: add hint creation workflow here
   };
 
   const handleRightKeyForNumberPlacer = () => {
-    const location = currentEditNumberXY;
+    const location = currentSelectionNumberXY;
     if (location == null || location?.length != 2) {
+      triggerNotification(
+        "Failed to handle right key press",
+        "error",
+        "Location is either not found or incorrect",
+      );
       return;
     }
 
@@ -344,9 +445,15 @@ export default function Crossword() {
   };
 
   const handleDownKeyForNumberPlacer = () => {
-    const location = currentEditNumberXY;
+    const location = currentSelectionNumberXY;
 
     if (location == null || location?.length != 2) {
+      triggerNotification(
+        "Failed to handle right key press",
+        "error",
+        "Location is either not found or incorrect",
+      );
+
       return;
     }
     setCurrentEditDirection("down");
@@ -469,11 +576,26 @@ export default function Crossword() {
                   ></div>
                   <p>Place Letters</p>
                 </div>
+                {editMode == "placeLetters" ? (
+                  <div className="pl-10">
+                    <p>1. Select a square</p>
+                    <p>2. Press a letter</p>
+                  </div>
+                ) : null}
               </div>
             </section>
           ) : null}
         </section>
       </section>
+      {notification ? (
+        <Notification
+          title={notificationTitle}
+          type={notificationType}
+          message={notificationMessage}
+          timeout={5000}
+          updateNotification={(value) => setNotification(value)}
+        />
+      ) : null}
     </main>
   );
 }
