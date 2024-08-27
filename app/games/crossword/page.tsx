@@ -20,8 +20,12 @@ export default function Crossword() {
     "down" | "across" | "both"
   >("both");
   const [editMode, setEditMode] = useState<
-    "select" | "editBlack" | "placeNumbers" | "placeLetters"
-  >("select");
+    "editBlack" | "placeNumbers" | "placeLetters"
+  >("editBlack");
+  const [currentEditNumber, setCurrentEditNumber] = useState(1);
+  const [currentEditDirection, setCurrentEditDirection] = useState<
+    "down" | "across"
+  >();
 
   useEffect(() => {
     let table: CrossWordBoxData[][] = [];
@@ -50,6 +54,8 @@ export default function Crossword() {
       setMode("play");
     } else {
       setMode("build");
+      setEditMode("editBlack");
+      setHighlightMode("both");
     }
   };
 
@@ -186,7 +192,7 @@ export default function Crossword() {
   };
 
   const editModeSelector = (
-    mode: "select" | "editBlack" | "placeNumbers" | "placeLetters",
+    mode: "editBlack" | "placeNumbers" | "placeLetters",
   ) => {
     setEditMode(mode);
   };
@@ -229,9 +235,7 @@ export default function Crossword() {
 
       highlight(x, y);
     } else {
-      if (editMode == "select") {
-        highlight(x, y);
-      } else if (editMode == "editBlack") {
+      if (editMode == "editBlack") {
         toggleBlack(x, y);
       } else if (editMode == "placeNumbers") {
       } else if (editMode == "placeLetters") {
@@ -249,7 +253,7 @@ export default function Crossword() {
                 <div
                   key={x}
                   onClick={() => takeAction(x, y)}
-                  className={`w-[50px] h-[50px] border border-black cursor-pointer ${
+                  className={`w-[40px] h-[40px] border border-black cursor-pointer ${
                     box.state == "highlighted" ? "border-secondary-500" : null
                   } ${
                     box.state == "selected"
@@ -309,18 +313,11 @@ export default function Crossword() {
                   Clear Associations
                 </button>
               </div>
+              <p className="text-red-500 text-center italic">
+                Blocks should be placed first, placing numbers or letters first
+                may break the process. (This will not be fixed)
+              </p>
               <div className="flex flex-col gap-2 mt-2">
-                <div
-                  className="flex gap-2 items-center cursor-pointer"
-                  onClick={() => editModeSelector("select")}
-                >
-                  <div
-                    className={`w-[30px] h-[30px] rounded-lg border border-secondary-300 ${
-                      editMode == "select" ? "bg-secondary-300" : null
-                    } hover:bg-secondary-200 transition-all duration-200 ease-in-out`}
-                  ></div>
-                  <p>Select</p>
-                </div>
                 <div
                   className="flex gap-2 items-center cursor-pointer"
                   onClick={() => editModeSelector("editBlack")}
