@@ -1,11 +1,11 @@
 "use client";
-
+// To the person who next works on this, im sorry
 import { useState, useEffect } from "react";
 
 type CrossWordBoxData = {
   letter: string;
   number?: number;
-  belongsTo?: number[];
+  belongsTo: number[];
   next?: "down" | "across"; // the direction of the next box to move cursor to, should be the direction of primary word, not crossing word
   state: "normal" | "selected" | "highlighted" | "black";
 };
@@ -26,6 +26,8 @@ export default function Crossword() {
   const [currentEditDirection, setCurrentEditDirection] = useState<
     "down" | "across"
   >();
+  const [currentEditNumberXY, setCurrentEditNumberXY] =
+    useState<[number, number]>();
 
   useEffect(() => {
     let table: CrossWordBoxData[][] = [];
@@ -36,6 +38,7 @@ export default function Crossword() {
       for (let j = 0; j < width; j++) {
         let box: CrossWordBoxData = {
           letter: "",
+          belongsTo: [],
           state: "normal",
         };
         row.push(box);
@@ -59,134 +62,159 @@ export default function Crossword() {
     }
   };
 
-  const highlight = (x: number, y: number) => {
-    if (data == null) {
-      return;
-    }
+  const highlight = (
+    x: number,
+    y: number,
+    direction: "across" | "down" | "both",
+    onlyDirections: boolean,
+  ) => {
+    if (!data || data[y][x].state === "black") return;
 
-    if (data[y][x].state == "black") {
-      return;
-    }
+    const tempData = data.map((row) => row.map((box) => ({ ...box })));
 
-    let tempData = data.map((row) => row.map((box) => ({ ...box })));
+    // Reset non-black boxes
+    tempData.forEach((row) =>
+      row.forEach((box) => {
+        if (box.state !== "black") box.state = "normal";
+      }),
+    );
 
-    for (let i = 0; i < tempData.length; i++) {
-      for (let j = 0; j < tempData[i].length; j++) {
-        if (tempData[i][j].state == "black") {
-          continue;
-        }
-        tempData[i][j].state = "normal";
-      }
-    }
-
-    if (highlightMode == "across" || highlightMode == "both") {
-      for (let i = x; i >= 0; i--) {
-        if (tempData[y][i].state == "black") {
-          break;
-        } else {
+    // Highlight in specified directions
+    if (direction === "across" || direction === "both") {
+      if (!onlyDirections) {
+        for (let i = x; i >= 0; i--) {
+          if (tempData[y][i].state === "black") break;
           tempData[y][i].state = "highlighted";
         }
       }
-
       for (let i = x; i < width; i++) {
-        if (tempData[y][i].state == "black") {
-          break;
-        } else {
-          tempData[y][i].state = "highlighted";
-        }
+        if (tempData[y][i].state === "black") break;
+        tempData[y][i].state = "highlighted";
       }
     }
 
-    if (highlightMode == "down" || highlightMode == "both") {
-      for (let i = y; i >= 0; i--) {
-        if (tempData[i][x].state == "black") {
-          break;
-        } else {
+    if (direction === "down" || direction === "both") {
+      if (!onlyDirections) {
+        for (let i = y; i >= 0; i--) {
+          if (tempData[i][x].state === "black") break;
           tempData[i][x].state = "highlighted";
         }
       }
-
       for (let i = y; i < height; i++) {
-        if (tempData[i][x].state == "black") {
-          break;
-        } else {
-          tempData[i][x].state = "highlighted";
-        }
+        if (tempData[i][x].state === "black") break;
+        tempData[i][x].state = "highlighted";
       }
     }
 
     tempData[y][x].state = "selected";
+    setData(tempData);
+  };
+
+  const setNumber = () => {
+    if (!data) return;
+
+    let direction = currentEditDirection;
+    if (!direction) return;
+
+    let location = currentEditNumberXY;
+    if (!location) return;
+
+    const tempData = data.map((row) => row.map((box) => ({ ...box })));
+
+    if (direction == "across") {
+      for (let i = location[0]; i < width; i++) {
+        if (tempData[location[1]][i].state == "black") {
+          break;
+        }
+        let belongsTo = tempData[location[1]][i].belongsTo;
+        belongsTo.push(currentEditNumber);
+        tempData[location[1]][i].belongsTo = belongsTo;
+      }
+    } else {
+      for (let i = location[1]; i < height; i++) {
+        if (tempData[i][location[0]].state == "black") {
+          break;
+        }
+        let belongsTo = tempData[i][location[0]].belongsTo;
+        belongsTo.push(currentEditNumber);
+        tempData[i][location[0]].belongsTo = belongsTo;
+      }
+    }
+
+    tempData[location[1]][location[0]].number = currentEditNumber;
 
     setData(tempData);
   };
 
   const fillNoneLettersBlack = () => {
-    if (data == null) {
-      return;
-    }
-
-    let tempData = data.map((row) => row.map((box) => ({ ...box })));
-
-    for (let i = 0; i < tempData.length; i++) {
-      for (let j = 0; j < tempData[i].length; j++) {
-        if (tempData[i][j].letter == "") {
-          tempData[i][j].state = "black";
-        }
-      }
-    }
-
+    if (!data) return;
+    const tempData = data.map((row) =>
+      row.map((box) => ({
+        ...box,
+        state: box.letter === "" ? "black" : box.state,
+      })),
+    );
     setData(tempData);
   };
 
   const fillBlackEmpty = () => {
-    if (data == null) {
-      return;
-    }
-
-    let tempData = data.map((row) => row.map((box) => ({ ...box })));
-
-    for (let i = 0; i < tempData.length; i++) {
-      for (let j = 0; j < tempData[i].length; j++) {
-        if (tempData[i][j].state == "black") {
-          tempData[i][j].state = "normal";
-        }
-      }
-    }
-
+    if (!data) return;
+    const tempData = data.map((row) =>
+      row.map((box) => ({
+        ...box,
+        state: box.state === "black" ? "normal" : box.state,
+      })),
+    );
     setData(tempData);
   };
 
   const clearLetters = () => {
-    if (data == null) {
-      return;
-    }
-
-    let tempData = data.map((row) => row.map((box) => ({ ...box })));
-
-    for (let i = 0; i < tempData.length; i++) {
-      for (let j = 0; j < tempData[i].length; j++) {
-        tempData[i][j].letter = "";
-      }
-    }
-
+    if (!data) return;
+    const tempData = data.map((row) =>
+      row.map((box) => ({
+        ...box,
+        letter: "",
+      })),
+    );
     setData(tempData);
   };
 
   const clearAssociations = () => {
+    if (!data) return;
+    const tempData = data.map((row) =>
+      row.map((box) => ({
+        ...box,
+        letter: "",
+        number: undefined,
+        belongsTo: [],
+        next: undefined,
+      })),
+    );
+    setData(tempData);
+  };
+
+  const clearHighlightAndSelection = () => {
+    if (!data) return;
+    const tempData = data.map((row) =>
+      row.map((box) => ({
+        ...box,
+        state:
+          box.state === "highlighted" || box.state === "selected"
+            ? "normal"
+            : box.state,
+      })),
+    );
+    setData(tempData);
+  };
+
+  const selectCurrent = (x: number, y: number) => {
     if (data == null) {
       return;
     }
 
     let tempData = data.map((row) => row.map((box) => ({ ...box })));
 
-    for (let i = 0; i < tempData.length; i++) {
-      for (let j = 0; j < tempData[i].length; j++) {
-        tempData[i][j].letter = "";
-        tempData[i][j].number = undefined;
-        tempData[i][j].belongsTo = undefined;
-        tempData[i][j].next = undefined;
-      }
-    }
+    tempData[y][x].state = "selected";
 
     setData(tempData);
   };
@@ -194,6 +222,7 @@ export default function Crossword() {
   const editModeSelector = (
     mode: "editBlack" | "placeNumbers" | "placeLetters",
   ) => {
+    clearHighlightAndSelection();
     setEditMode(mode);
   };
 
@@ -222,6 +251,7 @@ export default function Crossword() {
   };
 
   const takeAction = (x: number, y: number) => {
+    clearHighlightAndSelection();
     if (mode == "play") {
       if (data == null) {
         return;
@@ -233,14 +263,84 @@ export default function Crossword() {
         setHighlightMode("across");
       }
 
-      highlight(x, y);
+      highlight(x, y, highlightMode, false);
     } else {
       if (editMode == "editBlack") {
         toggleBlack(x, y);
       } else if (editMode == "placeNumbers") {
+        startNumberPlacer(x, y);
       } else if (editMode == "placeLetters") {
       }
     }
+  };
+
+  const startNumberPlacer = (x: number, y: number) => {
+    clearHighlightAndSelection();
+    selectCurrent(x, y);
+    setCurrentEditNumberXY([x, y]);
+  };
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      switch (event.key) {
+        case "ArrowRight":
+          if (mode == "build" && editMode == "placeNumbers") {
+            handleRightKeyForNumberPlacer();
+          }
+          break;
+        case "ArrowDown":
+          if (mode == "build" && editMode == "placeNumbers") {
+            handleDownKeyForNumberPlacer();
+          }
+          break;
+        case "Enter":
+          if (mode == "build" && editMode == "placeNumbers") {
+            handleEnterForNumberPlace();
+          }
+          break;
+        case "Escape":
+          console.log("Escape key pressed");
+          break;
+        default:
+          break;
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [mode, editMode, currentEditNumberXY, highlightMode, data]);
+
+  const handleEnterForNumberPlace = () => {
+    clearHighlightAndSelection();
+    setNumber();
+    setCurrentEditDirection(undefined);
+    setCurrentEditNumber(currentEditNumber + 1);
+    setCurrentEditNumberXY(undefined);
+  };
+
+  const handleRightKeyForNumberPlacer = () => {
+    const location = currentEditNumberXY;
+    if (location == null || location?.length != 2) {
+      return;
+    }
+
+    setCurrentEditDirection("across");
+    setHighlightMode("across");
+    highlight(location[0], location[1], "across", true);
+  };
+
+  const handleDownKeyForNumberPlacer = () => {
+    const location = currentEditNumberXY;
+
+    if (location == null || location?.length != 2) {
+      return;
+    }
+    setCurrentEditDirection("down");
+    setHighlightMode("down");
+    highlight(location[0], location[1], "down", true);
   };
 
   return (
@@ -264,6 +364,7 @@ export default function Crossword() {
                   }`}
                 >
                   <p className="relative top-1 left-1">{box.number}</p>
+                  <p>{box.belongsTo}</p>
                 </div>
               ))}
             </div>
@@ -314,8 +415,8 @@ export default function Crossword() {
                 </button>
               </div>
               <p className="text-red-500 text-center italic">
-                Blocks should be placed first, placing numbers or letters first
-                may break the process. (This will not be fixed)
+                First place blocks, then place numbers, finally add letters. If
+                you dont follow this order things will go wrong.
               </p>
               <div className="flex flex-col gap-2 mt-2">
                 <div
@@ -340,6 +441,14 @@ export default function Crossword() {
                   ></div>
                   <p>Place Numbers</p>
                 </div>
+                {editMode == "placeNumbers" ? (
+                  <div className="pl-10">
+                    <p>1. Select a square</p>
+                    <p>2. Use right and down keys to set a direction</p>
+                    <p>3. Press enter to confirm number placement</p>
+                    <p>Press esc at any time before pressing enter to cancel</p>
+                  </div>
+                ) : null}
                 <div
                   className="flex gap-2 items-center cursor-pointer"
                   onClick={() => editModeSelector("placeLetters")}
