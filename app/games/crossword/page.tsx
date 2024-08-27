@@ -124,20 +124,30 @@ export default function Crossword() {
     if (direction == "across") {
       for (let i = location[0]; i < width; i++) {
         if (tempData[location[1]][i].state == "black") {
+          tempData[location[1]][i - 1].next = undefined;
           break;
         }
         let belongsTo = tempData[location[1]][i].belongsTo;
         belongsTo.push(currentEditNumber);
         tempData[location[1]][i].belongsTo = belongsTo;
+        tempData[location[1]][i].next = "across";
+        if (i == width - 1) {
+          tempData[location[1]][i].next = undefined;
+        }
       }
     } else {
       for (let i = location[1]; i < height; i++) {
         if (tempData[i][location[0]].state == "black") {
+          tempData[i - 1][location[0]].next = undefined;
           break;
         }
         let belongsTo = tempData[i][location[0]].belongsTo;
         belongsTo.push(currentEditNumber);
         tempData[i][location[0]].belongsTo = belongsTo;
+        tempData[i][location[0]].next = "down";
+        if (i == height - 1) {
+          tempData[i][location[0]].next = undefined;
+        }
       }
     }
 
@@ -364,7 +374,6 @@ export default function Crossword() {
                   }`}
                 >
                   <p className="relative top-1 left-1">{box.number}</p>
-                  <p>{box.belongsTo}</p>
                 </div>
               ))}
             </div>
@@ -446,7 +455,6 @@ export default function Crossword() {
                     <p>1. Select a square</p>
                     <p>2. Use right and down keys to set a direction</p>
                     <p>3. Press enter to confirm number placement</p>
-                    <p>Press esc at any time before pressing enter to cancel</p>
                   </div>
                 ) : null}
                 <div
