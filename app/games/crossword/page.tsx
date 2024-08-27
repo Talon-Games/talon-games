@@ -162,6 +162,7 @@ export default function Crossword() {
       row.map((box) => ({
         ...box,
         state: box.letter === "" ? "black" : box.state,
+        belongsTo: [],
       })),
     );
     setData(tempData);
