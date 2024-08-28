@@ -28,7 +28,7 @@ export default function Crossword() {
   const [notificationMessage, setNotificationMessage] = useState("");
 
   const [data, setData] = useState<CrossWordBoxData[][]>();
-  const [mode, setMode] = useState<"play" | "build">("build");
+  const [mode, setMode] = useState<"play" | "build">("play");
   const [highlightMode, setHighlightMode] = useState<
     "down" | "across" | "both"
   >("both");
@@ -94,7 +94,21 @@ export default function Crossword() {
   }, []);
 
   const toggleMode = () => {
-    //TODO: auth check
+    if (!user) {
+      triggerNotification(
+        "Failed to toggle mode",
+        "error",
+        "You must have an account",
+      );
+    }
+
+    if (!isHelper && !isAdmin && !isMaksim) {
+      triggerNotification(
+        "Failed to toggle mode",
+        "error",
+        "You must have a role",
+      );
+    }
 
     if (mode == "build") {
       setMode("play");
