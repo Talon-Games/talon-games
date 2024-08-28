@@ -142,7 +142,7 @@ export default function Account() {
       triggerNotification(
         "Failed to update admin",
         "error",
-        "You cant change this users roles",
+        "This user is Maksim",
       );
       return;
     }
@@ -180,7 +180,7 @@ export default function Account() {
   };
 
   return (
-    <main className="flex flex-col items-center py-2">
+    <main className="flex flex-col gap-2 items-center py-2">
       {isAdmin ? (
         <section className="w-full p-5 h-[26rem] bg-accent-100 rounded-xl max-sm:w-11/12">
           <h1 className="text-xl font-bold font-heading">User Management</h1>
@@ -239,6 +239,9 @@ export default function Account() {
           </div>
         </section>
       ) : null}
+      <button className="bg-red-200 p-5 rounded-lg w-full hover:bg-red-300 transition-all duration-200 ease-in-out">
+        Delete Account
+      </button>
       {notification ? (
         <Notification
           title={notificationTitle}
