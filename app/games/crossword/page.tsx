@@ -6,12 +6,28 @@ import { useAuthContext } from "@/lib/contexts/authContext";
 import { auth, db } from "@/firebase/config";
 import getRoles from "@/firebase/db/getRoles";
 
-type CrossWordBoxData = {
-  letter: string;
+export type Crossword = {
+  data: CrossWordBoxData[][];
+  hints: CrosswordHints;
+};
+
+export type CrossWordBoxData = {
+  answer: string;
+  guess: string;
   number?: number;
   belongsTo: number[];
   next?: "down" | "across"; // the direction of the next box to move cursor to, should be the direction of primary word, not crossing word
   state: "normal" | "selected" | "highlighted" | "black";
+};
+
+export type CrosswordHints = {
+  across: CrossWordHint[];
+  down: CrossWordHint[];
+};
+
+export type CrossWordHint = {
+  hint: string;
+  number: number;
 };
 
 export default function Crossword() {
@@ -27,7 +43,9 @@ export default function Crossword() {
   >("success");
   const [notificationMessage, setNotificationMessage] = useState("");
 
-  const [data, setData] = useState<CrossWordBoxData[][]>();
+  const [buildData, setBuildData] = useState<CrossWordBoxData[][]>();
+  const [buildHints, setBuildHints] = useState<CrosswordHints>();
+
   const [mode, setMode] = useState<"play" | "build">("play");
   const [highlightMode, setHighlightMode] = useState<
     "down" | "across" | "both"
@@ -44,6 +62,12 @@ export default function Crossword() {
   const [currentTrend, setCurrentTrend] = useState<
     "down" | "across" | undefined
   >(undefined);
+  const [showHintCreationPopup, setShowHintCreationPopup] = useState(false);
+  const [hintNumber, setHintNumber] = useState<number | undefined>(undefined);
+  const [hintDirection, setHintDirection] = useState<
+    "down" | "across" | undefined
+  >(undefined);
+  const [hint, setHint] = useState("");
 
   const [isMaksim, setIsMaksim] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -73,6 +97,15 @@ export default function Crossword() {
   };
 
   useEffect(() => {
+    //TODO: for play get data from db
+    let table = generateNewTable();
+    let newHints = initNewHints();
+
+    setBuildHints(newHints);
+    setBuildData(table);
+  }, []);
+
+  const generateNewTable = () => {
     let table: CrossWordBoxData[][] = [];
 
     for (let i = 0; i < height; i++) {
@@ -80,7 +113,8 @@ export default function Crossword() {
 
       for (let j = 0; j < width; j++) {
         let box: CrossWordBoxData = {
-          letter: "",
+          answer: "",
+          guess: "",
           belongsTo: [],
           state: "normal",
         };
@@ -90,8 +124,17 @@ export default function Crossword() {
       table.push(row);
     }
 
-    setData(table);
-  }, []);
+    return table;
+  };
+
+  const initNewHints = () => {
+    let hints: CrosswordHints = {
+      across: [],
+      down: [],
+    };
+
+    return hints;
+  };
 
   const toggleMode = () => {
     if (!user) {
@@ -113,10 +156,31 @@ export default function Crossword() {
     if (mode == "build") {
       setMode("play");
     } else {
-      setMode("build");
-      setEditMode("editBlack");
-      setHighlightMode("both");
+      startBuildWorkflow();
     }
+  };
+
+  const startBuildWorkflow = () => {
+    setEditMode("editBlack");
+    setHighlightMode("both");
+    setCurrentEditNumber(1);
+    let table = generateNewTable();
+    let newHints = initNewHints();
+
+    setBuildHints(newHints);
+    setBuildData(table);
+    setMode("build");
+  };
+
+  const cancelBuildWorkflow = () => {
+    setEditMode("editBlack");
+    setHighlightMode("both");
+    setCurrentEditNumber(1);
+    let table = generateNewTable();
+    let newHints = initNewHints();
+
+    setBuildHints(newHints);
+    setBuildData(table);
   };
 
   const highlight = (
@@ -125,9 +189,9 @@ export default function Crossword() {
     direction: "across" | "down" | "both",
     onlyDirections: boolean,
   ) => {
-    if (!data || data[y][x].state === "black") return;
+    if (!buildData || buildData[y][x].state === "black") return;
 
-    const tempData = data.map((row) => row.map((box) => ({ ...box })));
+    const tempData = buildData.map((row) => row.map((box) => ({ ...box })));
 
     // Reset non-black boxes
     tempData.forEach((row) =>
@@ -164,11 +228,11 @@ export default function Crossword() {
     }
 
     tempData[y][x].state = "selected";
-    setData(tempData);
+    setBuildData(tempData);
   };
 
   const setNumber = () => {
-    if (!data) {
+    if (!buildData) {
       triggerNotification("Failed to set number", "error", "Data not found");
       return;
     }
@@ -193,7 +257,7 @@ export default function Crossword() {
       return;
     }
 
-    const tempData = data.map((row) => row.map((box) => ({ ...box })));
+    const tempData = buildData.map((row) => row.map((box) => ({ ...box })));
 
     const startX = location[0];
     const startY = location[1];
@@ -281,11 +345,11 @@ export default function Crossword() {
 
     tempData[location[1]][location[0]].number = currentEditNumber;
 
-    setData(tempData);
+    setBuildData(tempData);
   };
 
   const fillNoneLettersBlack = () => {
-    if (!data) {
+    if (!buildData) {
       triggerNotification(
         "Failed to fill non-letters black",
         "error",
@@ -293,46 +357,46 @@ export default function Crossword() {
       );
       return;
     }
-    const tempData = data.map((row) =>
+    const tempData = buildData.map((row) =>
       row.map((box) => ({
         ...box,
-        state: box.letter === "" ? "black" : box.state,
+        state: box.answer === "" ? "black" : box.state,
         belongsTo: [],
       })),
     );
-    setData(tempData);
+    setBuildData(tempData);
   };
 
   const fillBlackEmpty = () => {
-    if (!data) {
+    if (!buildData) {
       triggerNotification("Failed to clear black", "error", "Data not found");
       return;
     }
-    const tempData = data.map((row) =>
+    const tempData = buildData.map((row) =>
       row.map((box) => ({
         ...box,
         state: box.state === "black" ? "normal" : box.state,
       })),
     );
-    setData(tempData);
+    setBuildData(tempData);
   };
 
   const clearLetters = () => {
-    if (!data) {
+    if (!buildData) {
       triggerNotification("Failed to clear letters", "error", "Data not found");
       return;
     }
-    const tempData = data.map((row) =>
+    const tempData = buildData.map((row) =>
       row.map((box) => ({
         ...box,
         letter: "",
       })),
     );
-    setData(tempData);
+    setBuildData(tempData);
   };
 
   const clearAssociations = () => {
-    if (!data) {
+    if (!buildData) {
       triggerNotification(
         "Failed to clear associations",
         "error",
@@ -340,7 +404,7 @@ export default function Crossword() {
       );
       return;
     }
-    const tempData = data.map((row) =>
+    const tempData = buildData.map((row) =>
       row.map((box) => ({
         ...box,
         letter: "",
@@ -349,11 +413,11 @@ export default function Crossword() {
         next: undefined,
       })),
     );
-    setData(tempData);
+    setBuildData(tempData);
   };
 
   const clearHighlightAndSelection = () => {
-    if (!data) {
+    if (!buildData) {
       triggerNotification(
         "Failed to clear highlight and selection",
         "error",
@@ -361,7 +425,7 @@ export default function Crossword() {
       );
       return;
     }
-    const tempData = data.map((row) =>
+    const tempData = buildData.map((row) =>
       row.map((box) => ({
         ...box,
         state:
@@ -370,11 +434,11 @@ export default function Crossword() {
             : box.state,
       })),
     );
-    setData(tempData);
+    setBuildData(tempData);
   };
 
   const selectCurrent = (x: number, y: number) => {
-    if (!data) {
+    if (!buildData) {
       triggerNotification(
         "Failed to select current",
         "error",
@@ -382,11 +446,11 @@ export default function Crossword() {
       );
       return;
     }
-    let tempData = data.map((row) => row.map((box) => ({ ...box })));
+    let tempData = buildData.map((row) => row.map((box) => ({ ...box })));
 
     tempData[y][x].state = "selected";
 
-    setData(tempData);
+    setBuildData(tempData);
   };
 
   const editModeSelector = (
@@ -397,15 +461,15 @@ export default function Crossword() {
   };
 
   const toggleBlack = (x: number, y: number) => {
-    if (!data) {
+    if (!buildData) {
       triggerNotification("Failed to toggle black", "error", "Data not found");
       return;
     }
 
-    let tempData = data.map((row) => row.map((box) => ({ ...box })));
+    let tempData = buildData.map((row) => row.map((box) => ({ ...box })));
 
     if (
-      tempData[y][x].letter != "" ||
+      tempData[y][x].answer != "" ||
       tempData[y][x].number != undefined ||
       tempData[y][x].belongsTo.length != 0
     ) {
@@ -423,20 +487,20 @@ export default function Crossword() {
       tempData[y][x].state = "black";
     }
 
-    setData(tempData);
+    setBuildData(tempData);
   };
 
   const takeAction = (x: number, y: number) => {
     clearHighlightAndSelection();
     if (mode == "play") {
-      if (data == null) {
+      if (buildData == null) {
         triggerNotification("Failed to take action", "error", "Data not found");
         return;
       }
 
-      if (data[y][x].next == "down") {
+      if (buildData[y][x].next == "down") {
         setHighlightMode("down");
-      } else if (data[y][x].next == "across") {
+      } else if (buildData[y][x].next == "across") {
         setHighlightMode("across");
       }
 
@@ -453,7 +517,7 @@ export default function Crossword() {
   };
 
   const startLetterPlacer = (x: number, y: number) => {
-    if (!data) {
+    if (!buildData) {
       triggerNotification(
         "Failed to start letter placer",
         "error",
@@ -462,7 +526,7 @@ export default function Crossword() {
       return;
     }
 
-    if (data[y][x].state == "black") {
+    if (buildData[y][x].state == "black") {
       triggerNotification(
         "Failed to start letter placer",
         "warning",
@@ -471,7 +535,7 @@ export default function Crossword() {
       return;
     }
 
-    if (data[y][x].belongsTo.length == 0) {
+    if (buildData[y][x].belongsTo.length == 0) {
       triggerNotification(
         "Failed to start letter placer",
         "warning",
@@ -480,7 +544,7 @@ export default function Crossword() {
       return;
     }
 
-    setCurrentTrend(data[y][x].next);
+    setCurrentTrend(buildData[y][x].next);
 
     clearHighlightAndSelection();
     selectCurrent(x, y);
@@ -488,7 +552,7 @@ export default function Crossword() {
   };
 
   const startNumberPlacer = (x: number, y: number) => {
-    if (!data) {
+    if (!buildData) {
       triggerNotification(
         "Failed to start number placer",
         "error",
@@ -497,7 +561,7 @@ export default function Crossword() {
       return;
     }
 
-    if (data[y][x].state == "black") {
+    if (buildData[y][x].state == "black") {
       triggerNotification(
         "Failed to start number placer",
         "warning",
@@ -558,10 +622,10 @@ export default function Crossword() {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [mode, editMode, currentSelectionNumberXY, highlightMode, data]);
+  }, [mode, editMode, currentSelectionNumberXY, highlightMode, buildData]);
 
   const handleBackspaceForLetters = () => {
-    if (!data) {
+    if (!buildData) {
       triggerNotification("Failed to backspace letter", "error", "Data found");
       return;
     }
@@ -576,13 +640,13 @@ export default function Crossword() {
       return;
     }
 
-    let tempData = data.map((row) => row.map((box) => ({ ...box })));
+    let tempData = buildData.map((row) => row.map((box) => ({ ...box })));
 
     let startX = location[0];
     let startY = location[1];
     let trend = currentTrend;
 
-    tempData[startY][startX].letter = "";
+    tempData[startY][startX].answer = "";
 
     // move the selector back
     if (trend) {
@@ -605,11 +669,11 @@ export default function Crossword() {
       }
     }
 
-    setData(tempData);
+    setBuildData(tempData);
   };
 
   const handleKeyPressForLetters = (key: string) => {
-    if (!data) {
+    if (!buildData) {
       triggerNotification("Failed to place letter", "error", "Data not found");
       return;
     }
@@ -624,7 +688,7 @@ export default function Crossword() {
       return;
     }
 
-    let tempData = data.map((row) => row.map((box) => ({ ...box })));
+    let tempData = buildData.map((row) => row.map((box) => ({ ...box })));
 
     let block = tempData[location[1]][location[0]];
 
@@ -636,7 +700,7 @@ export default function Crossword() {
       );
       return;
     }
-    tempData[location[1]][location[0]].letter = key;
+    tempData[location[1]][location[0]].answer = key;
     tempData[location[1]][location[0]].state = "normal";
 
     if (currentTrend && tempData[location[1]][location[0]].next) {
@@ -649,16 +713,109 @@ export default function Crossword() {
       }
     }
 
-    setData(tempData);
+    setBuildData(tempData);
   };
 
   const handleEnterForNumberPlace = () => {
+    if (!currentEditDirection) {
+      triggerNotification(
+        "Failed to handle enter for number",
+        "error",
+        "Current edit direction not found",
+      );
+      return;
+    }
     clearHighlightAndSelection();
     setNumber();
+    addNewHintToList(currentEditDirection, currentEditNumber);
     setCurrentEditDirection(undefined);
     setCurrentEditNumber(currentEditNumber + 1);
     setCurrentSelectionNumberXY(undefined);
-    //TODO: add hint creation workflow here
+  };
+
+  const addNewHintToList = (direction: "across" | "down", number: number) => {
+    if (!buildHints) {
+      triggerNotification(
+        "Failed to add new hint",
+        "error",
+        "Build Hints not found",
+      );
+      return;
+    }
+
+    let tempHints = buildHints;
+
+    let hint: CrossWordHint = {
+      number: number,
+      hint: "",
+    };
+
+    if (direction == "across") {
+      tempHints.across.push(hint);
+    } else {
+      tempHints.down.push(hint);
+    }
+
+    setBuildHints(tempHints);
+  };
+
+  const activateHintEditPopup = (
+    direction: "down" | "across",
+    number: number,
+    hint: string,
+  ) => {
+    setHintNumber(number);
+    setHintDirection(direction);
+    setHint(hint);
+    setShowHintCreationPopup(true);
+  };
+
+  const deactivateHintEditPopup = () => {
+    setShowHintCreationPopup(false);
+    setHintDirection(undefined);
+    setHintNumber(undefined);
+    setHint("");
+  };
+
+  const saveEditHint = () => {
+    if (!buildHints) {
+      triggerNotification(
+        "Failed to save hint",
+        "error",
+        "Build hints not found",
+      );
+      return;
+    }
+
+    if (!hintDirection) {
+      triggerNotification(
+        "Failed to save hint",
+        "error",
+        "Hint direction not found",
+      );
+      return;
+    }
+
+    let tempHints = buildHints;
+
+    if (hintDirection == "across") {
+      for (let i = 0; i < tempHints.across.length; i++) {
+        if (tempHints.across[i].number == hintNumber) {
+          tempHints.across[i].hint = hint;
+          break;
+        }
+      }
+    } else {
+      for (let i = 0; i < tempHints.down.length; i++) {
+        if (tempHints.down[i].number == hintNumber) {
+          tempHints.down[i].hint = hint;
+          break;
+        }
+      }
+    }
+
+    setBuildHints(tempHints);
+    deactivateHintEditPopup();
   };
 
   const handleRightKeyForNumberPlacer = () => {
@@ -694,11 +851,27 @@ export default function Crossword() {
     highlight(location[0], location[1], "down", true);
   };
 
+  const handleClickOnHint = (
+    direction: "across" | "down",
+    number: number,
+    hint: string,
+  ) => {
+    if (mode == "play") {
+      //TODO: select the square with the hint number and highlight in the direction
+    } else {
+      activateHintEditPopup(direction, number, hint);
+    }
+  };
+
+  const editHint = (event: any) => {
+    setHint(event.target.value);
+  };
+
   return (
     <main className="py-2">
       <section className="flex justify-center gap-2">
         <section className="flex flex-col bg-accent-100 rounded-xl p-5">
-          {data?.map((row: CrossWordBoxData[], y) => (
+          {buildData?.map((row: CrossWordBoxData[], y) => (
             <div key={y} className="flex">
               {row.map((box: CrossWordBoxData, x) => (
                 <div
@@ -717,7 +890,7 @@ export default function Crossword() {
                   <p className="absolute text-sm top-[1px] left-1">
                     {box.number}
                   </p>
-                  <p>{box.letter}</p>
+                  <p>{`${mode == "play" ? box.guess : box.answer}`}</p>
                 </div>
               ))}
             </div>
@@ -727,9 +900,39 @@ export default function Crossword() {
           <section className="flex gap-2 justify-between">
             <div className="bg-accent-100 p-5 w-full rounded-xl">
               <p className="font-bold text-xl text-center">Down</p>
+              {buildHints ? (
+                <div className="flex flex-col gap-2">
+                  {buildHints.down.map((hint: CrossWordHint, key) => (
+                    <p
+                      key={key}
+                      onClick={() =>
+                        handleClickOnHint("down", hint.number, hint.hint)
+                      }
+                      className="hover:bg-secondary-100 p-2 transition-all duration-200 ease-out cursor-pointer rounded-lg"
+                    >{`${hint.number}. ${
+                      hint.hint == "" ? "Edit Hint" : hint.hint
+                    }`}</p>
+                  ))}
+                </div>
+              ) : null}
             </div>
             <div className="bg-accent-100 p-5 w-full rounded-xl">
               <p className="font-bold text-xl text-center">Across</p>
+              {buildHints ? (
+                <div className="flex flex-col gap-2">
+                  {buildHints.across.map((hint: CrossWordHint, key) => (
+                    <p
+                      key={key}
+                      onClick={() =>
+                        handleClickOnHint("across", hint.number, hint.hint)
+                      }
+                      className="hover:bg-secondary-100 p-2 transition-all duration-200 ease-out cursor-pointer rounded-lg"
+                    >{`${hint.number}. ${
+                      hint.hint == "" ? "Edit Hint" : hint.hint
+                    }`}</p>
+                  ))}
+                </div>
+              ) : null}
             </div>
           </section>
           {user && (isMaksim || isAdmin || isHelper) ? (
@@ -841,7 +1044,10 @@ export default function Crossword() {
                 </div>
               </section>
               <section className="flex gap-2 items-center justify-between">
-                <button className="bg-red-200 p-5 rounded-lg w-full hover:bg-red-300 transition-all duration-200 ease-in-out">
+                <button
+                  className="bg-red-200 p-5 rounded-lg w-full hover:bg-red-300 transition-all duration-200 ease-in-out"
+                  onClick={cancelBuildWorkflow}
+                >
                   Cancel
                 </button>
                 <button className="bg-secondary-200 p-5 rounded-lg w-full hover:bg-secondary-300 transition-all duration-200 ease-in-out">
@@ -852,6 +1058,33 @@ export default function Crossword() {
           ) : null}
         </section>
       </section>
+      {showHintCreationPopup ? (
+        <section className="fixed flex items-center justify-center left-0 top-0 w-full h-full bg-accent-900 bg-opacity-50">
+          <div className="p-10 bg-background-50 rounded-xl">
+            <input
+              type="text"
+              placeholder="Edit Hint"
+              className="bg-accent-200 p-2 rounded-lg w-full placeholder:text-secondary-900 focus:outline-none"
+              value={hint}
+              onChange={(event) => editHint(event)}
+            />
+            <div className="flex mt-2">
+              <button
+                onClick={saveEditHint}
+                className="w-full p-2 bg-red-200 hover:bg-red-300 rounded-tl-lg rounded-bl-lg transition-all duration-200 ease-in-out"
+              >
+                Save
+              </button>
+              <button
+                onClick={deactivateHintEditPopup}
+                className="w-full p-2 bg-secondary-200 hover:bg-secondary-300 rounded-tr-lg rounded-br-lg transition-all duration-200 ease-in-out"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </section>
+      ) : null}
       {notification ? (
         <Notification
           title={notificationTitle}
