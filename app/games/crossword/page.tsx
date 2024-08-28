@@ -2,6 +2,7 @@
 // To the person who next works on this, im sorry
 import { useState, useEffect } from "react";
 import Notification from "@/components/general/notification";
+import { useAuthContext } from "@/lib/contexts/authContext";
 
 type CrossWordBoxData = {
   letter: string;
@@ -14,6 +15,8 @@ type CrossWordBoxData = {
 export default function Crossword() {
   const width = 15;
   const height = 15;
+
+  const { user } = useAuthContext() as { user: any };
 
   const [notification, setNotification] = useState(false);
   const [notificationTitle, setNotificationTitle] = useState("");
@@ -197,7 +200,6 @@ export default function Crossword() {
         tempData[startY][x].belongsTo = belongsTo;
 
         if (currentState == undefined) {
-          console.log("x: ", x);
           break;
         } else {
           tempData[startY][x].next = currentState;
@@ -483,8 +485,7 @@ export default function Crossword() {
 
       if (key >= "a" && key <= "z") {
         if ((mode == "build" && editMode == "placeLetters") || mode == "play") {
-          event.preventDefault();
-          handleKeyPressForLetterPlace(key.toUpperCase());
+          handleKeyPressForLetters(key.toUpperCase());
         }
       }
 
@@ -512,9 +513,8 @@ export default function Crossword() {
             (mode == "build" && editMode == "placeLetters") ||
             mode == "play"
           ) {
-            //TODO: handle delete chars
+            handleBackspaceForLetters();
           }
-          console.log("Backspace key pressed");
           break;
         default:
           break;
@@ -528,7 +528,55 @@ export default function Crossword() {
     };
   }, [mode, editMode, currentSelectionNumberXY, highlightMode, data]);
 
-  const handleKeyPressForLetterPlace = (key: string) => {
+  const handleBackspaceForLetters = () => {
+    if (!data) {
+      triggerNotification("Failed to backspace letter", "error", "Data found");
+      return;
+    }
+
+    let location = currentSelectionNumberXY;
+    if (!location) {
+      triggerNotification(
+        "Failed to backspace letter",
+        "error",
+        "Location not found",
+      );
+      return;
+    }
+
+    let tempData = data.map((row) => row.map((box) => ({ ...box })));
+
+    let startX = location[0];
+    let startY = location[1];
+    let trend = currentTrend;
+
+    tempData[startY][startX].letter = "";
+
+    // move the selector back
+    if (trend) {
+      if (
+        trend == "across" &&
+        tempData[startY][startX - 1].state != "black" &&
+        startX - 1 >= 0
+      ) {
+        tempData[startY][startX].state = "normal";
+        tempData[startY][startX - 1].state = "selected";
+        setCurrentSelectionNumberXY([startX - 1, startY]);
+      } else if (
+        trend == "down" &&
+        tempData[startY - 1][startX].state != "black" &&
+        startY - 1 >= 0
+      ) {
+        tempData[startY][startX].state = "normal";
+        tempData[startY - 1][startX].state = "selected";
+        setCurrentSelectionNumberXY([startX, startY - 1]);
+      }
+    }
+
+    setData(tempData);
+  };
+
+  const handleKeyPressForLetters = (key: string) => {
     if (!data) {
       triggerNotification("Failed to place letter", "error", "Data not found");
       return;
@@ -536,7 +584,11 @@ export default function Crossword() {
 
     let location = currentSelectionNumberXY;
     if (!location) {
-      triggerNotification("Failed to place letter", "error", "Data not found");
+      triggerNotification(
+        "Failed to place letter",
+        "error",
+        "Location not found",
+      );
       return;
     }
 
@@ -552,7 +604,6 @@ export default function Crossword() {
       );
       return;
     }
-    //TODO: improve this, follow next if not start on number, if start on number, follow trend
     tempData[location[1]][location[0]].letter = key;
     tempData[location[1]][location[0]].state = "normal";
 
@@ -651,92 +702,102 @@ export default function Crossword() {
           </section>
           {/*TODO: if authed and admin, show edit button then switch to edit tools panel if pressed, save button closes panel*/}
           {mode === "build" ? (
-            <section className="bg-accent-100 p-5 rounded-xl">
-              <p className="font-bold text-xl text-center">Edit Tools</p>
-              <p className="text-red-500 text-center italic">
-                There is no undo. I will not make one. Dont mess up.
-              </p>
-              <div className="flex gap-2">
-                <button
-                  className="bg-secondary-200 p-2 rounded-lg w-full hover:bg-secondary-300 transition-all duration-200 ease-in-out"
-                  onClick={fillNoneLettersBlack}
-                >
-                  Fill Empty Black
-                </button>
-                <button
-                  className="bg-secondary-200 p-2 rounded-lg w-full hover:bg-secondary-300 transition-all duration-200 ease-in-out"
-                  onClick={fillBlackEmpty}
-                >
-                  Fill Black Empty
-                </button>
-              </div>
-              <div className="flex gap-2 mt-2">
-                <button
-                  className="bg-secondary-200 p-2 rounded-lg w-full hover:bg-secondary-300 transition-all duration-200 ease-in-out"
-                  onClick={clearLetters}
-                >
-                  Clear Letters
-                </button>
-                <button
-                  className="bg-secondary-200 p-2 rounded-lg w-full hover:bg-secondary-300 transition-all duration-200 ease-in-out"
-                  onClick={clearAssociations}
-                >
-                  Clear Associations
-                </button>
-              </div>
-              <p className="text-red-500 text-center italic">
-                First place blocks, then place numbers, finally add letters. If
-                you dont follow this order things will go wrong.
-              </p>
-              <div className="flex flex-col gap-2 mt-2">
-                <div
-                  className="flex gap-2 items-center cursor-pointer"
-                  onClick={() => editModeSelector("editBlack")}
-                >
-                  <div
-                    className={`w-[30px] h-[30px] rounded-lg border border-secondary-300 ${
-                      editMode == "editBlack" ? "bg-secondary-300" : null
-                    } hover:bg-secondary-200 transition-all duration-200 ease-in-out`}
-                  ></div>
-                  <p>Edit Black</p>
+            <>
+              <section className="bg-accent-100 p-5 rounded-xl">
+                <p className="font-bold text-xl text-center">Edit Tools</p>
+                <p className="text-red-500 text-center italic">
+                  There is no undo. I will not make one. Dont mess up.
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    className="bg-secondary-200 p-2 rounded-lg w-full hover:bg-secondary-300 transition-all duration-200 ease-in-out"
+                    onClick={fillNoneLettersBlack}
+                  >
+                    Fill Empty Black
+                  </button>
+                  <button
+                    className="bg-secondary-200 p-2 rounded-lg w-full hover:bg-secondary-300 transition-all duration-200 ease-in-out"
+                    onClick={fillBlackEmpty}
+                  >
+                    Fill Black Empty
+                  </button>
                 </div>
-                <div
-                  className="flex gap-2 items-center cursor-pointer"
-                  onClick={() => editModeSelector("placeNumbers")}
-                >
-                  <div
-                    className={`w-[30px] h-[30px] rounded-lg border border-secondary-300 ${
-                      editMode == "placeNumbers" ? "bg-secondary-300" : null
-                    } hover:bg-secondary-200 transition-all duration-200 ease-in-out`}
-                  ></div>
-                  <p>Place Numbers</p>
+                <div className="flex gap-2 mt-2">
+                  <button
+                    className="bg-secondary-200 p-2 rounded-lg w-full hover:bg-secondary-300 transition-all duration-200 ease-in-out"
+                    onClick={clearLetters}
+                  >
+                    Clear Letters
+                  </button>
+                  <button
+                    className="bg-secondary-200 p-2 rounded-lg w-full hover:bg-secondary-300 transition-all duration-200 ease-in-out"
+                    onClick={clearAssociations}
+                  >
+                    Clear Associations
+                  </button>
                 </div>
-                {editMode == "placeNumbers" ? (
-                  <div className="pl-10">
-                    <p>1. Select a square</p>
-                    <p>2. Use right and down keys to set a direction</p>
-                    <p>3. Press enter to confirm number placement</p>
+                <p className="text-red-500 text-center italic">
+                  First place blocks, then place numbers, finally add letters.
+                  If you dont follow this order things will go wrong.
+                </p>
+                <div className="flex flex-col gap-2 mt-2">
+                  <div
+                    className="flex gap-2 items-center cursor-pointer"
+                    onClick={() => editModeSelector("editBlack")}
+                  >
+                    <div
+                      className={`w-[30px] h-[30px] rounded-lg border border-secondary-300 ${
+                        editMode == "editBlack" ? "bg-secondary-300" : null
+                      } hover:bg-secondary-200 transition-all duration-200 ease-in-out`}
+                    ></div>
+                    <p>Edit Black</p>
                   </div>
-                ) : null}
-                <div
-                  className="flex gap-2 items-center cursor-pointer"
-                  onClick={() => editModeSelector("placeLetters")}
-                >
                   <div
-                    className={`w-[30px] h-[30px] rounded-lg border border-secondary-300 ${
-                      editMode == "placeLetters" ? "bg-secondary-300" : null
-                    } hover:bg-secondary-200 transition-all duration-200 ease-in-out`}
-                  ></div>
-                  <p>Place Letters</p>
-                </div>
-                {editMode == "placeLetters" ? (
-                  <div className="pl-10">
-                    <p>1. Select a square</p>
-                    <p>2. Press a letter</p>
+                    className="flex gap-2 items-center cursor-pointer"
+                    onClick={() => editModeSelector("placeNumbers")}
+                  >
+                    <div
+                      className={`w-[30px] h-[30px] rounded-lg border border-secondary-300 ${
+                        editMode == "placeNumbers" ? "bg-secondary-300" : null
+                      } hover:bg-secondary-200 transition-all duration-200 ease-in-out`}
+                    ></div>
+                    <p>Place Numbers</p>
                   </div>
-                ) : null}
-              </div>
-            </section>
+                  {editMode == "placeNumbers" ? (
+                    <div className="pl-10">
+                      <p>1. Select a square</p>
+                      <p>2. Use right and down keys to set a direction</p>
+                      <p>3. Press enter to confirm number placement</p>
+                    </div>
+                  ) : null}
+                  <div
+                    className="flex gap-2 items-center cursor-pointer"
+                    onClick={() => editModeSelector("placeLetters")}
+                  >
+                    <div
+                      className={`w-[30px] h-[30px] rounded-lg border border-secondary-300 ${
+                        editMode == "placeLetters" ? "bg-secondary-300" : null
+                      } hover:bg-secondary-200 transition-all duration-200 ease-in-out`}
+                    ></div>
+                    <p>Place Letters</p>
+                  </div>
+                  {editMode == "placeLetters" ? (
+                    <div className="pl-10">
+                      <p>1. Select a square</p>
+                      <p>2. Press a letter</p>
+                    </div>
+                  ) : null}
+                </div>
+              </section>
+              <section className="flex gap-2 items-center justify-between">
+                <button className="bg-red-200 p-5 rounded-lg w-full hover:bg-red-300 transition-all duration-200 ease-in-out">
+                  Cancel
+                </button>
+                <button className="bg-secondary-200 p-5 rounded-lg w-full hover:bg-secondary-300 transition-all duration-200 ease-in-out">
+                  Update
+                </button>
+              </section>
+            </>
           ) : null}
         </section>
       </section>

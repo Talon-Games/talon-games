@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { AuthContextProvider } from "@/lib/contexts/authContext";
+import NavBar from "@/components/general/navBar";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -17,10 +19,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${inter.className} bg-background-50 flex flex-col items-center pt-10`}
+        className={`${inter.className} bg-background-50 flex flex-col items-center`}
       >
-        <h1 className="font-heading text-8xl text-accent-800">Talon Games</h1>
-        <div className="w-5/6 ml-auto mr-auto">{children}</div>
+        <AuthContextProvider>
+          <NavBar />
+          <h1 className="font-heading text-8xl text-accent-800">Talon Games</h1>
+          <div className="w-5/6 ml-auto mr-auto">{children}</div>
+        </AuthContextProvider>
         <footer className="bg-accent-100 rounded-xl p-5 mb-4 w-5/6 flex justify-between">
           <a
             href="https://github.com/cqb13/talon-games/blob/main/LICENSE"
