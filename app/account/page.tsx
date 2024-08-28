@@ -87,6 +87,88 @@ export default function Account() {
     setFilteredUserList(filteredUsers);
   };
 
+  const updateUsersHelperStatus = (user: any) => {
+    if (user.uid === auth.currentUser?.uid) {
+      triggerNotification(
+        "Failed to update helper",
+        "error",
+        "You can't change your own status",
+      );
+      return;
+    }
+
+    if (user.isMaksim) {
+      triggerNotification(
+        "Failed to update helper",
+        "error",
+        "You cant change this users roles",
+      );
+      return;
+    }
+
+    const updatedUserList = userList.map((u) => {
+      if (u.uid === user.uid) {
+        return { ...u, isHelper: !u.isHelper };
+      }
+      return u;
+    });
+
+    setUserList(updatedUserList);
+
+    const userRef = doc(db, "users", user.uid);
+    const newHelperStatus = !user.isHelper;
+    setDoc(
+      userRef,
+      {
+        isHelper: newHelperStatus,
+      },
+      { merge: true },
+    ).catch((error) => {
+      triggerNotification("Failed to update helper", "error", error);
+    });
+  };
+
+  const updateUsersAdminStatus = (user: any) => {
+    if (user.uid === auth.currentUser?.uid) {
+      triggerNotification(
+        "Failed to update admin",
+        "error",
+        "You can't change your own status",
+      );
+      return;
+    }
+
+    if (user.isMaksim) {
+      triggerNotification(
+        "Failed to update admin",
+        "error",
+        "You cant change this users roles",
+      );
+      return;
+    }
+
+    const updatedUserList = userList.map((u) => {
+      if (u.uid === user.uid) {
+        return { ...u, isAdmin: !u.isAdmin };
+      }
+      return u;
+    });
+
+    setUserList(updatedUserList);
+
+    const userRef = doc(db, "users", user.uid);
+    const newAdminStatus = !user.isAdmin;
+    setDoc(
+      userRef,
+      {
+        isAdmin: newAdminStatus,
+      },
+      { merge: true },
+    ).catch((error) => {
+      triggerNotification("Failed to update admin", "error", error);
+    });
+  };
+
   const deleteAccountHandler = () => {
     deleteAccount(auth.currentUser)
       .then(() => {
@@ -123,6 +205,7 @@ export default function Account() {
                         {user.isHelper ? "Helper" : "Not Helper"}
                       </p>
                       <button
+                        onClick={() => updateUsersHelperStatus(user)}
                         className={`${
                           user.isHelper
                             ? "bg-red-100 hover:bg-red-200"
@@ -139,6 +222,7 @@ export default function Account() {
                         {user.isAdmin ? "Admin" : "Not Admin"}
                       </p>
                       <button
+                        onClick={() => updateUsersAdminStatus(user)}
                         className={`${
                           user.isAdmin
                             ? "bg-red-100 hover:bg-red-200"
