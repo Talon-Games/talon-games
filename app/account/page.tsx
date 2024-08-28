@@ -1,6 +1,6 @@
 "use client";
 
-import { collection, getDocs, setDoc, getDoc, doc } from "firebase/firestore";
+import { collection, getDocs, setDoc, doc } from "firebase/firestore";
 import Notification from "@/components/general/notification";
 import deleteAccount from "@/firebase/db/deleteAccount";
 import { useAuthContext } from "@/lib/contexts/authContext";
@@ -34,6 +34,8 @@ export default function Account() {
   >("success");
   const [notificationMessage, setNotificationMessage] = useState("");
 
+  const [confirmDeletePopup, setConfirmDeletePopup] = useState(false);
+
   const triggerNotification = (
     title: string,
     type: "success" | "error" | "warning",
@@ -54,7 +56,6 @@ export default function Account() {
           setIsMaksim(roles.isMaksim);
           setIsAdmin(roles.isAdmin);
           setIsHelper(roles.isHelper);
-          console.log(user.displayName);
           if (roles.isMaksim || roles.isAdmin) {
             const users = collection(db, "users");
             getDocs(users)
@@ -124,7 +125,8 @@ export default function Account() {
       },
       { merge: true },
     ).catch((error) => {
-      triggerNotification("Failed to update helper", "error", error);
+      console.log(error);
+      triggerNotification("Failed to update helper", "error", "Unknown error");
     });
   };
 
@@ -165,17 +167,32 @@ export default function Account() {
       },
       { merge: true },
     ).catch((error) => {
-      triggerNotification("Failed to update admin", "error", error);
+      console.log(error);
+      triggerNotification("Failed to update admin", "error", "Unknown error");
     });
+  };
+
+  const startDeleteWorkflow = () => {
+    setConfirmDeletePopup(true);
+  };
+
+  const stopDeleteWorkflow = () => {
+    setConfirmDeletePopup(false);
   };
 
   const deleteAccountHandler = () => {
     deleteAccount(auth.currentUser)
       .then(() => {
+        setConfirmDeletePopup(false);
         router.push("/");
       })
       .catch((error) => {
-        console.log("Error:", error);
+        console.log(error);
+        triggerNotification(
+          "Failed to delete account",
+          "error",
+          "Unknown error",
+        );
       });
   };
 
@@ -208,8 +225,8 @@ export default function Account() {
                         onClick={() => updateUsersHelperStatus(user)}
                         className={`${
                           user.isHelper
-                            ? "bg-red-100 hover:bg-red-200"
-                            : "bg-green-100 hover:bg-green-200"
+                            ? "bg-red-200 hover:bg-red-300"
+                            : "bg-green-200 hover:bg-green-300"
                         } p-1 text-center w-full rounded-bl-lg rounded-br-lg transition-all duration-200 ease-in-out`}
                       >
                         {user.isHelper ? "Remove" : "Add"}
@@ -225,8 +242,8 @@ export default function Account() {
                         onClick={() => updateUsersAdminStatus(user)}
                         className={`${
                           user.isAdmin
-                            ? "bg-red-100 hover:bg-red-200"
-                            : "bg-green-100 hover:bg-green-200"
+                            ? "bg-red-200 hover:bg-red-300"
+                            : "bg-green-200 hover:bg-green-300"
                         } p-1 text-center w-full rounded-bl-lg rounded-br-lg transition-all duration-200 ease-in-out`}
                       >
                         {user.isAdmin ? "Remove" : "Add"}
@@ -239,9 +256,34 @@ export default function Account() {
           </div>
         </section>
       ) : null}
-      <button className="bg-red-200 p-5 rounded-lg w-full hover:bg-red-300 transition-all duration-200 ease-in-out">
+      <button
+        className="bg-red-200 p-5 rounded-lg w-full hover:bg-red-300 transition-all duration-200 ease-in-out"
+        onClick={startDeleteWorkflow}
+      >
         Delete Account
       </button>
+      {confirmDeletePopup ? (
+        <section className="fixed flex items-center justify-center left-0 top-0 w-full h-full bg-accent-900 bg-opacity-50">
+          <div className="p-10 bg-background-50 rounded-xl">
+            <p>Are you sure you want to delete your account?</p>
+            <div className="flex mt-2">
+              <button
+                onClick={deleteAccountHandler}
+                className="w-full p-2 bg-red-200 hover:bg-red-300 rounded-tl-lg rounded-bl-lg transition-all duration-200 ease-in-out"
+              >
+                Yes
+              </button>
+              <button
+                onClick={stopDeleteWorkflow}
+                className="w-full p-2 bg-secondary-200 hover:bg-secondary-300 rounded-tr-lg rounded-br-lg transition-all duration-200 ease-in-out"
+              >
+                No
+              </button>
+            </div>
+          </div>
+        </section>
+      ) : null}
+
       {notification ? (
         <Notification
           title={notificationTitle}
