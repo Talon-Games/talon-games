@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import Notification from "@/components/general/notification";
 import { useAuthContext } from "@/lib/contexts/authContext";
+import { auth, db } from "@/firebase/config";
+import getRoles from "@/firebase/db/getRoles";
 
 type CrossWordBoxData = {
   letter: string;
@@ -42,6 +44,22 @@ export default function Crossword() {
   const [currentTrend, setCurrentTrend] = useState<
     "down" | "across" | undefined
   >(undefined);
+
+  const [isMaksim, setIsMaksim] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isHelper, setIsHelper] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      getRoles(auth.currentUser).then(
+        (roles: { isMaksim: boolean; isAdmin: boolean; isHelper: boolean }) => {
+          setIsMaksim(roles.isMaksim);
+          setIsAdmin(roles.isAdmin);
+          setIsHelper(roles.isHelper);
+        },
+      );
+    }
+  });
 
   const triggerNotification = (
     title: string,
@@ -700,11 +718,30 @@ export default function Crossword() {
               <p className="font-bold text-xl text-center">Across</p>
             </div>
           </section>
-          {/*TODO: if authed and admin, show edit button then switch to edit tools panel if pressed, save button closes panel*/}
+          {user && (isMaksim || isAdmin || isHelper) ? (
+            <div className="flex">
+              <button
+                onClick={toggleMode}
+                className={`w-full p-2 bg-secondary-200 hover:bg-secondary-300 rounded-tl-lg rounded-bl-lg transition-all duration-200 ease-in-out ${
+                  mode === "play" ? "bg-secondary-400" : ""
+                }`}
+              >
+                Play
+              </button>
+              <button
+                onClick={toggleMode}
+                className={`w-full p-2 bg-secondary-200 hover:bg-secondary-300 rounded-tr-lg rounded-br-lg transition-all duration-200 ease-in-out ${
+                  mode === "build" ? "bg-secondary-400" : ""
+                }`}
+              >
+                Build
+              </button>
+            </div>
+          ) : null}
           {mode === "build" ? (
             <>
               <section className="bg-accent-100 p-5 rounded-xl">
-                <p className="font-bold text-xl text-center">Edit Tools</p>
+                <p className="font-bold text-xl text-center">Build Tools</p>
                 <p className="text-red-500 text-center italic">
                   There is no undo. I will not make one. Dont mess up.
                 </p>
