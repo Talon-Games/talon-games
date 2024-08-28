@@ -10,6 +10,7 @@ export default async function createUserDoc(user: any) {
       await setDoc(userRef, {
         uid: user.uid,
         email: user.email,
+        name: user.displayName,
         isMaksim: false,
         isAdmin: false,
         isHelper: false,

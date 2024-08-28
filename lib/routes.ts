@@ -12,6 +12,12 @@ const routes: Route[] = [
     signedIn: true,
     signedOut: true,
   },
+  {
+    name: "Account",
+    path: "/account",
+    signedIn: true,
+    signedOut: false,
+  },
 ];
 
 export default routes;

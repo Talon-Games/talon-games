@@ -691,7 +691,7 @@ export default function Crossword() {
             </div>
           ))}
         </section>
-        <section className="flex flex-col gap-2 w-2/6">
+        <section className="flex flex-col gap-2 w-full">
           <section className="flex gap-2 justify-between">
             <div className="bg-accent-100 p-5 w-full rounded-xl">
               <p className="font-bold text-xl text-center">Down</p>
