@@ -211,7 +211,7 @@ export default function Account() {
             className="bg-accent-200 p-2 rounded-lg w-full placeholder:text-secondary-900 focus:outline-none"
             onChange={searchUsers}
           />
-          <div className="flex flex-col gap-2 mt-2 overflow-y-scroll">
+          <div className="flex flex-col gap-2 mt-2 overflow-y-scroll h-72">
             {filteredUserList.map((user: any) => (
               <div
                 key={user.uid}

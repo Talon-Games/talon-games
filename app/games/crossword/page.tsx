@@ -82,6 +82,7 @@ export default function Crossword() {
   const [isMaksim, setIsMaksim] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isHelper, setIsHelper] = useState(false);
+  const [numbersToCheck, setNumbersToCheck] = useState<number[]>([]);
 
   useEffect(() => {
     if (user) {
@@ -610,7 +611,9 @@ export default function Crossword() {
           }
           break;
         case "Enter":
-          //TODO: check current to play mode, on enter check the current word by looking at belong numbers and nexts
+          if (mode == "play") {
+            toggleEnterCheckNumbers();
+          }
           if (
             mode == "build" &&
             editMode == "placeNumbers" &&
@@ -647,7 +650,37 @@ export default function Crossword() {
     highlightMode,
     buildData,
     hintNumber,
+    numbersToCheck,
   ]);
+
+  const toggleEnterCheckNumbers = () => {
+    if (numbersToCheck.length != 0) {
+      setNumbersToCheck([]);
+      return;
+    }
+
+    if (!buildData) {
+      triggerNotification("Failed to backspace letter", "error", "Data found");
+      return;
+    }
+
+    let location = currentSelectionNumberXY;
+    if (!location) {
+      triggerNotification(
+        "Failed to backspace letter",
+        "error",
+        "Location not found",
+      );
+      return;
+    }
+
+    const originX = location[0];
+    const originY = location[1];
+
+    let belongsTo = buildData[originY][originX].belongsTo;
+
+    setNumbersToCheck(belongsTo);
+  };
 
   const handleBackspaceForLetters = () => {
     if (!buildData) {
@@ -1081,6 +1114,22 @@ export default function Crossword() {
     setChecked(!checked);
   };
 
+  const isCheckable = (x: number, y: number, belongsTo: number[]) => {
+    if (checked) {
+      return true;
+    }
+
+    for (let i = 0; i < belongsTo.length; i++) {
+      if (numbersToCheck.includes(belongsTo[i])) {
+        return entireWordIsFilled(belongsTo[i]);
+      }
+    }
+  };
+
+  const entireWordIsFilled = (number: number) => {
+    return true;
+  };
+
   return (
     <main className="py-2">
       <section className="flex justify-center gap-2 max-xl:flex-col">
@@ -1100,7 +1149,7 @@ export default function Crossword() {
                   } ${
                     box.state == "black" ? "bg-accent-900 cursor-default" : null
                   } ${
-                    checked && box.state != "black"
+                    isCheckable(x, y, box.belongsTo) && box.state != "black"
                       ? `${
                           box.guess == box.answer
                             ? "bg-green-200"
