@@ -7,8 +7,10 @@ import { auth, db } from "@/firebase/config";
 import getRoles from "@/firebase/db/getRoles";
 
 export type Crossword = {
-  data: CrossWordBoxData[][];
-  hints: CrosswordHints;
+  data: string; // as json
+  hints: string; // as json
+  author: string;
+  published: string;
 };
 
 export type CrossWordBoxData = {
@@ -867,6 +869,132 @@ export default function Crossword() {
     setHint(event.target.value);
   };
 
+  const formatDate = (date: Date) => {
+    const months = [
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
+    ];
+
+    const day = date.getDate();
+    const month = months[date.getMonth()];
+    const year = date.getFullYear();
+
+    const getOrdinalSuffix = (day: number) => {
+      if (day > 3 && day < 21) return "th";
+      switch (day % 10) {
+        case 1:
+          return "st";
+        case 2:
+          return "nd";
+        case 3:
+          return "rd";
+        default:
+          return "th";
+      }
+    };
+
+    return `${month} ${day}${getOrdinalSuffix(day)}, ${year}`;
+  };
+
+  const updateCrossword = () => {
+    let tempHints = buildHints;
+
+    if (!tempHints) {
+      triggerNotification(
+        "Crossword update failed",
+        "error",
+        "Hints not found",
+      );
+      return;
+    }
+
+    if (tempHints.across.length == 0 && tempHints.down.length == 0) {
+      triggerNotification(
+        "Crossword update failed",
+        "error",
+        "Crossword must have at least one word",
+      );
+      return;
+    }
+
+    for (let i = 0; i < tempHints.across.length; i++) {
+      if (tempHints.across[i].hint == "") {
+        triggerNotification(
+          "Crossword update failed",
+          "error",
+          "Hint missing hint",
+        );
+        return;
+      }
+    }
+
+    for (let i = 0; i < tempHints.down.length; i++) {
+      if (tempHints.down[i].hint == "") {
+        triggerNotification(
+          "Crossword update failed",
+          "error",
+          "Hint missing hint",
+        );
+        return;
+      }
+    }
+
+    let tempData = buildData;
+
+    if (!tempData) {
+      triggerNotification("Crossword update failed", "error", "Data not found");
+      return;
+    }
+
+    for (let y = 0; y < tempData.length; y++) {
+      for (let x = 0; x < tempData[y].length; x++) {
+        if (
+          tempData[y][x].belongsTo.length != 0 &&
+          tempData[y][x].answer == ""
+        ) {
+          triggerNotification(
+            "Crossword update failed",
+            "error",
+            "A square associated with a number is missing an answer",
+          );
+          return;
+        }
+      }
+    }
+
+    const currentDate = new Date();
+    const formattedDate = formatDate(currentDate);
+
+    const jsonDataString = JSON.stringify(tempData);
+    const jsonHintString = JSON.stringify(tempHints);
+
+    let crossword: Crossword = {
+      data: jsonDataString,
+      hints: jsonHintString,
+      author: user.displayName,
+      published: formattedDate,
+    };
+
+    const jsonCrosswordString = JSON.stringify(crossword);
+
+    console.log(jsonCrosswordString);
+
+    // write to db
+    // set BuildData and BuildHInts to PlayData and PlayHInts
+    // switch to play mode
+    triggerNotification("Saved!", "success", "Successfully updated crossword");
+  };
+
   return (
     <main className="py-2">
       <section className="flex justify-center gap-2">
@@ -1050,7 +1178,10 @@ export default function Crossword() {
                 >
                   Cancel
                 </button>
-                <button className="bg-secondary-200 p-5 rounded-lg w-full hover:bg-secondary-300 transition-all duration-200 ease-in-out">
+                <button
+                  className="bg-secondary-200 p-5 rounded-lg w-full hover:bg-secondary-300 transition-all duration-200 ease-in-out"
+                  onClick={updateCrossword}
+                >
                   Update
                 </button>
               </section>

@@ -14,6 +14,7 @@ interface User {
   isAdmin: boolean;
   isHelper: boolean;
   email: string;
+  name: string;
   uid: string;
 }
 
@@ -83,7 +84,10 @@ export default function Account() {
   const searchUsers = (event: React.ChangeEvent<HTMLInputElement>) => {
     const searchTerm = event.target.value.toLowerCase();
     const filteredUsers = userList.filter((user) => {
-      return user.email.toLowerCase().includes(searchTerm);
+      return (
+        user.email.toLowerCase().includes(searchTerm) ||
+        user.name.toLowerCase().includes(searchTerm)
+      );
     });
     setFilteredUserList(filteredUsers);
   };
