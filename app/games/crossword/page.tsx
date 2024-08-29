@@ -51,6 +51,7 @@ export default function Crossword() {
   const [fromDbData, setFromDbData] = useState<CrossWordBoxData[][]>();
   const [buildHints, setBuildHints] = useState<CrosswordHints>();
   const [fromDbHints, setFromDbHints] = useState<CrosswordHints>();
+  const [showAssociations, setShowAssociations] = useState(false);
 
   const [author, setAuthor] = useState("");
   const [published, setPublished] = useState("");
@@ -186,7 +187,6 @@ export default function Crossword() {
     setEditMode("editBlack");
     setHighlightMode("both");
     setCurrentEditNumber(1);
-    toggleMode();
   };
 
   const highlight = (
@@ -237,6 +237,8 @@ export default function Crossword() {
     setBuildData(tempData);
   };
 
+  //TODO: add button for showing squares without associations
+
   const setNumber = () => {
     if (!buildData) {
       triggerNotification("Failed to set number", "error", "Data not found");
@@ -252,7 +254,7 @@ export default function Crossword() {
       );
       return;
     }
-
+    //TODO: allow for a number to be noth down and across
     let location = currentSelectionNumberXY;
     if (!location) {
       triggerNotification(
@@ -400,7 +402,7 @@ export default function Crossword() {
     const tempData = buildData.map((row) =>
       row.map((box) => ({
         ...box,
-        letter: "",
+        answer: "",
       })),
     );
     setBuildData(tempData);
@@ -479,18 +481,18 @@ export default function Crossword() {
 
     let tempData = buildData.map((row) => row.map((box) => ({ ...box })));
 
-    if (
-      tempData[y][x].answer != "" ||
-      tempData[y][x].number != undefined ||
-      tempData[y][x].belongsTo.length != 0
-    ) {
+    if (tempData[y][x].number != undefined) {
       triggerNotification(
         "Failed to toggle black",
         "error",
-        "Letter, Number, or Belonging is already set",
+        "Square has a number",
       );
       return;
     }
+
+    tempData[y][x].answer = "";
+    tempData[y][x].belongsTo = [];
+    tempData[y][x].next = undefined;
 
     if (tempData[y][x].state == "black") {
       tempData[y][x].state = "normal";
@@ -1111,6 +1113,9 @@ export default function Crossword() {
   }
 
   const toggleChecked = () => {
+    if (mode == "build") {
+      return;
+    }
     setChecked(!checked);
   };
 
@@ -1128,6 +1133,10 @@ export default function Crossword() {
 
   const entireWordIsFilled = (number: number) => {
     return true;
+  };
+
+  const toggleShowAssociations = () => {
+    setShowAssociations(!showAssociations);
   };
 
   return (
@@ -1149,14 +1158,18 @@ export default function Crossword() {
                   } ${
                     box.state == "black" ? "bg-accent-900 cursor-default" : null
                   } ${
-                    isCheckable(x, y, box.belongsTo) && box.state != "black"
-                      ? `${
-                          box.guess == box.answer
-                            ? "bg-green-200"
-                            : "bg-red-200"
-                        }`
+                    showAssociations &&
+                    mode == "build" &&
+                    box.state != "black" &&
+                    box.answer == ""
+                      ? "bg-red-200"
                       : ""
-                  }`}
+                  }
+ ${
+   isCheckable(x, y, box.belongsTo) && box.state != "black"
+     ? `${box.guess == box.answer ? "bg-green-200" : "bg-red-200"}`
+     : ""
+ }`}
                 >
                   <p className="absolute text-sm top-[1px] left-1">
                     {box.number}
@@ -1212,15 +1225,14 @@ export default function Crossword() {
           </section>
           <button
             onClick={toggleChecked}
-            className={`w-full p-2 bg-secondary-200 hover:bg-secondary-300 rounded-tl-lg rounded-bl-lg transition-all duration-200 ease-in-out ${
-              mode === "build"
+            className={`w-full p-2 rounded-lg transition-all duration-200 ease-in-out ${
+              mode == "build"
                 ? "bg-accent-300 hover:bg-accent-300 cursor-default"
-                : ""
+                : "bg-secondary-200 hover:bg-secondary-300"
             }`}
           >
             check
           </button>
-
           {user && (isMaksim || isAdmin || isHelper) ? (
             <div className="flex">
               <button
@@ -1253,13 +1265,13 @@ export default function Crossword() {
                     className="bg-secondary-200 p-2 rounded-lg w-full hover:bg-secondary-300 transition-all duration-200 ease-in-out"
                     onClick={fillNoneLettersBlack}
                   >
-                    Fill Empty Black
+                    Blackout
                   </button>
                   <button
                     className="bg-secondary-200 p-2 rounded-lg w-full hover:bg-secondary-300 transition-all duration-200 ease-in-out"
                     onClick={fillBlackEmpty}
                   >
-                    Fill Black Empty
+                    Whiteout
                   </button>
                 </div>
                 <div className="flex gap-2 mt-2">
@@ -1273,9 +1285,15 @@ export default function Crossword() {
                     className="bg-secondary-200 p-2 rounded-lg w-full hover:bg-secondary-300 transition-all duration-200 ease-in-out"
                     onClick={clearAssociations}
                   >
-                    Clear Associations
+                    Clear Numbers
                   </button>
                 </div>
+                <button
+                  className="bg-secondary-200 mt-2 p-2 rounded-lg w-full hover:bg-secondary-300 transition-all duration-200 ease-in-out"
+                  onClick={toggleShowAssociations}
+                >
+                  Toggle Associations
+                </button>
                 <p className="text-red-500 text-center italic">
                   First place blocks, then place numbers, finally add letters.
                   If you dont follow this order things will go wrong.
