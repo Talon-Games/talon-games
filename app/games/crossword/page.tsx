@@ -6,6 +6,7 @@ import { useAuthContext } from "@/lib/contexts/authContext";
 import { auth } from "@/firebase/config";
 import getRoles from "@/firebase/db/getRoles";
 import saveCrossword from "@/firebase/db/saveCrossword";
+import getCrossword from "@/firebase/db/getCrossword";
 
 export type Crossword = {
   data: string; // as json
@@ -47,7 +48,12 @@ export default function Crossword() {
   const [notificationMessage, setNotificationMessage] = useState("");
 
   const [buildData, setBuildData] = useState<CrossWordBoxData[][]>();
+  const [fromDbData, setFromDbData] = useState<CrossWordBoxData[][]>();
   const [buildHints, setBuildHints] = useState<CrosswordHints>();
+  const [fromDbHints, setFromDbHints] = useState<CrosswordHints>();
+
+  const [author, setAuthor] = useState("");
+  const [published, setPublished] = useState("");
 
   const [mode, setMode] = useState<"play" | "build">("play");
   const [highlightMode, setHighlightMode] = useState<
@@ -100,12 +106,9 @@ export default function Crossword() {
   };
 
   useEffect(() => {
-    //TODO: for play get data from db
-    let table = generateNewTable();
-    let newHints = initNewHints();
-
-    setBuildHints(newHints);
-    setBuildData(table);
+    getCrossword().then((data) => {
+      loadStringData(data);
+    });
   }, []);
 
   const generateNewTable = () => {
@@ -157,6 +160,8 @@ export default function Crossword() {
     }
 
     if (mode == "build") {
+      setBuildData(fromDbData);
+      setBuildHints(fromDbHints);
       setMode("play");
     } else {
       startBuildWorkflow();
@@ -999,7 +1004,14 @@ export default function Crossword() {
     let crosswordData: CrossWordBoxData[][] = JSON.parse(crossword.data);
     let hintData: CrosswordHints = JSON.parse(crossword.hints);
 
-    //TODO: add code for updating this crossword here, and switch to play mode
+    setFromDbData(crosswordData);
+    setFromDbHints(hintData);
+    setAuthor(crossword.author);
+    setPublished(crossword.published);
+    setBuildData(crosswordData);
+    setBuildHints(hintData);
+
+    setMode("play");
   };
 
   function decodeJsonData(data: string): Crossword {
@@ -1043,6 +1055,10 @@ export default function Crossword() {
               ))}
             </div>
           ))}
+          <div className="flex items-center justify-between mt-2">
+            <p>{`Crossword by ${author}`}</p>
+            <p>{`Published ${published}`}</p>
+          </div>
         </section>
         <section className="flex flex-col gap-2 w-full">
           <section className="flex gap-2 justify-between">
