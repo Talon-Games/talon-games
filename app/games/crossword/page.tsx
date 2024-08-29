@@ -263,7 +263,6 @@ export default function Crossword() {
     }
 
     const tempData = buildData.map((row) => row.map((box) => ({ ...box })));
-
     const startX = location[0];
     const startY = location[1];
     if (direction == "across") {
@@ -276,22 +275,25 @@ export default function Crossword() {
           }
         };
 
-        const getCurrentState = (): "down" | "across" | undefined => {
+        const getCurrentState = (): {
+          direction: "down" | "across";
+          possible: boolean;
+        } => {
           const nextBlock = getNextBlock();
 
           if (nextBlock == undefined) {
-            return undefined;
+            return { direction: "across", possible: true };
           }
 
           if (nextBlock.state == "black") {
             if (tempData[startY][x].next == "down") {
-              return "down";
+              return { direction: "down", possible: true };
             } else {
-              return undefined;
+              return { direction: "across", possible: false };
             }
           }
 
-          return "across";
+          return { direction: "across", possible: true };
         };
 
         let currentState = getCurrentState();
@@ -300,10 +302,10 @@ export default function Crossword() {
         belongsTo.push(currentEditNumber);
         tempData[startY][x].belongsTo = belongsTo;
 
-        if (currentState == undefined) {
+        tempData[startY][x].next = currentState.direction;
+
+        if (currentState.possible == false) {
           break;
-        } else {
-          tempData[startY][x].next = currentState;
         }
       }
     } else {
@@ -316,22 +318,25 @@ export default function Crossword() {
           }
         };
 
-        const getCurrentState = (): "down" | "across" | undefined => {
+        const getCurrentState = (): {
+          direction: "down" | "across";
+          possible: boolean;
+        } => {
           const nextBlock = getNextBlock();
 
           if (nextBlock == undefined) {
-            return undefined;
+            return { direction: "down", possible: true };
           }
 
           if (nextBlock.state == "black") {
             if (tempData[y][startX].next == "across") {
-              return "across";
+              return { direction: "across", possible: true };
             } else {
-              return undefined;
+              return { direction: "down", possible: false };
             }
           }
 
-          return "down";
+          return { direction: "down", possible: true };
         };
 
         let currentState = getCurrentState();
@@ -340,10 +345,10 @@ export default function Crossword() {
         belongsTo.push(currentEditNumber);
         tempData[y][startX].belongsTo = belongsTo;
 
-        if (currentState == undefined) {
+        tempData[y][startX].next = currentState.direction;
+
+        if (currentState.possible == false) {
           break;
-        } else {
-          tempData[y][startX].next = currentState;
         }
       }
     }
@@ -604,6 +609,7 @@ export default function Crossword() {
           }
           break;
         case "Enter":
+          //TODO: check current to play mode, on enter check the current word by looking at belong numbers and nexts
           if (
             mode == "build" &&
             editMode == "placeNumbers" &&
@@ -725,14 +731,23 @@ export default function Crossword() {
     } else {
       tempData[location[1]][location[0]].answer = key;
     }
-    tempData[location[1]][location[0]].state = "normal";
 
     if (currentTrend && tempData[location[1]][location[0]].next) {
-      if (currentTrend == "across") {
+      if (
+        currentTrend == "across" &&
+        location[0] + 1 != width &&
+        tempData[location[1]][location[0] + 1].state != "black"
+      ) {
+        tempData[location[1]][location[0]].state = "normal";
         tempData[location[1]][location[0] + 1].state = "selected";
         setCurrentSelectionNumberXY([location[0] + 1, location[1]]);
-      } else {
+      } else if (
+        currentTrend == "down" &&
+        location[1] + 1 != height &&
+        tempData[location[1] + 1][location[0]].state != "black"
+      ) {
         tempData[location[1] + 1][location[0]].state = "selected";
+        tempData[location[1]][location[0]].state = "normal";
         setCurrentSelectionNumberXY([location[0], location[1] + 1]);
       }
     }
