@@ -77,6 +77,7 @@ export default function Crossword() {
     "down" | "across" | undefined
   >(undefined);
   const [hint, setHint] = useState("");
+  const [checked, setChecked] = useState(false);
 
   const [isMaksim, setIsMaksim] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -184,11 +185,7 @@ export default function Crossword() {
     setEditMode("editBlack");
     setHighlightMode("both");
     setCurrentEditNumber(1);
-    let table = generateNewTable();
-    let newHints = initNewHints();
-
-    setBuildHints(newHints);
-    setBuildData(table);
+    toggleMode();
   };
 
   const highlight = (
@@ -501,18 +498,7 @@ export default function Crossword() {
   const takeAction = (x: number, y: number) => {
     clearHighlightAndSelection();
     if (mode == "play") {
-      if (buildData == null) {
-        triggerNotification("Failed to take action", "error", "Data not found");
-        return;
-      }
-
-      if (buildData[y][x].next == "down") {
-        setHighlightMode("down");
-      } else if (buildData[y][x].next == "across") {
-        setHighlightMode("across");
-      }
-
-      highlight(x, y, highlightMode, false);
+      startLetterPlacer(x, y);
     } else {
       if (editMode == "editBlack") {
         toggleBlack(x, y);
@@ -553,10 +539,8 @@ export default function Crossword() {
     }
 
     setCurrentTrend(buildData[y][x].next);
-
-    clearHighlightAndSelection();
-    selectCurrent(x, y);
     setCurrentSelectionNumberXY([x, y]);
+    highlight(x, y, highlightMode, mode == "play" ? false : true);
   };
 
   const startNumberPlacer = (x: number, y: number) => {
@@ -588,33 +572,52 @@ export default function Crossword() {
       const key = event.key;
 
       if (key >= "a" && key <= "z") {
-        if ((mode == "build" && editMode == "placeLetters") || mode == "play") {
+        if (
+          (mode == "build" &&
+            editMode == "placeLetters" &&
+            !showHintCreationPopup) ||
+          mode == "play"
+        ) {
           handleKeyPressForLetters(key.toUpperCase());
         }
       }
 
       switch (key) {
         case "ArrowRight":
-          if (mode == "build" && editMode == "placeNumbers") {
+          if (
+            mode == "build" &&
+            editMode == "placeNumbers" &&
+            !showHintCreationPopup
+          ) {
             event.preventDefault();
             handleRightKeyForNumberPlacer();
           }
           break;
         case "ArrowDown":
-          if (mode == "build" && editMode == "placeNumbers") {
+          if (
+            mode == "build" &&
+            editMode == "placeNumbers" &&
+            !showHintCreationPopup
+          ) {
             event.preventDefault();
             handleDownKeyForNumberPlacer();
           }
           break;
         case "Enter":
-          if (mode == "build" && editMode == "placeNumbers") {
+          if (
+            mode == "build" &&
+            editMode == "placeNumbers" &&
+            !showHintCreationPopup
+          ) {
             event.preventDefault();
             handleEnterForNumberPlace();
           }
           break;
         case "Backspace":
           if (
-            (mode == "build" && editMode == "placeLetters") ||
+            (mode == "build" &&
+              editMode == "placeLetters" &&
+              !showHintCreationPopup) ||
             mode == "play"
           ) {
             handleBackspaceForLetters();
@@ -630,7 +633,14 @@ export default function Crossword() {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [mode, editMode, currentSelectionNumberXY, highlightMode, buildData]);
+  }, [
+    mode,
+    editMode,
+    currentSelectionNumberXY,
+    highlightMode,
+    buildData,
+    hintNumber,
+  ]);
 
   const handleBackspaceForLetters = () => {
     if (!buildData) {
@@ -654,8 +664,11 @@ export default function Crossword() {
     let startY = location[1];
     let trend = currentTrend;
 
-    tempData[startY][startX].answer = "";
-
+    if (mode == "play") {
+      tempData[startY][startX].guess = "";
+    } else {
+      tempData[startY][startX].answer = "";
+    }
     // move the selector back
     if (trend) {
       if (
@@ -699,7 +712,6 @@ export default function Crossword() {
     let tempData = buildData.map((row) => row.map((box) => ({ ...box })));
 
     let block = tempData[location[1]][location[0]];
-
     if (block.belongsTo.length == 0 || block.state == "black") {
       triggerNotification(
         "Failed to place letter",
@@ -708,7 +720,11 @@ export default function Crossword() {
       );
       return;
     }
-    tempData[location[1]][location[0]].answer = key;
+    if (mode == "play") {
+      tempData[location[1]][location[0]].guess = key;
+    } else {
+      tempData[location[1]][location[0]].answer = key;
+    }
     tempData[location[1]][location[0]].state = "normal";
 
     if (currentTrend && tempData[location[1]][location[0]].next) {
@@ -865,9 +881,27 @@ export default function Crossword() {
     hint: string,
   ) => {
     if (mode == "play") {
-      //TODO: select the square with the hint number and highlight in the direction
+      gotoWord(number, direction);
     } else {
       activateHintEditPopup(direction, number, hint);
+    }
+  };
+
+  const gotoWord = (number: number, direction: "across" | "down") => {
+    if (!buildData) {
+      triggerNotification("Failed to goto word", "error", "Data not found");
+      return;
+    }
+
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        if (buildData[y][x].number == number) {
+          setCurrentTrend(direction);
+          setCurrentSelectionNumberXY([x, y]);
+          highlight(x, y, highlightMode, false);
+          break;
+        }
+      }
     }
   };
 
@@ -1027,6 +1061,10 @@ export default function Crossword() {
     return crossword;
   }
 
+  const toggleChecked = () => {
+    setChecked(!checked);
+  };
+
   return (
     <main className="py-2">
       <section className="flex justify-center gap-2">
@@ -1045,6 +1083,14 @@ export default function Crossword() {
                       : null
                   } ${
                     box.state == "black" ? "bg-accent-900 cursor-default" : null
+                  } ${
+                    checked && box.state != "black"
+                      ? `${
+                          box.guess == box.answer
+                            ? "bg-green-200"
+                            : "bg-red-200"
+                        }`
+                      : ""
                   }`}
                 >
                   <p className="absolute text-sm top-[1px] left-1">
@@ -1099,6 +1145,17 @@ export default function Crossword() {
               ) : null}
             </div>
           </section>
+          <button
+            onClick={toggleChecked}
+            className={`w-full p-2 bg-secondary-200 hover:bg-secondary-300 rounded-tl-lg rounded-bl-lg transition-all duration-200 ease-in-out ${
+              mode === "build"
+                ? "bg-accent-300 hover:bg-accent-300 cursor-default"
+                : ""
+            }`}
+          >
+            check
+          </button>
+
           {user && (isMaksim || isAdmin || isHelper) ? (
             <div className="flex">
               <button
