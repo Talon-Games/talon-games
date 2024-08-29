@@ -3,8 +3,9 @@
 import { useState, useEffect } from "react";
 import Notification from "@/components/general/notification";
 import { useAuthContext } from "@/lib/contexts/authContext";
-import { auth, db } from "@/firebase/config";
+import { auth } from "@/firebase/config";
 import getRoles from "@/firebase/db/getRoles";
+import saveCrossword from "@/firebase/db/saveCrossword";
 
 export type Crossword = {
   data: string; // as json
@@ -986,14 +987,33 @@ export default function Crossword() {
     };
 
     const jsonCrosswordString = JSON.stringify(crossword);
+    saveCrossword(jsonCrosswordString);
 
-    console.log(jsonCrosswordString);
+    loadStringData(jsonCrosswordString);
 
-    // write to db
-    // set BuildData and BuildHInts to PlayData and PlayHInts
-    // switch to play mode
     triggerNotification("Saved!", "success", "Successfully updated crossword");
   };
+
+  const loadStringData = (data: string) => {
+    let crossword = decodeJsonData(data);
+    let crosswordData: CrossWordBoxData[][] = JSON.parse(crossword.data);
+    let hintData: CrosswordHints = JSON.parse(crossword.hints);
+
+    //TODO: add code for updating this crossword here, and switch to play mode
+  };
+
+  function decodeJsonData(data: string): Crossword {
+    let jsonCrossword = JSON.parse(data);
+
+    let crossword: Crossword = {
+      data: jsonCrossword.data,
+      hints: jsonCrossword.hints,
+      author: jsonCrossword.author,
+      published: jsonCrossword.published,
+    };
+
+    return crossword;
+  }
 
   return (
     <main className="py-2">
