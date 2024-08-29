@@ -237,8 +237,6 @@ export default function Crossword() {
     setBuildData(tempData);
   };
 
-  //TODO: add button for showing squares without associations
-
   const setNumber = () => {
     if (!buildData) {
       triggerNotification("Failed to set number", "error", "Data not found");
@@ -548,8 +546,16 @@ export default function Crossword() {
     }
 
     setCurrentTrend(buildData[y][x].next);
+
+    let next = buildData[y][x].next;
+
     setCurrentSelectionNumberXY([x, y]);
-    highlight(x, y, highlightMode, mode == "play" ? false : true);
+    if (!next) {
+      highlight(x, y, highlightMode, mode == "play" ? false : true);
+      return;
+    } else {
+      highlight(x, y, next, mode == "play" ? false : true);
+    }
   };
 
   const startNumberPlacer = (x: number, y: number) => {
