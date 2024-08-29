@@ -737,6 +737,7 @@ export default function Crossword() {
         }
       }
 
+      //TODO: direction switching in play mode
       switch (key) {
         case "ArrowRight":
           if (
@@ -1111,7 +1112,7 @@ export default function Crossword() {
         if (buildData[y][x].number == number) {
           setCurrentTrend(direction);
           setCurrentSelectionNumberXY([x, y]);
-          highlight(x, y, highlightMode, false);
+          highlight(x, y, direction, true);
           break;
         }
       }
