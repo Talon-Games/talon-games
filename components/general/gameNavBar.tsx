@@ -4,7 +4,7 @@ import GameCard from "./gameCard";
 
 export default function GameNavBar() {
   return (
-    <nav className="flex items-center justify-center gap-10 w-5/6">
+    <nav className="flex items-center justify-center gap-10 w-full max-sm:flex-col">
       {games.map((game: Game) => (
         <GameCard game={game} key={game.name} />
       ))}

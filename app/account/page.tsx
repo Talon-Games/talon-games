@@ -203,7 +203,7 @@ export default function Account() {
   return (
     <main className="flex flex-col gap-2 items-center py-2">
       {isAdmin ? (
-        <section className="w-full p-5 h-[26rem] bg-accent-100 rounded-xl max-sm:w-11/12">
+        <section className="w-full p-5 h-[26rem] bg-accent-100 rounded-xl">
           <h1 className="text-xl font-bold font-heading">User Management</h1>
           <input
             type="text"
@@ -221,7 +221,7 @@ export default function Account() {
                 <p className="px-1">{user.email}</p>
                 <section className="flex gap-2">
                   {isAdmin ? (
-                    <div className="py-2 w-2/12">
+                    <div className="py-2 w-2/12 max-sm:w-3/12 max-xs:w-4/12">
                       <p className="bg-secondary-100 text-center p-1 rounded-tl-lg rounded-tr-lg">
                         {user.isHelper ? "Helper" : "Not Helper"}
                       </p>
@@ -238,7 +238,7 @@ export default function Account() {
                     </div>
                   ) : null}
                   {isMaksim ? (
-                    <div className="py-2 w-2/12">
+                    <div className="py-2 w-2/12 max-sm:w-3/12 max-xs:w-4/12">
                       <p className="bg-secondary-100 text-center p-1 rounded-tl-lg rounded-tr-lg">
                         {user.isAdmin ? "Admin" : "Not Admin"}
                       </p>

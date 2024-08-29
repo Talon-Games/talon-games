@@ -501,6 +501,7 @@ export default function Crossword() {
   };
 
   const takeAction = (x: number, y: number) => {
+    //TODO: something for mobile support prob here
     clearHighlightAndSelection();
     if (mode == "play") {
       startLetterPlacer(x, y);
@@ -1082,15 +1083,15 @@ export default function Crossword() {
 
   return (
     <main className="py-2">
-      <section className="flex justify-center gap-2">
-        <section className="flex flex-col bg-accent-100 rounded-xl p-5">
+      <section className="flex justify-center gap-2 max-xl:flex-col">
+        <section className="flex flex-col bg-accent-100 rounded-xl p-5 max-xl:items-center">
           {buildData?.map((row: CrossWordBoxData[], y) => (
             <div key={y} className="flex">
               {row.map((box: CrossWordBoxData, x) => (
                 <div
                   key={x}
                   onClick={() => takeAction(x, y)}
-                  className={`w-[40px] h-[40px] border border-black cursor-pointer flex items-center justify-center relative ${
+                  className={`w-[40px] h-[40px] max-md:w-[35px] max-md:h-[35px] max-sm:w-[25px] max-sm:h-[25px] max-xs:w-[20px] max-xs:h-[20px] border border-black cursor-pointer flex items-center justify-center relative ${
                     box.state == "highlighted" ? "border-secondary-500" : null
                   } ${
                     box.state == "selected"
@@ -1116,14 +1117,14 @@ export default function Crossword() {
               ))}
             </div>
           ))}
-          <div className="flex items-center justify-between mt-2">
+          <div className="flex items-center justify-between mt-2 max-xl:w-full">
             <p>{`Crossword by ${author}`}</p>
             <p>{`Published ${published}`}</p>
           </div>
         </section>
         <section className="flex flex-col gap-2 w-full">
-          <section className="flex gap-2 justify-between">
-            <div className="bg-accent-100 p-5 w-full rounded-xl">
+          <section className="flex gap-2 justify-between max-sm:flex-col">
+            <div className="bg-accent-100 p-5 w-full rounded-xl max-sm:p-2">
               <p className="font-bold text-xl text-center">Down</p>
               {buildHints ? (
                 <div className="flex flex-col gap-2">

@@ -43,7 +43,7 @@ export default function NavBar() {
 
   return (
     <section
-      className={`flex items-center justify-between dark:text-light sticky top-0 w-full ${
+      className={`flex items-center justify-between dark:text-light sticky top-0 w-full z-50 ${
         useScroll(0.1) ? "shadow-bar backdrop-blur-sm px-12 py-4" : "p-4"
       }`}
     >
