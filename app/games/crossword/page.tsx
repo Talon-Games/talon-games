@@ -7,6 +7,7 @@ import { auth } from "@/firebase/config";
 import getRoles from "@/firebase/db/getRoles";
 import saveCrossword from "@/firebase/db/saveCrossword";
 import getCrossword from "@/firebase/db/getCrossword";
+import formatDate from "@/utils/formatDate";
 
 export type Crossword = {
   data: string; // as json
@@ -52,6 +53,7 @@ export default function Crossword() {
   const [buildHints, setBuildHints] = useState<CrosswordHints>();
   const [fromDbHints, setFromDbHints] = useState<CrosswordHints>();
   const [showAssociations, setShowAssociations] = useState(false);
+  const [debug, setDebug] = useState(false);
 
   const [author, setAuthor] = useState("");
   const [published, setPublished] = useState("");
@@ -61,7 +63,7 @@ export default function Crossword() {
     "down" | "across" | "both"
   >("both");
   const [editMode, setEditMode] = useState<
-    "editBlack" | "placeNumbers" | "placeLetters"
+    "editBlack" | "placeNumbers" | "removeNumbers" | "placeLetters"
   >("editBlack");
   const [currentEditNumber, setCurrentEditNumber] = useState(1);
   const [currentEditDirection, setCurrentEditDirection] = useState<
@@ -187,6 +189,12 @@ export default function Crossword() {
     setEditMode("editBlack");
     setHighlightMode("both");
     setCurrentEditNumber(1);
+
+    let table = generateNewTable();
+    let newHints = initNewHints();
+
+    setBuildHints(newHints);
+    setBuildData(table);
   };
 
   const highlight = (
@@ -252,7 +260,6 @@ export default function Crossword() {
       );
       return;
     }
-    //TODO: allow for a number to be noth down and across
     let location = currentSelectionNumberXY;
     if (!location) {
       triggerNotification(
@@ -263,9 +270,17 @@ export default function Crossword() {
       return;
     }
 
-    const tempData = buildData.map((row) => row.map((box) => ({ ...box })));
     const startX = location[0];
     const startY = location[1];
+
+    const tempData = buildData.map((row) => row.map((box) => ({ ...box })));
+
+    let skipAdd = tempData[startY][startX].number ? true : false;
+
+    if (!skipAdd) {
+      tempData[startY][startX].number = currentEditNumber;
+    }
+
     if (direction == "across") {
       for (let x = startX; x < width; x++) {
         const getNextBlock = () => {
@@ -300,7 +315,11 @@ export default function Crossword() {
         let currentState = getCurrentState();
 
         let belongsTo = tempData[startY][x].belongsTo;
-        belongsTo.push(currentEditNumber);
+        const number = tempData[startY]?.[startX]?.number;
+        const valueToPush = skipAdd && number ? number : currentEditNumber;
+        if (!belongsTo.includes(valueToPush)) {
+          belongsTo.push(valueToPush);
+        }
         tempData[startY][x].belongsTo = belongsTo;
 
         tempData[startY][x].next = currentState.direction;
@@ -343,7 +362,11 @@ export default function Crossword() {
         let currentState = getCurrentState();
 
         let belongsTo = tempData[y][startX].belongsTo;
-        belongsTo.push(currentEditNumber);
+        const number = tempData[startY]?.[startX]?.number;
+        const valueToPush = skipAdd && number ? number : currentEditNumber;
+        if (!belongsTo.includes(valueToPush)) {
+          belongsTo.push(valueToPush);
+        }
         tempData[y][startX].belongsTo = belongsTo;
 
         tempData[y][startX].next = currentState.direction;
@@ -354,7 +377,20 @@ export default function Crossword() {
       }
     }
 
-    tempData[location[1]][location[0]].number = currentEditNumber;
+    if (!skipAdd) {
+      setCurrentEditNumber(currentEditNumber + 1);
+      addNewHintToList(direction, currentEditNumber);
+    } else {
+      let num = tempData[startY][startX].number
+        ? tempData[startY][startX].number
+        : -1;
+      console.log("here", num);
+      if (!num) {
+        return;
+      }
+
+      addNewHintToList(direction, num);
+    }
 
     setBuildData(tempData);
   };
@@ -418,7 +454,7 @@ export default function Crossword() {
     const tempData = buildData.map((row) =>
       row.map((box) => ({
         ...box,
-        letter: "",
+        answer: "",
         number: undefined,
         belongsTo: [],
         next: undefined,
@@ -457,7 +493,16 @@ export default function Crossword() {
       );
       return;
     }
-    let tempData = buildData.map((row) => row.map((box) => ({ ...box })));
+
+    const tempData = buildData.map((row) => row.map((box) => ({ ...box })));
+
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        if (tempData[y][x].state == "selected") {
+          tempData[y][x].state = "normal";
+        }
+      }
+    }
 
     tempData[y][x].state = "selected";
 
@@ -465,10 +510,35 @@ export default function Crossword() {
   };
 
   const editModeSelector = (
-    mode: "editBlack" | "placeNumbers" | "placeLetters",
+    mode: "editBlack" | "placeNumbers" | "removeNumbers" | "placeLetters",
   ) => {
     clearHighlightAndSelection();
     setEditMode(mode);
+  };
+
+  const startNumberRemover = (x: number, y: number) => {
+    if (!buildData) {
+      triggerNotification(
+        "Failed to start number remover",
+        "error",
+        "Data not found",
+      );
+      return;
+    }
+
+    let deletionNumber = buildData[y][x].number;
+
+    if (!deletionNumber) {
+      return;
+    }
+
+    let tempData = buildData.map((row) => row.map((box) => ({ ...box })));
+    tempData[y][x].number = undefined;
+    let downShifted = downShift(tempData, deletionNumber);
+
+    setCurrentEditNumber(currentEditNumber - 1);
+
+    setBuildData(downShifted);
   };
 
   const toggleBlack = (x: number, y: number) => {
@@ -477,20 +547,42 @@ export default function Crossword() {
       return;
     }
 
-    let tempData = buildData.map((row) => row.map((box) => ({ ...box })));
+    const calcTempData = () => {
+      let tempData = buildData.map((row) => row.map((box) => ({ ...box })));
 
-    if (tempData[y][x].number != undefined) {
-      triggerNotification(
-        "Failed to toggle black",
-        "error",
-        "Square has a number",
-      );
+      if (tempData[y][x].number != undefined) {
+        let num = tempData[y][x].number;
+
+        if (tempData[y][x].belongsTo.length > 1) {
+          triggerNotification(
+            "Failed to toggle black",
+            "error",
+            "Remove parent numbers before deleting child number",
+          );
+          return false;
+        }
+
+        if (!num) {
+          return tempData;
+        }
+        setCurrentEditNumber(currentEditNumber - 1);
+
+        return downShift(tempData, num);
+      } else {
+        return tempData;
+      }
+    };
+
+    let tempData = calcTempData();
+
+    if (tempData == false) {
       return;
     }
 
     tempData[y][x].answer = "";
     tempData[y][x].belongsTo = [];
     tempData[y][x].next = undefined;
+    tempData[y][x].number = undefined;
 
     if (tempData[y][x].state == "black") {
       tempData[y][x].state = "normal";
@@ -500,6 +592,60 @@ export default function Crossword() {
 
     setBuildData(tempData);
   };
+
+  function downShift(
+    data: CrossWordBoxData[][],
+    deletionNumber: number,
+  ): CrossWordBoxData[][] {
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        if (data[y][x].state == "black") {
+          continue;
+        }
+
+        let num = data[y][x].number;
+
+        if (num && num > deletionNumber) {
+          data[y][x].number = num - 1;
+        }
+
+        let belongsTo = data[y][x].belongsTo.filter(
+          (num) => num !== deletionNumber,
+        );
+
+        data[y][x].belongsTo = belongsTo.map((num) =>
+          num > deletionNumber ? num - 1 : num,
+        );
+      }
+    }
+
+    let tempHints = buildHints;
+
+    if (tempHints) {
+      tempHints.down = tempHints.down.filter(
+        (hint) => hint.number !== deletionNumber,
+      );
+      tempHints.across = tempHints.across.filter(
+        (hint) => hint.number !== deletionNumber,
+      );
+
+      tempHints.down = tempHints.down.map(({ hint, number }) =>
+        number > deletionNumber
+          ? { hint: hint, number: number - 1 }
+          : { hint: hint, number: number },
+      );
+
+      tempHints.across = tempHints.across.map(({ hint, number }) =>
+        number > deletionNumber
+          ? { hint: hint, number: number - 1 }
+          : { hint: hint, number: number },
+      );
+
+      setBuildHints(tempHints);
+    }
+
+    return data;
+  }
 
   const takeAction = (x: number, y: number) => {
     //TODO: something for mobile support prob here
@@ -511,6 +657,8 @@ export default function Crossword() {
         toggleBlack(x, y);
       } else if (editMode == "placeNumbers") {
         startNumberPlacer(x, y);
+      } else if (editMode == "removeNumbers") {
+        startNumberRemover(x, y);
       } else if (editMode == "placeLetters") {
         startLetterPlacer(x, y);
       }
@@ -536,22 +684,14 @@ export default function Crossword() {
       return;
     }
 
-    if (buildData[y][x].belongsTo.length == 0) {
-      triggerNotification(
-        "Failed to start letter placer",
-        "warning",
-        "Cant place letter on a square without an association",
-      );
-      return;
-    }
-
     setCurrentTrend(buildData[y][x].next);
 
     let next = buildData[y][x].next;
 
     setCurrentSelectionNumberXY([x, y]);
     if (!next) {
-      highlight(x, y, highlightMode, mode == "play" ? false : true);
+      clearHighlightAndSelection();
+      selectCurrent(x, y);
       return;
     } else {
       highlight(x, y, next, mode == "play" ? false : true);
@@ -601,7 +741,7 @@ export default function Crossword() {
         case "ArrowRight":
           if (
             mode == "build" &&
-            editMode == "placeNumbers" &&
+            (editMode == "placeNumbers" || editMode == "placeLetters") &&
             !showHintCreationPopup
           ) {
             event.preventDefault();
@@ -611,7 +751,7 @@ export default function Crossword() {
         case "ArrowDown":
           if (
             mode == "build" &&
-            editMode == "placeNumbers" &&
+            (editMode == "placeNumbers" || editMode == "placeLetters") &&
             !showHintCreationPopup
           ) {
             event.preventDefault();
@@ -760,11 +900,11 @@ export default function Crossword() {
     let tempData = buildData.map((row) => row.map((box) => ({ ...box })));
 
     let block = tempData[location[1]][location[0]];
-    if (block.belongsTo.length == 0 || block.state == "black") {
+    if (block.state == "black") {
       triggerNotification(
         "Failed to place letter",
         "warning",
-        "Letters can only be placed on squares associated with a number",
+        "Letters cant be placed on black squares",
       );
       return;
     }
@@ -774,7 +914,7 @@ export default function Crossword() {
       tempData[location[1]][location[0]].answer = key;
     }
 
-    if (currentTrend && tempData[location[1]][location[0]].next) {
+    if (currentTrend) {
       if (
         currentTrend == "across" &&
         location[0] + 1 != width &&
@@ -808,9 +948,7 @@ export default function Crossword() {
     }
     clearHighlightAndSelection();
     setNumber();
-    addNewHintToList(currentEditDirection, currentEditNumber);
     setCurrentEditDirection(undefined);
-    setCurrentEditNumber(currentEditNumber + 1);
     setCurrentSelectionNumberXY(undefined);
   };
 
@@ -911,6 +1049,7 @@ export default function Crossword() {
     }
 
     setCurrentEditDirection("across");
+    setCurrentTrend("across");
     setHighlightMode("across");
     highlight(location[0], location[1], "across", true);
   };
@@ -928,6 +1067,7 @@ export default function Crossword() {
       return;
     }
     setCurrentEditDirection("down");
+    setCurrentTrend("down");
     setHighlightMode("down");
     highlight(location[0], location[1], "down", true);
   };
@@ -940,6 +1080,22 @@ export default function Crossword() {
     if (mode == "play") {
       gotoWord(number, direction);
     } else {
+      if (!buildData) {
+        triggerNotification("Failed to goto word", "error", "Data not found");
+        return;
+      }
+
+      for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+          if (buildData[y][x].number == number) {
+            setCurrentTrend(direction);
+            setCurrentSelectionNumberXY([x, y]);
+            highlight(x, y, direction, true);
+            break;
+          }
+        }
+      }
+
       activateHintEditPopup(direction, number, hint);
     }
   };
@@ -964,43 +1120,6 @@ export default function Crossword() {
 
   const editHint = (event: any) => {
     setHint(event.target.value);
-  };
-
-  const formatDate = (date: Date) => {
-    const months = [
-      "January",
-      "February",
-      "March",
-      "April",
-      "May",
-      "June",
-      "July",
-      "August",
-      "September",
-      "October",
-      "November",
-      "December",
-    ];
-
-    const day = date.getDate();
-    const month = months[date.getMonth()];
-    const year = date.getFullYear();
-
-    const getOrdinalSuffix = (day: number) => {
-      if (day > 3 && day < 21) return "th";
-      switch (day % 10) {
-        case 1:
-          return "st";
-        case 2:
-          return "nd";
-        case 3:
-          return "rd";
-        default:
-          return "th";
-      }
-    };
-
-    return `${month} ${day}${getOrdinalSuffix(day)}, ${year}`;
   };
 
   const updateCrossword = () => {
@@ -1132,13 +1251,9 @@ export default function Crossword() {
 
     for (let i = 0; i < belongsTo.length; i++) {
       if (numbersToCheck.includes(belongsTo[i])) {
-        return entireWordIsFilled(belongsTo[i]);
+        return true;
       }
     }
-  };
-
-  const entireWordIsFilled = (number: number) => {
-    return true;
   };
 
   const toggleShowAssociations = () => {
@@ -1164,10 +1279,11 @@ export default function Crossword() {
                   } ${
                     box.state == "black" ? "bg-accent-900 cursor-default" : null
                   } ${
-                    showAssociations &&
+                    (showAssociations || debug) &&
                     mode == "build" &&
                     box.state != "black" &&
-                    box.answer == ""
+                    ((box.answer != "" && box.belongsTo.length == 0) ||
+                      (box.belongsTo.length != 0 && box.answer == ""))
                       ? "bg-red-200"
                       : ""
                   }
@@ -1177,10 +1293,29 @@ export default function Crossword() {
      : ""
  }`}
                 >
+                  <p className="absolute text-sm top-[1px] right-1">
+                    {mode == "build" && debug
+                      ? `${
+                          box.number != undefined
+                            ? `${box.belongsTo.length == 1 ? "p" : "c"}`
+                            : ""
+                        }`
+                      : ""}
+                  </p>
                   <p className="absolute text-sm top-[1px] left-1">
                     {box.number}
                   </p>
-                  <p>{`${mode == "play" ? box.guess : box.answer}`}</p>
+                  <p>{`${mode == "play" ? box.guess : box.answer} `}</p>
+                  <p className="absolute text-sm bottom-[1px] left-1">
+                    {mode == "build" && debug ? box.belongsTo.join(",") : ""}
+                  </p>
+                  <p className="absolute text-sm bottom-[1px] right-1">
+                    {mode == "build" && debug
+                      ? `${
+                          box.next ? `${box.next == "across" ? "a" : "d"}` : ""
+                        }`
+                      : ""}
+                  </p>
                 </div>
               ))}
             </div>
@@ -1300,10 +1435,12 @@ export default function Crossword() {
                 >
                   Toggle Associations
                 </button>
-                <p className="text-red-500 text-center italic">
-                  First place blocks, then place numbers, finally add letters.
-                  If you dont follow this order things will go wrong.
-                </p>
+                <button
+                  className="bg-secondary-200 mt-2 p-2 rounded-lg w-full hover:bg-secondary-300 transition-all duration-200 ease-in-out"
+                  onClick={() => setDebug(!debug)}
+                >
+                  Debug
+                </button>
                 <div className="flex flex-col gap-2 mt-2">
                   <div
                     className="flex gap-2 items-center cursor-pointer"
@@ -1336,6 +1473,24 @@ export default function Crossword() {
                   ) : null}
                   <div
                     className="flex gap-2 items-center cursor-pointer"
+                    onClick={() => editModeSelector("removeNumbers")}
+                  >
+                    <div
+                      className={`w-[30px] h-[30px] rounded-lg border border-secondary-300 ${
+                        editMode == "removeNumbers" ? "bg-secondary-300" : null
+                      } hover:bg-secondary-200 transition-all duration-200 ease-in-out`}
+                    ></div>
+                    <p>Remove Numbers</p>
+                  </div>
+                  {editMode == "removeNumbers" ? (
+                    <div className="pl-10">
+                      <p>
+                        1. Select a square with a number in the top left corner
+                      </p>
+                    </div>
+                  ) : null}
+                  <div
+                    className="flex gap-2 items-center cursor-pointer"
                     onClick={() => editModeSelector("placeLetters")}
                   >
                     <div
@@ -1348,7 +1503,8 @@ export default function Crossword() {
                   {editMode == "placeLetters" ? (
                     <div className="pl-10">
                       <p>1. Select a square</p>
-                      <p>2. Press a letter</p>
+                      <p>2. Use right and down keys to set a direction</p>
+                      <p>3. Press a letter</p>
                     </div>
                   ) : null}
                 </div>
@@ -1372,7 +1528,7 @@ export default function Crossword() {
         </section>
       </section>
       {showHintCreationPopup ? (
-        <section className="fixed flex items-center justify-center left-0 top-0 w-full h-full bg-accent-900 bg-opacity-50">
+        <section className="fixed flex items-center justify-center left-0 top-0 w-full h-full">
           <div className="p-10 bg-background-50 rounded-xl">
             <input
               type="text"
