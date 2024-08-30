@@ -8,6 +8,7 @@ import getRoles from "@/firebase/db/getRoles";
 import saveCrossword from "@/firebase/db/saveCrossword";
 import getCrossword from "@/firebase/db/getCrossword";
 import formatDate from "@/utils/formatDate";
+import decodeJsonData from "@/utils/games/decodeJsonData";
 
 export type Crossword = {
   data: string; // as json
@@ -74,13 +75,14 @@ export default function Crossword() {
   const [currentTrend, setCurrentTrend] = useState<
     "down" | "across" | undefined
   >(undefined);
+  const [checked, setChecked] = useState(false);
+
   const [showHintCreationPopup, setShowHintCreationPopup] = useState(false);
   const [hintNumber, setHintNumber] = useState<number | undefined>(undefined);
   const [hintDirection, setHintDirection] = useState<
     "down" | "across" | undefined
   >(undefined);
   const [hint, setHint] = useState("");
-  const [checked, setChecked] = useState(false);
 
   const [isMaksim, setIsMaksim] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -460,6 +462,9 @@ export default function Crossword() {
         next: undefined,
       })),
     );
+
+    setCurrentEditNumber(1);
+    setBuildHints(initNewHints());
     setBuildData(tempData);
   };
 
@@ -737,26 +742,27 @@ export default function Crossword() {
         }
       }
 
-      //TODO: direction switching in play mode
       switch (key) {
         case "ArrowRight":
           if (
-            mode == "build" &&
-            (editMode == "placeNumbers" || editMode == "placeLetters") &&
-            !showHintCreationPopup
+            (mode == "build" &&
+              (editMode == "placeNumbers" || editMode == "placeLetters") &&
+              !showHintCreationPopup) ||
+            mode == "play"
           ) {
             event.preventDefault();
-            handleRightKeyForNumberPlacer();
+            handleRightKey();
           }
           break;
         case "ArrowDown":
           if (
-            mode == "build" &&
-            (editMode == "placeNumbers" || editMode == "placeLetters") &&
-            !showHintCreationPopup
+            (mode == "build" &&
+              (editMode == "placeNumbers" || editMode == "placeLetters") &&
+              !showHintCreationPopup) ||
+            mode == "play"
           ) {
             event.preventDefault();
-            handleDownKeyForNumberPlacer();
+            handleDownKey();
           }
           break;
         case "Enter":
@@ -979,66 +985,7 @@ export default function Crossword() {
     setBuildHints(tempHints);
   };
 
-  const activateHintEditPopup = (
-    direction: "down" | "across",
-    number: number,
-    hint: string,
-  ) => {
-    setHintNumber(number);
-    setHintDirection(direction);
-    setHint(hint);
-    setShowHintCreationPopup(true);
-  };
-
-  const deactivateHintEditPopup = () => {
-    setShowHintCreationPopup(false);
-    setHintDirection(undefined);
-    setHintNumber(undefined);
-    setHint("");
-  };
-
-  const saveEditHint = () => {
-    if (!buildHints) {
-      triggerNotification(
-        "Failed to save hint",
-        "error",
-        "Build hints not found",
-      );
-      return;
-    }
-
-    if (!hintDirection) {
-      triggerNotification(
-        "Failed to save hint",
-        "error",
-        "Hint direction not found",
-      );
-      return;
-    }
-
-    let tempHints = buildHints;
-
-    if (hintDirection == "across") {
-      for (let i = 0; i < tempHints.across.length; i++) {
-        if (tempHints.across[i].number == hintNumber) {
-          tempHints.across[i].hint = hint;
-          break;
-        }
-      }
-    } else {
-      for (let i = 0; i < tempHints.down.length; i++) {
-        if (tempHints.down[i].number == hintNumber) {
-          tempHints.down[i].hint = hint;
-          break;
-        }
-      }
-    }
-
-    setBuildHints(tempHints);
-    deactivateHintEditPopup();
-  };
-
-  const handleRightKeyForNumberPlacer = () => {
+  const handleRightKey = () => {
     const location = currentSelectionNumberXY;
     if (location == null || location?.length != 2) {
       triggerNotification(
@@ -1055,7 +1002,7 @@ export default function Crossword() {
     highlight(location[0], location[1], "across", true);
   };
 
-  const handleDownKeyForNumberPlacer = () => {
+  const handleDownKey = () => {
     const location = currentSelectionNumberXY;
 
     if (location == null || location?.length != 2) {
@@ -1101,6 +1048,69 @@ export default function Crossword() {
     }
   };
 
+  const activateHintEditPopup = (
+    direction: "down" | "across",
+    number: number,
+    hint: string,
+  ) => {
+    setHintNumber(number);
+    setHintDirection(direction);
+    setHint(hint);
+    setShowHintCreationPopup(true);
+  };
+
+  const deactivateHintEditPopup = () => {
+    setShowHintCreationPopup(false);
+    setHintDirection(undefined);
+    setHintNumber(undefined);
+    setHint("");
+  };
+
+  const editHint = (event: any) => {
+    setHint(event.target.value);
+  };
+
+  const saveEditHint = () => {
+    if (!buildHints) {
+      triggerNotification(
+        "Failed to save hint",
+        "error",
+        "Build hints not found",
+      );
+      return;
+    }
+
+    if (!hintDirection) {
+      triggerNotification(
+        "Failed to save hint",
+        "error",
+        "Hint direction not found",
+      );
+      return;
+    }
+
+    let tempHints = buildHints;
+
+    if (hintDirection == "across") {
+      for (let i = 0; i < tempHints.across.length; i++) {
+        if (tempHints.across[i].number == hintNumber) {
+          tempHints.across[i].hint = hint;
+          break;
+        }
+      }
+    } else {
+      for (let i = 0; i < tempHints.down.length; i++) {
+        if (tempHints.down[i].number == hintNumber) {
+          tempHints.down[i].hint = hint;
+          break;
+        }
+      }
+    }
+
+    setBuildHints(tempHints);
+    deactivateHintEditPopup();
+  };
+
   const gotoWord = (number: number, direction: "across" | "down") => {
     if (!buildData) {
       triggerNotification("Failed to goto word", "error", "Data not found");
@@ -1117,10 +1127,6 @@ export default function Crossword() {
         }
       }
     }
-  };
-
-  const editHint = (event: any) => {
-    setHint(event.target.value);
   };
 
   const updateCrossword = () => {
@@ -1225,19 +1231,6 @@ export default function Crossword() {
     setMode("play");
   };
 
-  function decodeJsonData(data: string): Crossword {
-    let jsonCrossword = JSON.parse(data);
-
-    let crossword: Crossword = {
-      data: jsonCrossword.data,
-      hints: jsonCrossword.hints,
-      author: jsonCrossword.author,
-      published: jsonCrossword.published,
-    };
-
-    return crossword;
-  }
-
   const toggleChecked = () => {
     if (mode == "build") {
       return;
@@ -1245,7 +1238,7 @@ export default function Crossword() {
     setChecked(!checked);
   };
 
-  const isCheckable = (x: number, y: number, belongsTo: number[]) => {
+  const isCheckable = (belongsTo: number[]) => {
     if (checked) {
       return true;
     }
@@ -1255,10 +1248,6 @@ export default function Crossword() {
         return true;
       }
     }
-  };
-
-  const toggleShowAssociations = () => {
-    setShowAssociations(!showAssociations);
   };
 
   return (
@@ -1289,7 +1278,7 @@ export default function Crossword() {
                       : ""
                   }
  ${
-   isCheckable(x, y, box.belongsTo) && box.state != "black"
+   isCheckable(box.belongsTo) && box.state != "black"
      ? `${box.guess == box.answer ? "bg-green-200" : "bg-red-200"}`
      : ""
  }`}
@@ -1321,12 +1310,41 @@ export default function Crossword() {
               ))}
             </div>
           ))}
-          <div className="flex items-center justify-between mt-2 max-xl:w-full">
+          <div
+            className={`flex items-center justify-between mt-2 max-xl:w-full ${
+              mode == "build" ? "hidden" : ""
+            }`}
+          >
             <p>{`Crossword by ${author}`}</p>
             <p>{`Published ${published}`}</p>
           </div>
         </section>
         <section className="flex flex-col gap-2 w-full">
+          {showHintCreationPopup ? (
+            <section className="bg-accent-100 p-5 max-xs:p-2 rounded-xl">
+              <input
+                type="text"
+                placeholder="Edit Hint"
+                className="bg-accent-200 p-2 rounded-lg w-full placeholder:text-secondary-900 focus:outline-none"
+                value={hint}
+                onChange={(event) => editHint(event)}
+              />
+              <div className="flex mt-2">
+                <button
+                  onClick={saveEditHint}
+                  className="w-full p-2 bg-red-200 hover:bg-red-300 rounded-tl-lg rounded-bl-lg transition-all duration-200 ease-in-out"
+                >
+                  Save
+                </button>
+                <button
+                  onClick={deactivateHintEditPopup}
+                  className="w-full p-2 bg-secondary-200 hover:bg-secondary-300 rounded-tr-lg rounded-br-lg transition-all duration-200 ease-in-out"
+                >
+                  Cancel
+                </button>
+              </div>
+            </section>
+          ) : null}
           <section className="flex gap-2 justify-between max-sm:flex-col">
             <div className="bg-accent-100 p-5 w-full rounded-xl max-sm:p-2">
               <p className="font-bold text-xl text-center">Down</p>
@@ -1432,7 +1450,7 @@ export default function Crossword() {
                 </div>
                 <button
                   className="bg-secondary-200 mt-2 p-2 rounded-lg w-full hover:bg-secondary-300 transition-all duration-200 ease-in-out"
-                  onClick={toggleShowAssociations}
+                  onClick={() => setShowAssociations(!showAssociations)}
                 >
                   Toggle Associations
                 </button>
@@ -1528,33 +1546,6 @@ export default function Crossword() {
           ) : null}
         </section>
       </section>
-      {showHintCreationPopup ? (
-        <section className="fixed flex items-center justify-center left-0 top-0 w-full h-full">
-          <div className="p-10 bg-background-50 rounded-xl">
-            <input
-              type="text"
-              placeholder="Edit Hint"
-              className="bg-accent-200 p-2 rounded-lg w-full placeholder:text-secondary-900 focus:outline-none"
-              value={hint}
-              onChange={(event) => editHint(event)}
-            />
-            <div className="flex mt-2">
-              <button
-                onClick={saveEditHint}
-                className="w-full p-2 bg-red-200 hover:bg-red-300 rounded-tl-lg rounded-bl-lg transition-all duration-200 ease-in-out"
-              >
-                Save
-              </button>
-              <button
-                onClick={deactivateHintEditPopup}
-                className="w-full p-2 bg-secondary-200 hover:bg-secondary-300 rounded-tr-lg rounded-br-lg transition-all duration-200 ease-in-out"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </section>
-      ) : null}
       {notification ? (
         <Notification
           title={notificationTitle}
