@@ -87,7 +87,6 @@ export default function Crossword() {
   const [isMaksim, setIsMaksim] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isHelper, setIsHelper] = useState(false);
-  const [numbersToCheck, setNumbersToCheck] = useState<number[]>([]);
 
   useEffect(() => {
     if (user) {
@@ -293,12 +292,12 @@ export default function Crossword() {
           }
         };
 
-        const getCurrentState = (): {
+        const getCurrentState = (
+          nextBlock: CrossWordBoxData | undefined,
+        ): {
           direction: "down" | "across";
           possible: boolean;
         } => {
-          const nextBlock = getNextBlock();
-
           if (nextBlock == undefined) {
             return { direction: "across", possible: true };
           }
@@ -314,7 +313,9 @@ export default function Crossword() {
           return { direction: "across", possible: true };
         };
 
-        let currentState = getCurrentState();
+        let nextBlock = getNextBlock();
+
+        let currentState = getCurrentState(nextBlock);
 
         let belongsTo = tempData[startY][x].belongsTo;
         const number = tempData[startY]?.[startX]?.number;
@@ -326,7 +327,7 @@ export default function Crossword() {
 
         tempData[startY][x].next = currentState.direction;
 
-        if (currentState.possible == false) {
+        if (nextBlock == undefined || nextBlock.state == "black") {
           break;
         }
       }
@@ -340,12 +341,12 @@ export default function Crossword() {
           }
         };
 
-        const getCurrentState = (): {
+        const getCurrentState = (
+          nextBlock: CrossWordBoxData | undefined,
+        ): {
           direction: "down" | "across";
           possible: boolean;
         } => {
-          const nextBlock = getNextBlock();
-
           if (nextBlock == undefined) {
             return { direction: "down", possible: true };
           }
@@ -361,7 +362,9 @@ export default function Crossword() {
           return { direction: "down", possible: true };
         };
 
-        let currentState = getCurrentState();
+        let nextBlock = getNextBlock();
+
+        let currentState = getCurrentState(nextBlock);
 
         let belongsTo = tempData[y][startX].belongsTo;
         const number = tempData[startY]?.[startX]?.number;
@@ -373,7 +376,7 @@ export default function Crossword() {
 
         tempData[y][startX].next = currentState.direction;
 
-        if (currentState.possible == false) {
+        if (nextBlock == undefined || nextBlock.state == "black") {
           break;
         }
       }
@@ -781,9 +784,6 @@ export default function Crossword() {
           }
           break;
         case "Enter":
-          if (mode == "play") {
-            toggleEnterCheckNumbers();
-          }
           if (
             mode == "build" &&
             editMode == "placeNumbers" &&
@@ -820,37 +820,7 @@ export default function Crossword() {
     highlightMode,
     buildData,
     hintNumber,
-    numbersToCheck,
   ]);
-
-  const toggleEnterCheckNumbers = () => {
-    if (numbersToCheck.length != 0) {
-      setNumbersToCheck([]);
-      return;
-    }
-
-    if (!buildData) {
-      triggerNotification("Failed to backspace letter", "error", "Data found");
-      return;
-    }
-
-    let location = currentSelectionNumberXY;
-    if (!location) {
-      triggerNotification(
-        "Failed to backspace letter",
-        "error",
-        "Location not found",
-      );
-      return;
-    }
-
-    const originX = location[0];
-    const originY = location[1];
-
-    let belongsTo = buildData[originY][originX].belongsTo;
-
-    setNumbersToCheck(belongsTo);
-  };
 
   const handleBackspaceForLetters = () => {
     if (!buildData) {
@@ -886,7 +856,7 @@ export default function Crossword() {
         tempData[startY][startX - 1].state != "black" &&
         startX - 1 >= 0
       ) {
-        tempData[startY][startX].state = "normal";
+        tempData[startY][startX].state = "highlighted";
         tempData[startY][startX - 1].state = "selected";
         setCurrentSelectionNumberXY([startX - 1, startY]);
       } else if (
@@ -894,7 +864,7 @@ export default function Crossword() {
         tempData[startY - 1][startX].state != "black" &&
         startY - 1 >= 0
       ) {
-        tempData[startY][startX].state = "normal";
+        tempData[startY][startX].state = "highlighted";
         tempData[startY - 1][startX].state = "selected";
         setCurrentSelectionNumberXY([startX, startY - 1]);
       }
@@ -942,22 +912,61 @@ export default function Crossword() {
         location[0] + 1 != width &&
         tempData[location[1]][location[0] + 1].state != "black"
       ) {
-        tempData[location[1]][location[0]].state = "normal";
-        tempData[location[1]][location[0] + 1].state = "selected";
-        setCurrentSelectionNumberXY([location[0] + 1, location[1]]);
+        tempData[location[1]][location[0]].state = "highlighted";
+        let next = findNextSelectionSpot(
+          tempData,
+          "across",
+          location[0],
+          location[1],
+        );
+        tempData[next.y][next.x].state = "selected";
+        setCurrentSelectionNumberXY([next.x, next.y]);
       } else if (
         currentTrend == "down" &&
         location[1] + 1 != height &&
         tempData[location[1] + 1][location[0]].state != "black"
       ) {
-        tempData[location[1] + 1][location[0]].state = "selected";
-        tempData[location[1]][location[0]].state = "normal";
-        setCurrentSelectionNumberXY([location[0], location[1] + 1]);
+        tempData[location[1]][location[0]].state = "highlighted";
+        let next = findNextSelectionSpot(
+          tempData,
+          "down",
+          location[0],
+          location[1],
+        );
+        tempData[next.y][next.x].state = "selected";
+        setCurrentSelectionNumberXY([next.x, next.y]);
       }
     }
 
     setBuildData(tempData);
   };
+
+  function findNextSelectionSpot(
+    data: CrossWordBoxData[][],
+    direction: "across" | "down",
+    startX: number,
+    startY: number,
+  ): { x: number; y: number } {
+    if (direction == "across") {
+      for (let x = startX + 1; x < data.length; x++) {
+        if (data[startY][x].guess == "" && data[startY][x].state != "black") {
+          return { x: x, y: startY };
+        } else if (data[startY][x].state == "black") {
+          return { x: x - 1, y: startY };
+        }
+      }
+    } else {
+      for (let y = startY + 1; y < data.length; y++) {
+        if (data[y][startX].guess == "" && data[y][startX].state != "black") {
+          return { x: startX, y: y };
+        } else if (data[y][startX].state == "black") {
+          return { x: startX, y: y - 1 };
+        }
+      }
+    }
+
+    return { x: startX, y: startY };
+  }
 
   const handleEnterForNumberPlace = () => {
     if (!currentEditDirection) {
@@ -1187,15 +1196,19 @@ export default function Crossword() {
       }
     }
 
-    let tempData = buildData;
-
-    if (!tempData) {
+    if (!buildData) {
       triggerNotification("Crossword update failed", "error", "Data not found");
       return;
     }
 
+    let tempData = buildData.map((row) => row.map((box) => ({ ...box })));
+
     for (let y = 0; y < tempData.length; y++) {
       for (let x = 0; x < tempData[y].length; x++) {
+        if (tempData[y][x].state != "black") {
+          tempData[y][x].state = "normal";
+        }
+
         if (
           tempData[y][x].belongsTo.length != 0 &&
           tempData[y][x].answer == ""
@@ -1212,9 +1225,9 @@ export default function Crossword() {
 
     if (debug) {
       triggerNotification(
-        "Crosssword would have updated",
-        "success",
-        "Cross word update out of debug mode",
+        "Crosssword does not update in debug mode",
+        "warning",
+        "Crossword would have updated",
       );
       return;
     }
@@ -1262,17 +1275,29 @@ export default function Crossword() {
     setChecked(!checked);
   };
 
-  const isCheckable = (belongsTo: number[]) => {
-    if (checked) {
-      return true;
+  function determineAssociationColor(box: CrossWordBoxData) {
+    if (box.state == "black") {
+      return "";
     }
 
-    for (let i = 0; i < belongsTo.length; i++) {
-      if (numbersToCheck.includes(belongsTo[i])) {
-        return true;
-      }
+    // no data
+    if (box.belongsTo.length == 0 && box.answer == "") {
+      return "bg-red-200";
     }
-  };
+
+    // half data
+    if (
+      (box.belongsTo.length == 0 && box.answer != "") ||
+      (box.belongsTo.length != 0 && box.answer == "")
+    ) {
+      return "bg-orange-200";
+    }
+
+    // all data
+    if (box.belongsTo.length != 0 && box.answer != "") {
+      return "bg-green-200";
+    }
+  }
 
   return (
     <main className="py-2">
@@ -1293,12 +1318,8 @@ export default function Crossword() {
                   } ${
                     box.state == "black" ? "bg-accent-900 cursor-default" : null
                   } ${
-                    (showAssociations || debug) &&
-                    mode == "build" &&
-                    box.state != "black" &&
-                    ((box.answer != "" && box.belongsTo.length == 0) ||
-                      (box.belongsTo.length != 0 && box.answer == ""))
-                      ? "bg-red-200"
+                    (showAssociations || debug) && mode == "build"
+                      ? `${determineAssociationColor(box)}`
                       : ""
                   }`}
                 >
@@ -1316,9 +1337,7 @@ export default function Crossword() {
                   </p>
                   <p
                     className={`${
-                      isCheckable(box.belongsTo) &&
-                      box.state != "black" &&
-                      mode == "play"
+                      checked && box.state != "black" && mode == "play"
                         ? `${
                             box.guess == box.answer
                               ? "text-green-700"
@@ -1419,10 +1438,10 @@ export default function Crossword() {
             className={`w-full p-2 rounded-lg transition-all duration-200 ease-in-out ${
               mode == "build"
                 ? "bg-accent-300 hover:bg-accent-300 cursor-default"
-                : "bg-secondary-200 hover:bg-secondary-300"
+                : "bg-secondary-200 hover:bg-secondary-300 active:tracking-widest"
             }`}
           >
-            check
+            Check
           </button>
           {user && (isMaksim || isAdmin || isHelper) ? (
             <div className="flex">
@@ -1453,13 +1472,13 @@ export default function Crossword() {
                 </p>
                 <div className="flex gap-2">
                   <button
-                    className="bg-secondary-200 p-2 rounded-lg w-full hover:bg-secondary-300 transition-all duration-200 ease-in-out"
+                    className="bg-secondary-200 p-2 rounded-lg w-full hover:bg-secondary-300 active:tracking-widest transition-all duration-200 ease-in-out"
                     onClick={fillNoneLettersBlack}
                   >
                     Blackout
                   </button>
                   <button
-                    className="bg-secondary-200 p-2 rounded-lg w-full hover:bg-secondary-300 transition-all duration-200 ease-in-out"
+                    className="bg-secondary-200 p-2 rounded-lg w-full hover:bg-secondary-300 active:tracking-widest transition-all duration-200 ease-in-out"
                     onClick={fillBlackEmpty}
                   >
                     Whiteout
@@ -1467,26 +1486,30 @@ export default function Crossword() {
                 </div>
                 <div className="flex gap-2 mt-2">
                   <button
-                    className="bg-secondary-200 p-2 rounded-lg w-full hover:bg-secondary-300 transition-all duration-200 ease-in-out"
+                    className="bg-secondary-200 p-2 rounded-lg w-full hover:bg-secondary-300 active:tracking-widest transition-all duration-200 ease-in-out"
                     onClick={clearLetters}
                   >
                     Clear Letters
                   </button>
                   <button
-                    className="bg-secondary-200 p-2 rounded-lg w-full hover:bg-secondary-300 transition-all duration-200 ease-in-out"
+                    className="bg-secondary-200 p-2 rounded-lg w-full hover:bg-secondary-300 active:tracking-widest transition-all duration-200 ease-in-out"
                     onClick={clearAssociations}
                   >
                     Clear Numbers
                   </button>
                 </div>
                 <button
-                  className="bg-secondary-200 mt-2 p-2 rounded-lg w-full hover:bg-secondary-300 transition-all duration-200 ease-in-out"
+                  className={`bg-secondary-200 mt-2 p-2 rounded-lg w-full hover:bg-secondary-300 active:tracking-widest transition-all duration-200 ease-in-out ${
+                    showAssociations ? "bg-secondary-400" : ""
+                  }`}
                   onClick={() => setShowAssociations(!showAssociations)}
                 >
                   Toggle Associations
                 </button>
                 <button
-                  className="bg-secondary-200 mt-2 p-2 rounded-lg w-full hover:bg-secondary-300 transition-all duration-200 ease-in-out"
+                  className={`bg-secondary-200 mt-2 p-2 rounded-lg w-full hover:bg-secondary-300 active:tracking-widest transition-all duration-200 ease-in-out ${
+                    debug ? "bg-secondary-400" : ""
+                  }`}
                   onClick={() => setDebug(!debug)}
                 >
                   Debug
@@ -1561,13 +1584,13 @@ export default function Crossword() {
               </section>
               <section className="flex gap-2 items-center justify-between">
                 <button
-                  className="bg-red-200 p-5 rounded-lg w-full hover:bg-red-300 transition-all duration-200 ease-in-out"
+                  className="bg-red-200 p-5 rounded-lg w-full hover:bg-red-300 active:tracking-widest transition-all duration-200 ease-in-out"
                   onClick={cancelBuildWorkflow}
                 >
                   Cancel
                 </button>
                 <button
-                  className="bg-secondary-200 p-5 rounded-lg w-full hover:bg-secondary-300 transition-all duration-200 ease-in-out"
+                  className="bg-secondary-200 p-5 rounded-lg w-full hover:bg-secondary-300 active:tracking-widest transition-all duration-200 ease-in-out"
                   onClick={updateCrossword}
                 >
                   Update
