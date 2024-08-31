@@ -37,8 +37,8 @@ export type CrossWordHint = {
 };
 
 export default function Crossword() {
-  const width = 15;
-  const height = 15;
+  const width = 16;
+  const height = 16;
 
   const { user } = useAuthContext() as { user: any };
 
@@ -386,7 +386,6 @@ export default function Crossword() {
       let num = tempData[startY][startX].number
         ? tempData[startY][startX].number
         : -1;
-      console.log("here", num);
       if (!num) {
         return;
       }
@@ -409,7 +408,8 @@ export default function Crossword() {
     const tempData = buildData.map((row) =>
       row.map((box) => ({
         ...box,
-        state: box.answer === "" ? "black" : box.state,
+        state:
+          box.answer === "" && box.belongsTo.length == 0 ? "black" : box.state,
         belongsTo: [],
       })),
     );
@@ -688,7 +688,6 @@ export default function Crossword() {
       );
       return;
     }
-
     setCurrentTrend(buildData[y][x].next);
 
     let next = buildData[y][x].next;
@@ -1195,6 +1194,15 @@ export default function Crossword() {
       }
     }
 
+    if (debug) {
+      triggerNotification(
+        "Crosssword would have updated",
+        "success",
+        "Cross word update out of debug mode",
+      );
+      return;
+    }
+
     const currentDate = new Date();
     const formattedDate = formatDate(currentDate);
 
@@ -1339,7 +1347,7 @@ export default function Crossword() {
               <div className="flex mt-2">
                 <button
                   onClick={saveEditHint}
-                  className="w-full p-2 bg-red-200 hover:bg-red-300 rounded-tl-lg rounded-bl-lg transition-all duration-200 ease-in-out"
+                  className="w-full p-2 bg-green-300 hover:bg-green-400 rounded-tl-lg rounded-bl-lg transition-all duration-200 ease-in-out"
                 >
                   Save
                 </button>
