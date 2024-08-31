@@ -202,6 +202,9 @@ export default function Account() {
 
   return (
     <main className="flex flex-col gap-2 items-center py-2">
+      <h1 className="font-heading text-center text-8xl text-accent-800 max-sm:text-7xl max-xs:text-6xl">
+        Account
+      </h1>
       {isAdmin ? (
         <section className="w-full p-5 h-[26rem] bg-accent-100 rounded-xl">
           <h1 className="text-xl font-bold font-heading">User Management</h1>

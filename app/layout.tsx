@@ -84,9 +84,6 @@ export default function RootLayout({
       >
         <AuthContextProvider>
           <NavBar />
-          <h1 className="font-heading text-8xl text-accent-800 max-sm:text-7xl max-xs:text-6xl">
-            Talon Games
-          </h1>
           <div className="w-5/6 ml-auto mr-auto">{children}</div>
         </AuthContextProvider>
         <footer className="bg-accent-100 rounded-xl p-5 mb-4 w-5/6 flex justify-between">
