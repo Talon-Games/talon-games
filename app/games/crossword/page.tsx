@@ -688,18 +688,34 @@ export default function Crossword() {
       );
       return;
     }
-    setCurrentTrend(buildData[y][x].next);
 
     let next = buildData[y][x].next;
 
-    setCurrentSelectionNumberXY([x, y]);
     if (!next) {
+      setCurrentTrend(buildData[y][x].next);
       clearHighlightAndSelection();
       selectCurrent(x, y);
-      return;
     } else {
-      highlight(x, y, next, mode == "play" ? false : true);
+      if (
+        currentSelectionNumberXY != undefined &&
+        currentSelectionNumberXY.length == 2 &&
+        currentSelectionNumberXY[0] == x &&
+        currentSelectionNumberXY[1] == y
+      ) {
+        if (currentTrend == "across") {
+          highlight(x, y, "down", mode == "play" ? false : true);
+          setCurrentTrend("down");
+        } else {
+          highlight(x, y, "across", mode == "play" ? false : true);
+          setCurrentTrend("across");
+        }
+      } else {
+        setCurrentTrend(buildData[y][x].next);
+        highlight(x, y, next, mode == "play" ? false : true);
+      }
     }
+
+    setCurrentSelectionNumberXY([x, y]);
   };
 
   const startNumberPlacer = (x: number, y: number) => {
