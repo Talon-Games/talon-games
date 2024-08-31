@@ -1276,12 +1276,7 @@ export default function Crossword() {
                       (box.belongsTo.length != 0 && box.answer == ""))
                       ? "bg-red-200"
                       : ""
-                  }
- ${
-   isCheckable(box.belongsTo) && box.state != "black"
-     ? `${box.guess == box.answer ? "bg-green-200" : "bg-red-200"}`
-     : ""
- }`}
+                  }`}
                 >
                   <p className="absolute text-sm top-[1px] right-1">
                     {mode == "build" && debug
@@ -1295,7 +1290,19 @@ export default function Crossword() {
                   <p className="absolute text-sm top-[1px] left-1">
                     {box.number}
                   </p>
-                  <p>{`${mode == "play" ? box.guess : box.answer} `}</p>
+                  <p
+                    className={`${
+                      isCheckable(box.belongsTo) &&
+                      box.state != "black" &&
+                      mode == "play"
+                        ? `${
+                            box.guess == box.answer
+                              ? "text-green-700"
+                              : "text-red-700"
+                          }`
+                        : ""
+                    }`}
+                  >{`${mode == "play" ? box.guess : box.answer} `}</p>
                   <p className="absolute text-sm bottom-[1px] left-1">
                     {mode == "build" && debug ? box.belongsTo.join(",") : ""}
                   </p>
