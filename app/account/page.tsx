@@ -202,7 +202,7 @@ export default function Account() {
 
   return (
     <main className="flex flex-col gap-2 items-center py-2">
-      <h1 className="font-heading text-center text-8xl text-accent-800 max-sm:text-7xl max-xs:text-6xl">
+      <h1 className="font-heading text-center text-8xl max-sm:text-7xl max-xs:text-6xl">
         Account
       </h1>
       {isAdmin ? (
@@ -232,8 +232,8 @@ export default function Account() {
                         onClick={() => updateUsersHelperStatus(user)}
                         className={`${
                           user.isHelper
-                            ? "bg-red-200 hover:bg-red-300"
-                            : "bg-green-200 hover:bg-green-300"
+                            ? "bg-red-300 hover:bg-red-400"
+                            : "bg-green-300 hover:bg-green-400"
                         } p-1 text-center w-full rounded-bl-lg rounded-br-lg transition-all duration-200 ease-in-out`}
                       >
                         {user.isHelper ? "Remove" : "Add"}
@@ -249,8 +249,8 @@ export default function Account() {
                         onClick={() => updateUsersAdminStatus(user)}
                         className={`${
                           user.isAdmin
-                            ? "bg-red-200 hover:bg-red-300"
-                            : "bg-green-200 hover:bg-green-300"
+                            ? "bg-red-300 hover:bg-red-400"
+                            : "bg-green-300 hover:bg-green-400"
                         } p-1 text-center w-full rounded-bl-lg rounded-br-lg transition-all duration-200 ease-in-out`}
                       >
                         {user.isAdmin ? "Remove" : "Add"}
@@ -264,7 +264,7 @@ export default function Account() {
         </section>
       ) : null}
       <button
-        className="bg-red-200 p-5 rounded-lg w-full hover:bg-red-300 transition-all duration-200 ease-in-out"
+        className="bg-red-300 p-5 rounded-lg w-full hover:bg-red-400 transition-all duration-200 ease-in-out"
         onClick={startDeleteWorkflow}
       >
         Delete Account

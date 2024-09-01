@@ -1056,10 +1056,12 @@ export default function Crossword() {
       hint: "",
     };
 
-    if (direction == "across") {
+    if (direction === "across") {
       tempHints.across.push(hint);
+      tempHints.across.sort((a, b) => a.number - b.number);
     } else {
       tempHints.down.push(hint);
+      tempHints.down.sort((a, b) => a.number - b.number);
     }
 
     setBuildHints(tempHints);
@@ -1384,7 +1386,7 @@ export default function Crossword() {
 
   return (
     <main className="py-2">
-      <h1 className="font-heading text-center text-8xl text-accent-800 max-sm:text-7xl max-xs:text-6xl">
+      <h1 className="font-heading text-center text-8xl max-sm:text-7xl max-xs:text-6xl">
         Crossword
       </h1>
       <section className="flex justify-center gap-2 max-xl:flex-col">
@@ -1683,7 +1685,7 @@ export default function Crossword() {
               </section>
               <section className="flex gap-2 items-center justify-between">
                 <button
-                  className="bg-red-200 p-5 rounded-lg w-full hover:bg-red-300 active:tracking-widest transition-all duration-200 ease-in-out"
+                  className="bg-red-300 p-5 rounded-lg w-full hover:bg-red-400 active:tracking-widest transition-all duration-200 ease-in-out"
                   onClick={cancelBuildWorkflow}
                 >
                   Cancel
