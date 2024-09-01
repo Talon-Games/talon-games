@@ -227,6 +227,10 @@ export default function Crossword() {
       if (!onlyDirections) {
         for (let i = x; i >= 0; i--) {
           if (data[y][i].state === "black") break;
+          if (data[y][i].number) {
+            data[y][i].state = "highlighted";
+            break;
+          }
           data[y][i].state = "highlighted";
         }
       }
@@ -240,6 +244,10 @@ export default function Crossword() {
       if (!onlyDirections) {
         for (let i = y; i >= 0; i--) {
           if (data[i][x].state === "black") break;
+          if (data[i][x].number) {
+            data[i][x].state = "highlighted";
+            break;
+          }
           data[i][x].state = "highlighted";
         }
       }
