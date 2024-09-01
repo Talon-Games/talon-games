@@ -19,10 +19,10 @@ export const metadata: Metadata = {
   title: "Talon Games",
   description: "Games for the Sharon Talon Newspaper",
   keywords: [
-    "newspaper",
+    "shs talon",
+    "shs",
     "sharon",
-    "games",
-    "crossword",
+    "talon games",
     "sharon talon",
     "talon",
   ],
