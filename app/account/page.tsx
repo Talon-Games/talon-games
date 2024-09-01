@@ -290,7 +290,6 @@ export default function Account() {
           </div>
         </section>
       ) : null}
-
       {notification ? (
         <Notification
           title={notificationTitle}

@@ -9,7 +9,8 @@ import saveCrossword from "@/firebase/db/saveCrossword";
 import getCrossword from "@/firebase/db/getCrossword";
 import formatDate from "@/utils/formatDate";
 import decodeJsonData from "@/utils/games/decodeJsonData";
-import build from "next/dist/build";
+import Stopwatch from "@/components/games/stopwatch";
+import { useRouter } from "next/navigation";
 
 export type Crossword = {
   data: string; // as json
@@ -41,6 +42,7 @@ export default function Crossword() {
   const width = 16;
   const height = 16;
 
+  const router = useRouter();
   const { user } = useAuthContext() as { user: any };
 
   const [notification, setNotification] = useState(false);
@@ -94,6 +96,35 @@ export default function Crossword() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isHelper, setIsHelper] = useState(false);
 
+  const [isRunning, setIsRunning] = useState(false);
+  const [isReset, setIsReset] = useState(false);
+  const [stoppedTime, setStoppedTime] = useState<number | null>(null);
+  const [won, setWon] = useState(false);
+
+  const playAgain = () => {
+    setIsRunning(false);
+    setIsReset(true);
+    setStoppedTime(null);
+    setWon(false);
+    clearBoard();
+  };
+
+  const handleResetComplete = () => {
+    setIsReset(false);
+  };
+
+  const handleStopTime = (time: number) => {
+    setStoppedTime(time);
+  };
+
+  const formatTime = (time: number) => {
+    const minutes = Math.floor(time / 60);
+    const seconds = time % 60;
+    return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(
+      2,
+      "0",
+    )}`;
+  };
   useEffect(() => {
     if (user) {
       getRoles(auth.currentUser).then(
@@ -707,6 +738,10 @@ export default function Crossword() {
       return;
     }
 
+    if (mode == "play" && !isRunning && !won) {
+      setIsRunning(true);
+    }
+
     let tempData = buildData.map((row) => row.map((box) => ({ ...box })));
     tempData = clearHighlightAndSelection(tempData);
 
@@ -1090,8 +1125,31 @@ export default function Crossword() {
       }
     }
 
+    let won = detectWin(tempData);
+
     setBuildData(tempData);
+
+    if (won) {
+      setIsRunning(false);
+      setWon(true);
+    }
   };
+
+  function detectWin(data: CrossWordBoxData[][]): boolean {
+    for (let y = 0; y < data.length; y++) {
+      for (let x = 0; x < data.length; x++) {
+        if (data[y][x].state == "black") {
+          continue;
+        }
+
+        if (data[y][x].guess != data[y][x].answer) {
+          return false;
+        }
+      }
+    }
+
+    return true;
+  }
 
   function findNextSelectionSpot(
     data: CrossWordBoxData[][],
@@ -1580,14 +1638,26 @@ export default function Crossword() {
         </section>
         <section className="flex flex-col gap-2 w-full">
           {mode == "play" ? (
-            <section className="bg-accent-100 p-5 max-xs:p-2 rounded-xl">
-              <p
-                className={`${
-                  hint == "" ? "text-accent-100 cursor-default select-none" : ""
-                }`}
-              >
-                {hint == "" ? "Hint Here" : `${hintNumber}. ${hint}`}
-              </p>
+            <section className="flex gap-2 w-full">
+              <div className="bg-accent-100 p-5 max-xs:p-2 rounded-xl w-full">
+                <p
+                  className={`${
+                    hint == ""
+                      ? "text-accent-100 cursor-default select-none"
+                      : ""
+                  }`}
+                >
+                  {hint == "" ? "Hint Here" : `${hintNumber}. ${hint}`}
+                </p>
+              </div>
+              <div className="bg-accent-100 p-5 max-xs:p-2 rounded-xl w-1/6 flex items-center justify-center">
+                <Stopwatch
+                  start={isRunning}
+                  reset={isReset}
+                  onResetComplete={handleResetComplete}
+                  onStop={handleStopTime}
+                />
+              </div>
             </section>
           ) : null}
           {showHintCreationPopup ? (
@@ -1837,6 +1907,40 @@ export default function Crossword() {
           ) : null}
         </section>
       </section>
+      {won ? (
+        <section className="fixed flex flex-col items-center justify-center left-0 top-0 w-full h-full bg-accent-900 bg-opacity-50">
+          <div className="p-10 bg-background-50 rounded-xl w-3/6">
+            <h2 className="font-heading text-7xl mb-1 text-center">
+              Congratulations
+            </h2>
+            <h2 className="font-heading text-7xl mb-10 text-center">
+              You Won!
+            </h2>
+            <div className="flex gap-2 justify-center items-center">
+              <p className="text-2xl">
+                Completion time:{" "}
+                {stoppedTime !== null
+                  ? formatTime(stoppedTime)
+                  : "Failed to calculate time"}
+              </p>
+            </div>
+          </div>
+          <div className="flex gap-2 mt-2 w-3/6">
+            <button
+              className="bg-secondary-200 p-5 rounded-lg w-full hover:bg-secondary-300 active:tracking-widest transition-all duration-200 ease-in-out"
+              onClick={playAgain}
+            >
+              Play Again
+            </button>
+            <button
+              className="bg-secondary-200 p-5 rounded-lg w-full hover:bg-secondary-300 active:tracking-widest transition-all duration-200 ease-in-out"
+              onClick={() => router.push("/")}
+            >
+              Browse Games
+            </button>
+          </div>
+        </section>
+      ) : null}
       {notification ? (
         <Notification
           title={notificationTitle}
