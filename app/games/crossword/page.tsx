@@ -76,6 +76,7 @@ export default function Crossword() {
     "down" | "across" | undefined
   >(undefined);
   const [checked, setChecked] = useState(false);
+  const [singleWordChecked, setSingleWordChecked] = useState(false);
 
   const [showHintCreationPopup, setShowHintCreationPopup] = useState(false);
   const [hintNumber, setHintNumber] = useState<number | undefined>(undefined);
@@ -164,6 +165,8 @@ export default function Crossword() {
         "You must have a role",
       );
     }
+
+    setChecked(false);
 
     if (mode == "build") {
       setBuildData(fromDbData);
@@ -431,6 +434,34 @@ export default function Crossword() {
         belongsTo: [],
       })),
     );
+    setBuildData(tempData);
+  };
+
+  const clearBoard = () => {
+    if (!buildData) {
+      triggerNotification(
+        "Failed to fill non-letters black",
+        "error",
+        "Data not found",
+      );
+      return;
+    }
+
+    let tempData = buildData.map((row) => row.map((box) => ({ ...box })));
+
+    for (let y = 0; y < tempData.length; y++) {
+      for (let x = 0; x < tempData.length; x++) {
+        if (tempData[y][x].state == "black") {
+          continue;
+        } else {
+          tempData[y][x].state = "normal";
+          tempData[y][x].guess = "";
+        }
+      }
+    }
+
+    setCurrentSelectionNumberXY(undefined);
+
     setBuildData(tempData);
   };
 
@@ -1325,13 +1356,6 @@ export default function Crossword() {
     setMode("play");
   };
 
-  const toggleChecked = () => {
-    if (mode == "build") {
-      return;
-    }
-    setChecked(!checked);
-  };
-
   function determineAssociationColor(box: CrossWordBoxData) {
     if (box.state == "black") {
       return "";
@@ -1355,6 +1379,8 @@ export default function Crossword() {
       return "bg-green-200";
     }
   }
+
+  const handleSingleWordCheck = () => {};
 
   return (
     <main className="py-2">
@@ -1493,16 +1519,29 @@ export default function Crossword() {
               ) : null}
             </div>
           </section>
+          <div className={`flex gap-2 ${mode == "build" ? "hidden" : ""}`}>
+            <button
+              onClick={() => setChecked(!checked)}
+              className="w-full p-2 rounded-lg transition-all duration-200 ease-in-out bg-secondary-200 hover:bg-secondary-300 active:tracking-widest"
+            >
+              Check Board
+            </button>
+            <button
+              onClick={handleSingleWordCheck}
+              className="w-full p-2 rounded-lg transition-all duration-200 ease-in-out bg-secondary-200 hover:bg-secondary-300 active:tracking-widest"
+            >
+              Check Current Word
+            </button>
+          </div>
           <button
-            onClick={toggleChecked}
-            className={`w-full p-2 rounded-lg transition-all duration-200 ease-in-out ${
-              mode == "build"
-                ? "hidden"
-                : "bg-secondary-200 hover:bg-secondary-300 active:tracking-widest"
+            onClick={clearBoard}
+            className={`w-full p-2 rounded-lg transition-all duration-200 ease-in-out bg-secondary-200 hover:bg-secondary-300 active:tracking-widest ${
+              mode == "build" ? "hidden" : ""
             }`}
           >
-            Check
+            Clear Board
           </button>
+
           {user && (isMaksim || isAdmin || isHelper) ? (
             <div className="flex">
               <button
