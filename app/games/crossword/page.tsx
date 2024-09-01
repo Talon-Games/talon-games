@@ -5,12 +5,17 @@ import Notification from "@/components/general/notification";
 import { useAuthContext } from "@/lib/contexts/authContext";
 import { auth } from "@/firebase/config";
 import getRoles from "@/firebase/db/getRoles";
-import saveCrossword from "@/firebase/db/saveCrossword";
-import getCrossword from "@/firebase/db/getCrossword";
+import saveCrossword from "@/firebase/db/games/crossword/saveCrossword";
+import getCrossword from "@/firebase/db/games/crossword/getCrossword";
 import formatDate from "@/utils/formatDate";
-import decodeJsonData from "@/utils/games/decodeJsonData";
+import decodeJsonData from "@/utils/games/crossword/decodeJsonData";
+import generateSimpleHash from "@/utils/games/simpleHash";
 import Stopwatch from "@/components/games/stopwatch";
 import { useRouter } from "next/navigation";
+import getCompletedCrosswords from "@/firebase/db/games/crossword/getCompletedCrosswords";
+import updateCompletedCrosswords from "@/firebase/db/games/crossword/updateCompletedCrosswords";
+import getHighScore from "@/firebase/db/games/crossword/getHighScore";
+import setHighScore from "@/firebase/db/games/crossword/setHighScore";
 
 export type Crossword = {
   data: string; // as json
@@ -101,6 +106,10 @@ export default function Crossword() {
   const [stoppedTime, setStoppedTime] = useState<number | null>(null);
   const [won, setWon] = useState(false);
 
+  const [highScoreTime, setHighScoreTime] = useState("");
+  const [highScoreDate, setHighScoreDate] = useState("");
+  const [alreadyCompleted, setAlreadyCompleted] = useState(false);
+
   const playAgain = () => {
     setIsRunning(false);
     setIsReset(true);
@@ -149,7 +158,7 @@ export default function Crossword() {
   };
 
   useEffect(() => {
-    getCrossword().then((data) => {
+    getCrossword("full").then((data) => {
       loadStringData(data);
     });
   }, []);
@@ -1135,6 +1144,70 @@ export default function Crossword() {
     }
   };
 
+  useEffect(() => {
+    if (!user || !won) {
+      return;
+    }
+
+    if (stoppedTime == null) {
+      return;
+    }
+
+    if (!buildData) {
+      triggerNotification("Failed to save time", "error", "Data not found");
+      return;
+    }
+
+    let data = buildData;
+
+    let string = "";
+    for (let y = 0; y < data.length; y++) {
+      for (let x = 0; x < data.length; x++) {
+        if (data[y][x].state == "black") {
+          continue;
+        }
+
+        string += data[y][x].answer;
+      }
+    }
+
+    const simpleHash = generateSimpleHash(string);
+    const currentDate = new Date();
+    const formattedDate = formatDate(currentDate);
+
+    let alreadyPlayed = false;
+
+    getCompletedCrosswords(auth.currentUser, "full").then(
+      (completed: string[]) => {
+        if (completed.includes(simpleHash)) {
+          alreadyPlayed = true;
+          setAlreadyCompleted(true);
+          return;
+        } else {
+          updateCompletedCrosswords(auth.currentUser, simpleHash, "full");
+        }
+      },
+    );
+
+    getHighScore(auth.currentUser, "full").then((score) => {
+      if (
+        !score ||
+        score.time == undefined ||
+        !score.date == undefined ||
+        (stoppedTime < score.time && !alreadyPlayed)
+      ) {
+        setHighScore(auth.currentUser, stoppedTime, formattedDate, "full");
+        setHighScoreTime(formatTime(stoppedTime));
+        setHighScoreDate(formattedDate);
+        return;
+      } else {
+        setHighScoreTime(formatTime(score.time));
+        setHighScoreDate(score.date);
+        return;
+      }
+    });
+  }, [stoppedTime, user, won]);
+
   function detectWin(data: CrossWordBoxData[][]): boolean {
     for (let y = 0; y < data.length; y++) {
       for (let x = 0; x < data.length; x++) {
@@ -1511,7 +1584,7 @@ export default function Crossword() {
     };
 
     const jsonCrosswordString = JSON.stringify(crossword);
-    saveCrossword(jsonCrosswordString);
+    saveCrossword(jsonCrosswordString, "full");
 
     loadStringData(jsonCrosswordString);
 
@@ -1923,7 +1996,13 @@ export default function Crossword() {
                   ? formatTime(stoppedTime)
                   : "Failed to calculate time"}
               </p>
+              <p className={`text-2xl ${!user ? "hidden" : ""}`}>
+                Best Time: {highScoreTime}
+              </p>
             </div>
+            <p className={`${alreadyCompleted ? "text-center" : "hidden"}`}>
+              You have already played this crossword, your score is invalid
+            </p>
           </div>
           <div className="flex gap-2 mt-2 w-3/6">
             <button
