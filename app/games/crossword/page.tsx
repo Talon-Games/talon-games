@@ -530,7 +530,7 @@ export default function Crossword() {
   };
 
   function clearHighlightAndSelection(data: CrossWordBoxData[][]) {
-    data.map((row) =>
+    return data.map((row) =>
       row.map((box) => ({
         ...box,
         state:
@@ -539,7 +539,6 @@ export default function Crossword() {
             : box.state,
       })),
     );
-    return data;
   }
 
   function selectCurrent(
@@ -784,7 +783,7 @@ export default function Crossword() {
       }
 
       // scan down till black or edge
-      for (let y = startY + 1; y > 0; y++) {
+      for (let y = startY + 1; y < data.length; y++) {
         if (data[y][startX].state == "black") {
           break;
         } else {
@@ -1150,7 +1149,6 @@ export default function Crossword() {
 
     let tempData = buildData.map((row) => row.map((box) => ({ ...box })));
 
-    tempData = clearHighlightAndSelection(tempData);
     tempData = setNumber(tempData);
 
     setBuildData(tempData);
