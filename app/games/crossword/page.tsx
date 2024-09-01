@@ -9,6 +9,7 @@ import saveCrossword from "@/firebase/db/saveCrossword";
 import getCrossword from "@/firebase/db/getCrossword";
 import formatDate from "@/utils/formatDate";
 import decodeJsonData from "@/utils/games/decodeJsonData";
+import build from "next/dist/build";
 
 export type Crossword = {
   data: string; // as json
@@ -77,6 +78,10 @@ export default function Crossword() {
   >(undefined);
   const [checked, setChecked] = useState(false);
   const [singleWordChecked, setSingleWordChecked] = useState(false);
+  const [wordBoxes, setWordBoxes] = useState<{
+    num: number;
+    boxes: { x: number; y: number }[];
+  }>({ num: 0, boxes: [] });
 
   const [showHintCreationPopup, setShowHintCreationPopup] = useState(false);
   const [hintNumber, setHintNumber] = useState<number | undefined>(undefined);
@@ -431,7 +436,6 @@ export default function Crossword() {
         ...box,
         state:
           box.answer === "" && box.belongsTo.length == 0 ? "black" : box.state,
-        belongsTo: [],
       })),
     );
     setBuildData(tempData);
@@ -698,6 +702,7 @@ export default function Crossword() {
 
     let tempData = buildData.map((row) => row.map((box) => ({ ...box })));
     tempData = clearHighlightAndSelection(tempData);
+
     if (mode == "play") {
       tempData = startLetterPlacer(x, y, tempData);
     } else {
@@ -714,6 +719,74 @@ export default function Crossword() {
 
     setBuildData(tempData);
   };
+
+  function getBoxesInDirection(
+    startX: number,
+    startY: number,
+    direction: "across" | "down",
+    data: CrossWordBoxData[][],
+  ): { num: number; boxes: { x: number; y: number }[] } {
+    let boxes: { num: number; boxes: { x: number; y: number }[] } = {
+      num: 0,
+      boxes: [],
+    };
+
+    if (direction == "across") {
+      // scan left till number black or edge
+      for (let x = startX; x > 0; x--) {
+        if (data[startY][x].state == "black") {
+          break;
+        } else if (data[startY][x].number != undefined) {
+          let num = data[startY][x].number;
+          if (!num) {
+            return boxes;
+          }
+          boxes.num = num;
+          boxes.boxes.push({ x: x, y: startY });
+          break;
+        } else {
+          boxes.boxes.push({ x: x, y: startY });
+        }
+      }
+
+      // scan right till black or edge
+      for (let x = startX + 1; x < data.length; x++) {
+        if (data[startY][x].state == "black") {
+          break;
+        } else {
+          boxes.boxes.push({ x: x, y: startY });
+        }
+      }
+    } else {
+      // scan up till number black or edge
+      for (let y = startY; y > 0; y--) {
+        if (data[y][startX].state == "black") {
+          break;
+        } else if (data[y][startX].number != undefined) {
+          let num = data[y][startX].number;
+          if (!num) {
+            return boxes;
+          }
+          boxes.num = num;
+          boxes.boxes.push({ x: startX, y: y });
+          break;
+        } else {
+          boxes.boxes.push({ x: startX, y: y });
+        }
+      }
+
+      // scan down till black or edge
+      for (let y = startY + 1; y > 0; y++) {
+        if (data[y][startX].state == "black") {
+          break;
+        } else {
+          boxes.boxes.push({ x: startX, y: y });
+        }
+      }
+    }
+
+    return boxes;
+  }
 
   function startLetterPlacer(
     x: number,
@@ -744,12 +817,21 @@ export default function Crossword() {
       ) {
         if (currentTrend == "across") {
           data = highlight(x, y, "down", mode == "play" ? false : true, data);
+          const boxes = getBoxesInDirection(x, y, "down", data);
+          updateHintFromWordBoxes(boxes, "down");
+          setWordBoxes(boxes);
           setCurrentTrend("down");
         } else {
           data = highlight(x, y, "across", mode == "play" ? false : true, data);
+          const boxes = getBoxesInDirection(x, y, "across", data);
+          updateHintFromWordBoxes(boxes, "across");
+          setWordBoxes(boxes);
           setCurrentTrend("across");
         }
       } else {
+        const boxes = getBoxesInDirection(x, y, next, data);
+        updateHintFromWordBoxes(boxes, next);
+        setWordBoxes(boxes);
         setCurrentTrend(data[y][x].next);
         data = highlight(x, y, next, mode == "play" ? false : true, data);
       }
@@ -758,6 +840,33 @@ export default function Crossword() {
     setCurrentSelectionNumberXY([x, y]);
 
     return data;
+  }
+
+  function updateHintFromWordBoxes(
+    boxes: { num: number; boxes: { x: number; y: number }[] },
+    direction: "down" | "across",
+  ) {
+    if (mode == "build" || !buildHints) {
+      return;
+    }
+
+    if (direction == "across") {
+      for (let i = 0; i < buildHints.across.length; i++) {
+        if (buildHints.across[i].number == boxes.num) {
+          setHint(buildHints.across[i].hint);
+          setHintNumber(buildHints.across[i].number);
+          return;
+        }
+      }
+    } else {
+      for (let i = 0; i < buildHints.down.length; i++) {
+        if (buildHints.down[i].number == boxes.num) {
+          setHint(buildHints.down[i].hint);
+          setHintNumber(buildHints.down[i].number);
+          return;
+        }
+      }
+    }
   }
 
   function startNumberPlacer(
@@ -1143,6 +1252,8 @@ export default function Crossword() {
 
     if (mode == "play") {
       tempData = gotoWord(number, direction, tempData);
+      setHintNumber(number);
+      setHint(hint);
     } else {
       for (let y = 0; y < height; y++) {
         for (let x = 0; x < width; x++) {
@@ -1382,8 +1493,6 @@ export default function Crossword() {
     }
   }
 
-  const handleSingleWordCheck = () => {};
-
   return (
     <main className="py-2">
       <h1 className="font-heading text-center text-8xl max-sm:text-7xl max-xs:text-6xl">
@@ -1425,14 +1534,20 @@ export default function Crossword() {
                   </p>
                   <p
                     className={`${
-                      checked && box.state != "black" && mode == "play"
+                      (checked ||
+                        (singleWordChecked &&
+                          wordBoxes.boxes.some(
+                            (wordBox) => wordBox.x === x && wordBox.y === y,
+                          ))) &&
+                      box.state != "black" &&
+                      mode == "play"
                         ? `${
                             box.guess == box.answer
                               ? "text-green-700"
                               : "text-red-700"
                           }`
                         : ""
-                    }`}
+                    } `}
                   >{`${mode == "play" ? box.guess : box.answer} `}</p>
                   <p className="absolute text-sm bottom-[1px] left-1">
                     {mode == "build" && debug ? box.belongsTo.join(",") : ""}
@@ -1458,6 +1573,17 @@ export default function Crossword() {
           </div>
         </section>
         <section className="flex flex-col gap-2 w-full">
+          {mode == "play" ? (
+            <section className="bg-accent-100 p-5 max-xs:p-2 rounded-xl">
+              <p
+                className={`${
+                  hint == "" ? "text-accent-100 cursor-default select-none" : ""
+                }`}
+              >
+                {hint == "" ? "Hint Here" : `${hintNumber}. ${hint}`}
+              </p>
+            </section>
+          ) : null}
           {showHintCreationPopup ? (
             <section className="bg-accent-100 p-5 max-xs:p-2 rounded-xl">
               <input
@@ -1524,13 +1650,17 @@ export default function Crossword() {
           <div className={`flex gap-2 ${mode == "build" ? "hidden" : ""}`}>
             <button
               onClick={() => setChecked(!checked)}
-              className="w-full p-2 rounded-lg transition-all duration-200 ease-in-out bg-secondary-200 hover:bg-secondary-300 active:tracking-widest"
+              className={`w-full p-2 rounded-lg transition-all duration-200 ease-in-out bg-secondary-200 hover:bg-secondary-300 active:tracking-widest ${
+                checked ? "bg-secondary-400" : ""
+              }`}
             >
               Check Board
             </button>
             <button
-              onClick={handleSingleWordCheck}
-              className="w-full p-2 rounded-lg transition-all duration-200 ease-in-out bg-secondary-200 hover:bg-secondary-300 active:tracking-widest"
+              onClick={() => setSingleWordChecked(!singleWordChecked)}
+              className={`w-full p-2 rounded-lg transition-all duration-200 ease-in-out bg-secondary-200 hover:bg-secondary-300 active:tracking-widest ${
+                singleWordChecked ? "bg-secondary-400" : ""
+              }`}
             >
               Check Current Word
             </button>
