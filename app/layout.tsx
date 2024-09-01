@@ -80,12 +80,14 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${inter.className} bg-background-50 text-accent-900 flex flex-col items-center justify-between`}
+        className={`${inter.className} bg-background-50 text-accent-900 flex flex-col items-center justify-between min-h-screen`}
       >
-        <AuthContextProvider>
-          <NavBar />
-          <div className="w-5/6 ml-auto mr-auto">{children}</div>
-        </AuthContextProvider>
+        <div className="w-full">
+          <AuthContextProvider>
+            <NavBar />
+            <div className="w-5/6 ml-auto mr-auto">{children}</div>
+          </AuthContextProvider>
+        </div>
         <footer className="bg-accent-100 rounded-xl p-5 mb-4 w-5/6 flex justify-between">
           <a
             href="https://github.com/cqb13/talon-games/blob/main/LICENSE"
