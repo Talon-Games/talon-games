@@ -1637,7 +1637,7 @@ export default function Crossword() {
     }
   }
   return (
-    <main className="py-2">
+    <main className="w-5/6 ml-auto mr-auto">
       <h1 className="font-heading text-center mb-4 text-8xl max-sm:text-7xl max-xs:text-6xl">
         Crossword
       </h1>

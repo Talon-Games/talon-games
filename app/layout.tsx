@@ -85,10 +85,10 @@ export default function RootLayout({
         <div className="w-full">
           <AuthContextProvider>
             <NavBar />
-            <div className="w-5/6 ml-auto mr-auto">{children}</div>
+            {children}
           </AuthContextProvider>
         </div>
-        <footer className="bg-accent-100 rounded-xl p-5 mb-4 w-5/6 flex justify-between">
+        <footer className="text-sm p-4 w-full flex justify-between">
           <a
             href="https://github.com/cqb13/talon-games/blob/main/LICENSE"
             className="hover:text-secondary-600 transition-all duration-200 ease-in-out"

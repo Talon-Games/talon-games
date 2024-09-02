@@ -1,33 +1,54 @@
 "use client";
 
 import { Game } from "@/lib/games";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
+import Button from "./button";
 
 export default function GameCard({ game }: { game: Game }) {
   const router = useRouter();
-  const pathname = usePathname();
+
+  // fuck tailwind
+  const getColor = (color: string) => {
+    switch (color) {
+      case "crossword":
+        return "bg-blue-300";
+      case "1":
+        return "bg-green-300";
+      case "2":
+        return "bg-orange-300";
+      case "3":
+        return "bg-pink-300";
+    }
+  };
 
   return (
-    <div
-      className="flex flex-col max-sm:w-full items-center justify-center bg-accent-100 rounded-xl p-5 cursor-pointer hover:bg-secondary-100 transition-all duration-200 ease-out"
-      onClick={() => router.push(`/games/${game.route}`)}
-    >
-      <Image
-        src={`/game-icons/${game.icon}`}
-        alt={game.name}
-        width="200"
-        height="200"
-      />
-      <button
-        className={`${
-          pathname === `/games/${game.route}`
-            ? "text-primary-500"
-            : "text-primary-900"
-        } font-bold text-xl text-center hover:text-secondary-600 transition-all duration-200 ease-in-out`}
+    <div className="flex w-5/6 h-96 max-sm:w-full rounded-xl cursor-pointer hover:drop-shadow-lg bg-accent-100 transition-all duration-300 ease-in-out">
+      <div
+        className={`flex items-center justify-center w-4/6 rounded-tl-xl rounded-bl-xl ${getColor(
+          game.color,
+        )}`}
       >
-        {game.name}
-      </button>
+        <Image
+          src={`/game-icons/${game.icon}`}
+          alt={game.name}
+          width="400"
+          height="400"
+        />
+      </div>
+      <div className="w-2/6 p-4 flex flex-col items-center justify-between">
+        <div>
+          <h2 className="font-bold text-4xl text-center font-heading">
+            {game.name}
+          </h2>
+          <p className="w-5-6">{game.description}</p>
+        </div>
+        <Button
+          onClick={() => router.push(`/games/${game.route}`)}
+          title="Play"
+          classModifier="p-5 bg-secondary-400 hover:bg-secondary-500 !w-5/6"
+        />
+      </div>
     </div>
   );
 }
