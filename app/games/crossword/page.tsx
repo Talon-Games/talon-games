@@ -16,6 +16,7 @@ import getCompletedCrosswords from "@/firebase/db/games/crossword/getCompletedCr
 import updateCompletedCrosswords from "@/firebase/db/games/crossword/updateCompletedCrosswords";
 import getHighScore from "@/firebase/db/games/crossword/getHighScore";
 import setHighScore from "@/firebase/db/games/crossword/setHighScore";
+import Button from "@/components/general/button";
 
 export type Crossword = {
   data: string; // as json
@@ -1643,16 +1644,14 @@ export default function Crossword() {
                 <div
                   key={x}
                   onClick={() => takeAction(x, y)}
-                  className={`w-[40px] h-[40px] max-md:w-[35px] max-md:h-[35px] max-sm:w-[25px] max-sm:h-[25px] max-xs:w-[20px] max-xs:h-[20px] border-[0.5px] border-gray-400 cursor-pointer flex items-center justify-center relative 
+                  className={`w-[40px] h-[40px] max-md:w-[35px] max-md:h-[35px] max-sm:w-[25px] max-sm:h-[25px] max-xs:w-[20px] max-xs:h-[20px] border-[0.5px] border-secondary-900 cursor-pointer flex items-center justify-center relative 
                   ${y == 0 ? "border-t-2 border-t-black" : ""} ${
                     y == height - 1 ? "border-b-2 border-b-black" : ""
                   } ${x == 0 ? "border-l-2 border-l-black" : ""} ${
                     x == width - 1 ? "border-r-2 border-r-black" : ""
                   }
-                  ${box.state == "highlighted" ? "border-secondary-500" : ""} ${
-                    box.state == "selected"
-                      ? "border-secondary-500 bg-secondary-50"
-                      : null
+                  ${box.state == "highlighted" ? "bg-secondary-300" : ""} ${
+                    box.state == "selected" ? "bg-primary-300" : null
                   } ${
                     box.state == "black" ? "bg-accent-900 cursor-default" : null
                   } ${
@@ -1716,7 +1715,7 @@ export default function Crossword() {
         <section className="flex flex-col gap-2 w-full">
           {mode == "play" ? (
             <section className="flex gap-2 w-full">
-              <div className="bg-accent-100 p-5 max-xs:p-2 rounded-xl w-full">
+              <div className="border-t-2 border-black p-5 max-xs:p-2 w-full">
                 <p
                   className={`${
                     hint == ""
@@ -1727,7 +1726,7 @@ export default function Crossword() {
                   {hint == "" ? "Hint Here" : `${hintNumber}. ${hint}`}
                 </p>
               </div>
-              <div className="bg-accent-100 p-5 max-xs:p-2 rounded-xl w-1/6 flex items-center justify-center">
+              <div className="border-t-2 border-black p-5 max-xs:p-2 w-1/6 flex items-center justify-center">
                 <Stopwatch
                   start={isRunning}
                   reset={isReset}
@@ -1773,7 +1772,7 @@ export default function Crossword() {
                       onClick={() =>
                         handleClickOnHint("down", hint.number, hint.hint)
                       }
-                      className="hover:bg-secondary-100 p-2 transition-all duration-200 ease-out cursor-pointer rounded-lg"
+                      className="hover:bg-secondary-400 rounded p-2 transition-all duration-200 ease-out cursor-pointer"
                     >{`${hint.number}. ${
                       hint.hint == "" ? "Edit Hint" : hint.hint
                     }`}</p>
@@ -1792,7 +1791,7 @@ export default function Crossword() {
                       onClick={() =>
                         handleClickOnHint("across", hint.number, hint.hint)
                       }
-                      className="hover:bg-secondary-100 p-2 transition-all duration-200 ease-out cursor-pointer rounded-lg"
+                      className="hover:bg-secondary-400 rounded p-2 transition-all duration-200 ease-out cursor-pointer"
                     >{`${hint.number}. ${
                       hint.hint == "" ? "Edit Hint" : hint.hint
                     }`}</p>
@@ -1802,32 +1801,22 @@ export default function Crossword() {
             </div>
           </section>
           <div className={`flex gap-2 ${mode == "build" ? "hidden" : ""}`}>
-            <button
+            <Button
               onClick={() => setChecked(!checked)}
-              className={`w-full p-2 rounded-lg transition-all duration-200 ease-in-out bg-secondary-200 hover:bg-secondary-300 active:tracking-widest ${
-                checked ? "bg-secondary-400" : ""
-              }`}
-            >
-              Check Board
-            </button>
-            <button
+              title="Check Board"
+              classModifier={checked ? "bg-secondary-500" : ""}
+            />
+            <Button
               onClick={() => setSingleWordChecked(!singleWordChecked)}
-              className={`w-full p-2 rounded-lg transition-all duration-200 ease-in-out bg-secondary-200 hover:bg-secondary-300 active:tracking-widest ${
-                singleWordChecked ? "bg-secondary-400" : ""
-              }`}
-            >
-              Check Current Word
-            </button>
+              title="Check Word"
+              classModifier={singleWordChecked ? "bg-secondary-500" : ""}
+            />
           </div>
-          <button
+          <Button
             onClick={clearBoard}
-            className={`w-full p-2 rounded-lg transition-all duration-200 ease-in-out bg-secondary-200 hover:bg-secondary-300 active:tracking-widest ${
-              mode == "build" ? "hidden" : ""
-            }`}
-          >
-            Clear Board
-          </button>
-
+            title="Clear Board"
+            classModifier={mode == "build" ? "hidden" : ""}
+          />
           {user && (isMaksim || isAdmin || isHelper) ? (
             <div className="flex">
               <button
