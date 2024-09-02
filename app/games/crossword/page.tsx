@@ -869,7 +869,7 @@ export default function Crossword() {
         if (currentTrend == "across") {
           data = highlight(x, y, "down", mode == "play" ? false : true, data);
           const boxes = getBoxesInDirection(x, y, "down", data);
-          updateHintFromWordBoxes(boxes, "down");
+          updateHintFromWordBoxes(boxes, "down"); //TODO: if in build, open hint edit box here.
           setWordBoxes(boxes);
           setCurrentTrend("down");
         } else {
@@ -1666,11 +1666,11 @@ export default function Crossword() {
                         }`
                       : ""}
                   </p>
-                  <p className="absolute text-sm top-[1px] left-1">
+                  <p className="absolute text-[0.7rem] max-sm:text-[0.5rem] top-[1px] left-1">
                     {box.number}
                   </p>
                   <p
-                    className={`${
+                    className={`max-sm:text-[0.7rem] ${
                       (checked ||
                         (singleWordChecked &&
                           wordBoxes.boxes.some(
