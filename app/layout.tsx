@@ -80,7 +80,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${inter.className} bg-background-50 text-accent-900 flex flex-col items-center justify-between min-h-screen`}
+        className={`${inter.className} bg-background-white text-accent-900 flex flex-col items-center justify-between min-h-screen`}
       >
         <div className="w-full">
           <AuthContextProvider>

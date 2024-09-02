@@ -1636,16 +1636,20 @@ export default function Crossword() {
         Crossword
       </h1>
       <section className="flex justify-center gap-2 max-xl:flex-col">
-        <section className="flex flex-col bg-accent-100 rounded-xl p-5 max-xl:items-center">
+        <section className="flex flex-col max-xl:items-center">
           {buildData?.map((row: CrossWordBoxData[], y) => (
             <div key={y} className="flex">
               {row.map((box: CrossWordBoxData, x) => (
                 <div
                   key={x}
                   onClick={() => takeAction(x, y)}
-                  className={`w-[40px] h-[40px] max-md:w-[35px] max-md:h-[35px] max-sm:w-[25px] max-sm:h-[25px] max-xs:w-[20px] max-xs:h-[20px] border border-black cursor-pointer flex items-center justify-center relative ${
-                    box.state == "highlighted" ? "border-secondary-500" : null
-                  } ${
+                  className={`w-[40px] h-[40px] max-md:w-[35px] max-md:h-[35px] max-sm:w-[25px] max-sm:h-[25px] max-xs:w-[20px] max-xs:h-[20px] border-[0.5px] border-gray-400 cursor-pointer flex items-center justify-center relative 
+                  ${y == 0 ? "border-t-2 border-t-black" : ""} ${
+                    y == height - 1 ? "border-b-2 border-b-black" : ""
+                  } ${x == 0 ? "border-l-2 border-l-black" : ""} ${
+                    x == width - 1 ? "border-r-2 border-r-black" : ""
+                  }
+                  ${box.state == "highlighted" ? "border-secondary-500" : ""} ${
                     box.state == "selected"
                       ? "border-secondary-500 bg-secondary-50"
                       : null
@@ -1758,11 +1762,11 @@ export default function Crossword() {
               </div>
             </section>
           ) : null}
-          <section className="flex gap-2 justify-between max-sm:flex-col">
-            <div className="bg-accent-100 p-5 w-full rounded-xl max-sm:p-2 max-h-72 overflow-scroll">
+          <section className="flex border-black border-t-2 gap-2 max-h-80 justify-between max-sm:flex-col">
+            <div className="w-full">
               <p className="font-bold text-xl text-center">Down</p>
               {buildHints ? (
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-2 overflow-scroll max-h-72">
                   {buildHints.down.map((hint: CrossWordHint, key) => (
                     <p
                       key={key}
@@ -1777,10 +1781,11 @@ export default function Crossword() {
                 </div>
               ) : null}
             </div>
-            <div className="bg-accent-100 p-5 w-full rounded-xl max-sm:p-2 max-h-72 overflow-scroll">
+            <div className="max-sm:hidden h-[17.5rem] mt-1 border border-black block"></div>
+            <div className="w-full">
               <p className="font-bold text-xl text-center">Across</p>
               {buildHints ? (
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-2 max-h-72 overflow-scroll">
                   {buildHints.across.map((hint: CrossWordHint, key) => (
                     <p
                       key={key}
