@@ -33,7 +33,7 @@ export default function ConnectedButton({
           leftClassModifier ? leftClassModifier : ""
         } ${
           disabled || leftDisabled
-            ? "cursor-not-allowed bg-gray-500 hover:bg-gray-500 dark:bg-gray-500 dark:hover:bg-gray-500"
+            ? "cursor-default bg-gray-500 hover:bg-gray-500 dark:bg-gray-500 dark:hover:bg-gray-500"
             : "cursor-pointer active:tracking-widest"
         }`}
         onClick={(e) => {
@@ -50,7 +50,7 @@ export default function ConnectedButton({
           rightClassModifier ? rightClassModifier : ""
         } ${
           disabled || rightDisabled
-            ? "cursor-not-allowed bg-gray-500 hover:bg-gray-500 dark:bg-gray-500 dark:hover:bg-gray-500"
+            ? "cursor-default bg-gray-500 hover:bg-gray-500 dark:bg-gray-500 dark:hover:bg-gray-500"
             : "cursor-pointer active:tracking-widest"
         }`}
         onClick={(e) => {
