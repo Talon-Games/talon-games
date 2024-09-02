@@ -17,6 +17,7 @@ import updateCompletedCrosswords from "@/firebase/db/games/crossword/updateCompl
 import getHighScore from "@/firebase/db/games/crossword/getHighScore";
 import setHighScore from "@/firebase/db/games/crossword/setHighScore";
 import Button from "@/components/general/button";
+import ConnectedButton from "@/components/general/connectedButtons";
 
 export type Crossword = {
   data: string; // as json
@@ -213,6 +214,11 @@ export default function Crossword() {
     }
 
     setChecked(false);
+    setIsRunning(false);
+    setIsReset(true);
+    setStoppedTime(null);
+    setWon(false);
+    clearBoard();
 
     if (mode == "build") {
       setBuildData(fromDbData);
@@ -1630,21 +1636,41 @@ export default function Crossword() {
       return "bg-green-200";
     }
   }
-
   return (
     <main className="py-2">
-      <h1 className="font-heading text-center text-8xl max-sm:text-7xl max-xs:text-6xl">
+      <h1 className="font-heading text-center mb-4 text-8xl max-sm:text-7xl max-xs:text-6xl">
         Crossword
       </h1>
-      <section className="flex justify-center gap-2 max-xl:flex-col">
-        <section className="flex flex-col max-xl:items-center">
-          {buildData?.map((row: CrossWordBoxData[], y) => (
-            <div key={y} className="flex">
-              {row.map((box: CrossWordBoxData, x) => (
-                <div
-                  key={x}
-                  onClick={() => takeAction(x, y)}
-                  className={`w-[40px] h-[40px] max-md:w-[35px] max-md:h-[35px] max-sm:w-[25px] max-sm:h-[25px] max-xs:w-[20px] max-xs:h-[20px] border-[0.5px] border-secondary-900 cursor-pointer flex items-center justify-center relative 
+      <section className="flex justify-center gap-2 max-xl:flex-col w-full">
+        <div className="flex flex-col gap-2">
+          <section className="flex gap-2 w-full">
+            <div className="rounded bg-secondary-300 max-xs:p-2 w-full flex items-center justify-left">
+              {isRunning == true && hint ? (
+                <p className="pl-2">{`${hintNumber}. ${hint}`}</p>
+              ) : (
+                <div className="flex w-full justify-between items-center px-2">
+                  <p>{`Crossword by ${author}`}</p>
+                  <p>{`Published ${published}`}</p>
+                </div>
+              )}
+            </div>
+            <div className="rounded bg-secondary-300 p-5 max-xs:p-2 w-1/6 flex items-center justify-center">
+              <Stopwatch
+                start={isRunning}
+                reset={isReset}
+                onResetComplete={handleResetComplete}
+                onStop={handleStopTime}
+              />
+            </div>
+          </section>
+          <section className="flex flex-col max-xl:items-center">
+            {buildData?.map((row: CrossWordBoxData[], y) => (
+              <div key={y} className="flex">
+                {row.map((box: CrossWordBoxData, x) => (
+                  <div
+                    key={x}
+                    onClick={() => takeAction(x, y)}
+                    className={`w-[40px] h-[40px] max-md:w-[35px] max-md:h-[35px] max-sm:w-[25px] max-sm:h-[25px] max-xs:w-[20px] max-xs:h-[20px] border-[0.5px] border-secondary-900 cursor-pointer flex items-center justify-center relative 
                   ${y == 0 ? "border-t-2 border-t-black" : ""} ${
                     y == height - 1 ? "border-b-2 border-b-black" : ""
                   } ${x == 0 ? "border-l-2 border-l-black" : ""} ${
@@ -1659,106 +1685,118 @@ export default function Crossword() {
                       ? `${determineAssociationColor(box)}`
                       : ""
                   }`}
-                >
-                  <p className="absolute text-sm top-[1px] right-1">
-                    {mode == "build" && debug
-                      ? `${
-                          box.number != undefined
-                            ? `${box.belongsTo.length == 1 ? "p" : "c"}`
-                            : ""
-                        }`
-                      : ""}
-                  </p>
-                  <p className="absolute text-[0.7rem] max-sm:text-[0.5rem] top-[1px] left-1">
-                    {box.number}
-                  </p>
-                  <p
-                    className={`max-sm:text-[0.7rem] ${
-                      (checked ||
-                        (singleWordChecked &&
-                          wordBoxes.boxes.some(
-                            (wordBox) => wordBox.x === x && wordBox.y === y,
-                          ))) &&
-                      box.state != "black" &&
-                      mode == "play"
+                  >
+                    <p className="absolute text-sm top-[1px] right-1">
+                      {mode == "build" && debug
                         ? `${
-                            box.guess == box.answer
-                              ? "text-green-700"
-                              : "text-red-700"
+                            box.number != undefined
+                              ? `${box.belongsTo.length == 1 ? "p" : "c"}`
+                              : ""
                           }`
-                        : ""
-                    } `}
-                  >{`${mode == "play" ? box.guess : box.answer} `}</p>
-                  <p className="absolute text-sm bottom-[1px] left-1">
-                    {mode == "build" && debug ? box.belongsTo.join(",") : ""}
-                  </p>
-                  <p className="absolute text-sm bottom-[1px] right-1">
-                    {mode == "build" && debug
-                      ? `${
-                          box.next ? `${box.next == "across" ? "a" : "d"}` : ""
-                        }`
-                      : ""}
-                  </p>
-                </div>
-              ))}
-            </div>
-          ))}
-          <div
-            className={`flex items-center justify-between mt-2 max-xl:w-full ${
-              mode == "build" ? "hidden" : ""
-            }`}
-          >
-            <p>{`Crossword by ${author}`}</p>
-            <p>{`Published ${published}`}</p>
-          </div>
-        </section>
+                        : ""}
+                    </p>
+                    <p className="absolute text-[0.7rem] max-sm:text-[0.5rem] top-[1px] left-1">
+                      {box.number}
+                    </p>
+                    <p
+                      className={`max-sm:text-[0.7rem] ${
+                        (checked ||
+                          (singleWordChecked &&
+                            wordBoxes.boxes.some(
+                              (wordBox) => wordBox.x === x && wordBox.y === y,
+                            ))) &&
+                        box.state != "black" &&
+                        mode == "play"
+                          ? `${
+                              box.guess == box.answer
+                                ? "text-green-700"
+                                : "text-red-700"
+                            }`
+                          : ""
+                      } `}
+                    >{`${mode == "play" ? box.guess : box.answer} `}</p>
+                    <p className="absolute text-sm bottom-[1px] left-1">
+                      {mode == "build" && debug ? box.belongsTo.join(",") : ""}
+                    </p>
+                    <p className="absolute text-sm bottom-[1px] right-1">
+                      {mode == "build" && debug
+                        ? `${
+                            box.next
+                              ? `${box.next == "across" ? "a" : "d"}`
+                              : ""
+                          }`
+                        : ""}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </section>
+        </div>
         <section className="flex flex-col gap-2 w-full">
           {mode == "play" ? (
-            <section className="flex gap-2 w-full">
-              <div className="border-t-2 border-black p-5 max-xs:p-2 w-full">
-                <p
-                  className={`${
-                    hint == ""
-                      ? "text-accent-100 cursor-default select-none"
-                      : ""
-                  }`}
-                >
-                  {hint == "" ? "Hint Here" : `${hintNumber}. ${hint}`}
-                </p>
-              </div>
-              <div className="border-t-2 border-black p-5 max-xs:p-2 w-1/6 flex items-center justify-center">
-                <Stopwatch
-                  start={isRunning}
-                  reset={isReset}
-                  onResetComplete={handleResetComplete}
-                  onStop={handleStopTime}
-                />
-              </div>
-            </section>
-          ) : null}
+            <div className="flex gap-2">
+              <Button
+                onClick={() => setChecked(!checked)}
+                title="Check Board"
+                classModifier={`p-5 ${checked ? "bg-secondary-500" : ""}`}
+              />
+              <Button
+                onClick={() => setSingleWordChecked(!singleWordChecked)}
+                title="Check Word"
+                classModifier={singleWordChecked ? "bg-secondary-500" : ""}
+              />
+              <Button onClick={clearBoard} title="Clear Board" />
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <Button
+                onClick={() => editModeSelector("editBlack")}
+                title="Edit Black"
+                classModifier={`p-5 ${
+                  editMode == "editBlack" ? "bg-secondary-500" : ""
+                }`}
+              />
+              <Button
+                onClick={() => editModeSelector("placeNumbers")}
+                title="Place Numbers"
+                classModifier={`p-5 ${
+                  editMode == "placeNumbers" ? "bg-secondary-500" : ""
+                }`}
+              />
+              <Button
+                onClick={() => editModeSelector("removeNumbers")}
+                title="Remove Numbers"
+                classModifier={`p-5 ${
+                  editMode == "removeNumbers" ? "bg-secondary-500" : ""
+                }`}
+              />
+              <Button
+                onClick={() => editModeSelector("placeLetters")}
+                title="Place Letters"
+                classModifier={`p-5 ${
+                  editMode == "placeLetters" ? "bg-secondary-500" : ""
+                }`}
+              />
+            </div>
+          )}
           {showHintCreationPopup ? (
-            <section className="bg-accent-100 p-5 max-xs:p-2 rounded-xl">
+            <section>
               <input
                 type="text"
-                placeholder="Edit Hint"
-                className="bg-accent-200 p-2 rounded-lg w-full placeholder:text-secondary-900 focus:outline-none"
+                placeholder={`${hintNumber}. Edit Hint`}
+                className="bg-accent-200 p-2 rounded w-full placeholder:text-secondary-900 focus:outline-none"
                 value={hint}
                 onChange={(event) => editHint(event)}
               />
-              <div className="flex mt-2">
-                <button
-                  onClick={saveEditHint}
-                  className="w-full p-2 bg-green-300 hover:bg-green-400 rounded-tl-lg rounded-bl-lg transition-all duration-200 ease-in-out"
-                >
-                  Save
-                </button>
-                <button
-                  onClick={deactivateHintEditPopup}
-                  className="w-full p-2 bg-secondary-200 hover:bg-secondary-300 rounded-tr-lg rounded-br-lg transition-all duration-200 ease-in-out"
-                >
-                  Cancel
-                </button>
-              </div>
+              <ConnectedButton
+                onClickLeft={saveEditHint}
+                onClickRight={deactivateHintEditPopup}
+                leftTitle="Save"
+                rightTitle="Cancel"
+                containerClassModifier="mt-2"
+                leftClassModifier="bg-green-400 hover:bg-green-500"
+              />
             </section>
           ) : null}
           <section className="flex border-black border-t-2 gap-2 max-h-80 justify-between max-sm:flex-col">
@@ -1800,175 +1838,62 @@ export default function Crossword() {
               ) : null}
             </div>
           </section>
-          <div className={`flex gap-2 ${mode == "build" ? "hidden" : ""}`}>
-            <Button
-              onClick={() => setChecked(!checked)}
-              title="Check Board"
-              classModifier={checked ? "bg-secondary-500" : ""}
-            />
-            <Button
-              onClick={() => setSingleWordChecked(!singleWordChecked)}
-              title="Check Word"
-              classModifier={singleWordChecked ? "bg-secondary-500" : ""}
-            />
-          </div>
-          <Button
-            onClick={clearBoard}
-            title="Clear Board"
-            classModifier={mode == "build" ? "hidden" : ""}
-          />
           {user && (isMaksim || isAdmin || isHelper) ? (
-            <div className="flex">
-              <button
-                onClick={toggleMode}
-                className={`w-full p-2 bg-secondary-200 hover:bg-secondary-300 rounded-tl-lg rounded-bl-lg transition-all duration-200 ease-in-out ${
-                  mode === "play" ? "bg-secondary-400" : ""
-                }`}
-              >
-                Play
-              </button>
-              <button
-                onClick={toggleMode}
-                className={`w-full p-2 bg-secondary-200 hover:bg-secondary-300 rounded-tr-lg rounded-br-lg transition-all duration-200 ease-in-out ${
-                  mode === "build" ? "bg-secondary-400" : ""
-                }`}
-              >
-                Build
-              </button>
-            </div>
+            <ConnectedButton
+              onClickLeft={toggleMode}
+              onClickRight={toggleMode}
+              leftTitle="Play"
+              rightTitle="Build"
+              leftClassModifier={
+                mode == "play"
+                  ? "bg-secondary-500 border-r-2 border-secondary-400"
+                  : ""
+              }
+              rightClassModifier={
+                mode == "build"
+                  ? "bg-secondary-500 border-l-2 border-secondary-400"
+                  : ""
+              }
+            />
           ) : null}
           {mode === "build" ? (
             <>
-              <section className="bg-accent-100 p-5 rounded-xl">
-                <p className="font-bold text-xl text-center">Build Tools</p>
-                <p className="text-red-500 text-center italic">
+              <section>
+                <p className="mb-2 text-red-500 text-center italic">
                   There is no undo. I will not make one. Dont mess up.
                 </p>
                 <div className="flex gap-2">
-                  <button
-                    className="bg-secondary-200 p-2 rounded-lg w-full hover:bg-secondary-300 active:tracking-widest transition-all duration-200 ease-in-out"
-                    onClick={fillNoneLettersBlack}
-                  >
-                    Blackout
-                  </button>
-                  <button
-                    className="bg-secondary-200 p-2 rounded-lg w-full hover:bg-secondary-300 active:tracking-widest transition-all duration-200 ease-in-out"
-                    onClick={fillBlackEmpty}
-                  >
-                    Whiteout
-                  </button>
+                  <Button onClick={fillNoneLettersBlack} title="Blackout" />
+                  <Button onClick={fillBlackEmpty} title="Whiteout" />
                 </div>
                 <div className="flex gap-2 mt-2">
-                  <button
-                    className="bg-secondary-200 p-2 rounded-lg w-full hover:bg-secondary-300 active:tracking-widest transition-all duration-200 ease-in-out"
-                    onClick={clearLetters}
-                  >
-                    Clear Letters
-                  </button>
-                  <button
-                    className="bg-secondary-200 p-2 rounded-lg w-full hover:bg-secondary-300 active:tracking-widest transition-all duration-200 ease-in-out"
-                    onClick={clearAssociations}
-                  >
-                    Clear Numbers
-                  </button>
+                  <Button onClick={clearLetters} title="Clear Letters" />
+                  <Button onClick={clearAssociations} title="Clear Numbers" />
                 </div>
-                <button
-                  className={`bg-secondary-200 mt-2 p-2 rounded-lg w-full hover:bg-secondary-300 active:tracking-widest transition-all duration-200 ease-in-out ${
-                    showAssociations ? "bg-secondary-400" : ""
-                  }`}
-                  onClick={() => setShowAssociations(!showAssociations)}
-                >
-                  Toggle Associations
-                </button>
-                <button
-                  className={`bg-secondary-200 mt-2 p-2 rounded-lg w-full hover:bg-secondary-300 active:tracking-widest transition-all duration-200 ease-in-out ${
-                    debug ? "bg-secondary-400" : ""
-                  }`}
-                  onClick={() => setDebug(!debug)}
-                >
-                  Debug
-                </button>
-                <div className="flex flex-col gap-2 mt-2">
-                  <div
-                    className="flex gap-2 items-center cursor-pointer"
-                    onClick={() => editModeSelector("editBlack")}
-                  >
-                    <div
-                      className={`w-[30px] h-[30px] rounded-lg border border-secondary-300 ${
-                        editMode == "editBlack" ? "bg-secondary-300" : null
-                      } hover:bg-secondary-200 transition-all duration-200 ease-in-out`}
-                    ></div>
-                    <p>Edit Black</p>
-                  </div>
-                  <div
-                    className="flex gap-2 items-center cursor-pointer"
-                    onClick={() => editModeSelector("placeNumbers")}
-                  >
-                    <div
-                      className={`w-[30px] h-[30px] rounded-lg border border-secondary-300 ${
-                        editMode == "placeNumbers" ? "bg-secondary-300" : null
-                      } hover:bg-secondary-200 transition-all duration-200 ease-in-out`}
-                    ></div>
-                    <p>Place Numbers</p>
-                  </div>
-                  {editMode == "placeNumbers" ? (
-                    <div className="pl-10">
-                      <p>1. Select a square</p>
-                      <p>2. Use right and down keys to set a direction</p>
-                      <p>3. Press enter to confirm number placement</p>
-                    </div>
-                  ) : null}
-                  <div
-                    className="flex gap-2 items-center cursor-pointer"
-                    onClick={() => editModeSelector("removeNumbers")}
-                  >
-                    <div
-                      className={`w-[30px] h-[30px] rounded-lg border border-secondary-300 ${
-                        editMode == "removeNumbers" ? "bg-secondary-300" : null
-                      } hover:bg-secondary-200 transition-all duration-200 ease-in-out`}
-                    ></div>
-                    <p>Remove Numbers</p>
-                  </div>
-                  {editMode == "removeNumbers" ? (
-                    <div className="pl-10">
-                      <p>
-                        1. Select a square with a number in the top left corner
-                      </p>
-                    </div>
-                  ) : null}
-                  <div
-                    className="flex gap-2 items-center cursor-pointer"
-                    onClick={() => editModeSelector("placeLetters")}
-                  >
-                    <div
-                      className={`w-[30px] h-[30px] rounded-lg border border-secondary-300 ${
-                        editMode == "placeLetters" ? "bg-secondary-300" : null
-                      } hover:bg-secondary-200 transition-all duration-200 ease-in-out`}
-                    ></div>
-                    <p>Place Letters</p>
-                  </div>
-                  {editMode == "placeLetters" ? (
-                    <div className="pl-10">
-                      <p>1. Select a square</p>
-                      <p>2. Use right and down keys to set a direction</p>
-                      <p>3. Press a letter</p>
-                    </div>
-                  ) : null}
+                <div className="mt-2 flex flex-col gap-2">
+                  <Button
+                    onClick={() => setShowAssociations(!showAssociations)}
+                    title="Toggle Associations"
+                    classModifier={showAssociations ? "bg-secondary-500" : ""}
+                  />
+                  <Button
+                    onClick={() => setDebug(!debug)}
+                    title="Debug"
+                    classModifier={showAssociations ? "bg-secondary-500" : ""}
+                  />
                 </div>
               </section>
               <section className="flex gap-2 items-center justify-between">
-                <button
-                  className="bg-red-300 p-5 rounded-lg w-full hover:bg-red-400 active:tracking-widest transition-all duration-200 ease-in-out"
+                <Button
                   onClick={cancelBuildWorkflow}
-                >
-                  Cancel
-                </button>
-                <button
-                  className="bg-secondary-200 p-5 rounded-lg w-full hover:bg-secondary-300 active:tracking-widest transition-all duration-200 ease-in-out"
+                  title="Cancel"
+                  classModifier="p-5 bg-red-500 hover:bg-red-600"
+                />
+                <Button
                   onClick={updateCrossword}
-                >
-                  Update
-                </button>
+                  title="Update"
+                  classModifier="p-5"
+                />
               </section>
             </>
           ) : null}

@@ -11,7 +11,7 @@ type Props = {
   rightClassModifier?: string;
 };
 
-export default function Button({
+export default function ConnectedButton({
   leftTitle,
   rightTitle,
   disabled,
@@ -46,7 +46,7 @@ export default function Button({
       </button>
       <button
         type="button"
-        className={`w-full p-2 rounded-tl rounded-bl transition-all duration-200 ease-in-out bg-secondary-400 hover:bg-secondary-500 ${
+        className={`w-full p-2 rounded-tr rounded-br transition-all duration-200 ease-in-out bg-secondary-400 hover:bg-secondary-500 ${
           rightClassModifier ? rightClassModifier : ""
         } ${
           disabled || rightDisabled
