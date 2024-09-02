@@ -1967,18 +1967,16 @@ export default function Crossword() {
             </p>
           </div>
           <div className="flex gap-2 mt-2 w-3/6">
-            <button
-              className="bg-secondary-200 p-5 rounded-lg w-full hover:bg-secondary-300 active:tracking-widest transition-all duration-200 ease-in-out"
+            <Button
               onClick={playAgain}
-            >
-              Play Again
-            </button>
-            <button
-              className="bg-secondary-200 p-5 rounded-lg w-full hover:bg-secondary-300 active:tracking-widest transition-all duration-200 ease-in-out"
+              title="Play Again"
+              classModifier="p-5 bg-secondary-400 hover:bg-secondary-500"
+            />
+            <Button
               onClick={() => router.push("/")}
-            >
-              Browse Games
-            </button>
+              title="Browse Games"
+              classModifier="p-5 bg-secondary-400 hover:bg-secondary-500"
+            />
           </div>
         </section>
       ) : null}
