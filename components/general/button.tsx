@@ -14,13 +14,11 @@ export default function Button({
   return (
     <button
       type="button"
-      className={`w-full p-2 rounded transition-all duration-200 ease-in-out bg-secondary-400 hover:bg-secondary-500 ${
-        classModifier ? classModifier : ""
-      } ${
+      className={`w-full p-2 rounded transition-all duration-200 ease-in-out ${
         disabled
           ? "cursor-not-allowed bg-gray-500 hover:bg-gray-500 dark:bg-gray-500 dark:hover:bg-gray-500"
           : "cursor-pointer active:tracking-widest"
-      }`}
+      } ${classModifier ? classModifier : ""}`}
       onClick={(e) => {
         if (!disabled) {
           onClick(e);

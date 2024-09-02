@@ -29,7 +29,7 @@ export default function ConnectedButton({
     >
       <button
         type="button"
-        className={`w-full p-2 rounded-tl rounded-bl transition-all duration-200 ease-in-out bg-secondary-400 hover:bg-secondary-500 ${
+        className={`w-full p-2 rounded-tl rounded-bl transition-all duration-200 ease-in-out ${
           leftClassModifier ? leftClassModifier : ""
         } ${
           disabled || leftDisabled
@@ -46,7 +46,7 @@ export default function ConnectedButton({
       </button>
       <button
         type="button"
-        className={`w-full p-2 rounded-tr rounded-br transition-all duration-200 ease-in-out bg-secondary-400 hover:bg-secondary-500 ${
+        className={`w-full p-2 rounded-tr rounded-br transition-all duration-200 ease-in-out ${
           rightClassModifier ? rightClassModifier : ""
         } ${
           disabled || rightDisabled

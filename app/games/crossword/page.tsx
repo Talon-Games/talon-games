@@ -1739,14 +1739,24 @@ export default function Crossword() {
               <Button
                 onClick={() => setChecked(!checked)}
                 title="Check Board"
-                classModifier={`p-5 ${checked ? "bg-secondary-500" : ""}`}
+                classModifier={`p-5 bg-secondary-400 hover:bg-secondary-500 ${
+                  checked ? "bg-secondary-500" : ""
+                }`}
               />
               <Button
                 onClick={() => setSingleWordChecked(!singleWordChecked)}
                 title="Check Word"
-                classModifier={singleWordChecked ? "bg-secondary-500" : ""}
+                classModifier={
+                  singleWordChecked
+                    ? "bg-secondary-500"
+                    : "bg-secondary-400 hover:bg-secondary-500"
+                }
               />
-              <Button onClick={clearBoard} title="Clear Board" />
+              <Button
+                onClick={clearBoard}
+                title="Clear Board"
+                classModifier="bg-secondary-400 hover:bg-secondary-500"
+              />
             </div>
           ) : (
             <div className="flex gap-2">
@@ -1754,28 +1764,36 @@ export default function Crossword() {
                 onClick={() => editModeSelector("editBlack")}
                 title="Edit Black"
                 classModifier={`p-5 ${
-                  editMode == "editBlack" ? "bg-secondary-500" : ""
+                  editMode == "editBlack"
+                    ? "bg-secondary-500"
+                    : "bg-secondary-400 hover:bg-secondary-500"
                 }`}
               />
               <Button
                 onClick={() => editModeSelector("placeNumbers")}
                 title="Place Numbers"
                 classModifier={`p-5 ${
-                  editMode == "placeNumbers" ? "bg-secondary-500" : ""
+                  editMode == "placeNumbers"
+                    ? "bg-secondary-500"
+                    : "bg-secondary-400 hover:bg-secondary-500"
                 }`}
               />
               <Button
                 onClick={() => editModeSelector("removeNumbers")}
                 title="Remove Numbers"
                 classModifier={`p-5 ${
-                  editMode == "removeNumbers" ? "bg-secondary-500" : ""
+                  editMode == "removeNumbers"
+                    ? "bg-secondary-500"
+                    : "bg-secondary-400 hover:bg-secondary-500"
                 }`}
               />
               <Button
                 onClick={() => editModeSelector("placeLetters")}
                 title="Place Letters"
                 classModifier={`p-5 ${
-                  editMode == "placeLetters" ? "bg-secondary-500" : ""
+                  editMode == "placeLetters"
+                    ? "bg-secondary-500"
+                    : "bg-secondary-400 hover:bg-secondary-500"
                 }`}
               />
             </div>
@@ -1796,6 +1814,7 @@ export default function Crossword() {
                 rightTitle="Cancel"
                 containerClassModifier="mt-2"
                 leftClassModifier="bg-green-400 hover:bg-green-500"
+                rightClassModifier="bg-secondary-400 hover:bg-secondary-500"
               />
             </section>
           ) : null}
@@ -1847,12 +1866,12 @@ export default function Crossword() {
               leftClassModifier={
                 mode == "play"
                   ? "bg-secondary-500 border-r-2 border-secondary-400"
-                  : ""
+                  : "bg-secondary-400 hover:bg-secondary-500"
               }
               rightClassModifier={
                 mode == "build"
                   ? "bg-secondary-500 border-l-2 border-secondary-400"
-                  : ""
+                  : "bg-secondary-400 hover:bg-secondary-500"
               }
             />
           ) : null}
@@ -1863,23 +1882,47 @@ export default function Crossword() {
                   There is no undo. I will not make one. Dont mess up.
                 </p>
                 <div className="flex gap-2">
-                  <Button onClick={fillNoneLettersBlack} title="Blackout" />
-                  <Button onClick={fillBlackEmpty} title="Whiteout" />
+                  <Button
+                    onClick={fillNoneLettersBlack}
+                    title="Blackout"
+                    classModifier="bg-secondary-400 hover:bg-secondary-500"
+                  />
+                  <Button
+                    onClick={fillBlackEmpty}
+                    title="Whiteout"
+                    classModifier="bg-secondary-400 hover:bg-secondary-500"
+                  />
                 </div>
                 <div className="flex gap-2 mt-2">
-                  <Button onClick={clearLetters} title="Clear Letters" />
-                  <Button onClick={clearAssociations} title="Clear Numbers" />
+                  <Button
+                    onClick={clearLetters}
+                    title="Clear Letters"
+                    classModifier="bg-secondary-400 hover:bg-secondary-500"
+                  />
+                  <Button
+                    onClick={clearAssociations}
+                    title="Clear Numbers"
+                    classModifier="bg-secondary-400 hover:bg-secondary-500"
+                  />
                 </div>
                 <div className="mt-2 flex flex-col gap-2">
                   <Button
                     onClick={() => setShowAssociations(!showAssociations)}
                     title="Toggle Associations"
-                    classModifier={showAssociations ? "bg-secondary-500" : ""}
+                    classModifier={
+                      showAssociations
+                        ? "bg-secondary-500"
+                        : "bg-secondary-400 hover:bg-secondary-500"
+                    }
                   />
                   <Button
                     onClick={() => setDebug(!debug)}
                     title="Debug"
-                    classModifier={showAssociations ? "bg-secondary-500" : ""}
+                    classModifier={
+                      showAssociations
+                        ? "bg-secondary-500"
+                        : "bg-secondary-400 hover:bg-secondary-500"
+                    }
                   />
                 </div>
               </section>
@@ -1892,7 +1935,7 @@ export default function Crossword() {
                 <Button
                   onClick={updateCrossword}
                   title="Update"
-                  classModifier="p-5"
+                  classModifier="p-5 bg-secondary-400 hover:bg-secondary-500"
                 />
               </section>
             </>
