@@ -73,9 +73,6 @@ export default function Crossword() {
   const [highlightMode, setHighlightMode] = useState<
     "down" | "across" | "both"
   >("both");
-  const [editMode, setEditMode] = useState<
-    "editBlack" | "placeNumbers" | "removeNumbers" | "placeLetters"
-  >("editBlack");
   const [currentEditNumber, setCurrentEditNumber] = useState(1);
   const [currentEditDirection, setCurrentEditDirection] = useState<
     "down" | "across"
@@ -91,7 +88,9 @@ export default function Crossword() {
     num: number;
     boxes: { x: number; y: number }[];
   }>({ num: 0, boxes: [] });
-  const [checkedBoxes, setBoxesToCheck] = useState(false);
+  const [boxesToCheck, setBoxesToCheck] = useState<{ x: number; y: number }[]>(
+    [],
+  );
 
   const [showHintCreationPopup, setShowHintCreationPopup] = useState(false);
   const [hintNumber, setHintNumber] = useState<number | undefined>(undefined);
@@ -231,7 +230,6 @@ export default function Crossword() {
   };
 
   const startBuildWorkflow = () => {
-    setEditMode("editBlack");
     setHighlightMode("both");
     setCurrentEditNumber(1);
     let table = generateNewTable();
@@ -243,7 +241,6 @@ export default function Crossword() {
   };
 
   const cancelBuildWorkflow = () => {
-    setEditMode("editBlack");
     setHighlightMode("both");
     setCurrentEditNumber(1);
 
@@ -607,30 +604,25 @@ export default function Crossword() {
     return data;
   }
 
-  const editModeSelector = (
-    mode: "editBlack" | "placeNumbers" | "removeNumbers" | "placeLetters",
-  ) => {
+  const startNumberRemover = () => {
     if (!buildData) {
+      triggerNotification("Failed to toggle black", "error", "Data not found");
+      return;
+    }
+
+    if (!currentSelectionNumberXY) {
       triggerNotification(
-        "Failed to change build mode",
+        "Failed to toggle black",
         "error",
-        "Data not found",
+        "Current location not found",
       );
       return;
     }
 
-    let tempData = buildData.map((row) => row.map((box) => ({ ...box })));
+    const data = buildData.map((row) => [...row]);
+    let x = currentSelectionNumberXY[0];
+    let y = currentSelectionNumberXY[1];
 
-    clearHighlightAndSelection(tempData);
-    setBuildData(tempData);
-    setEditMode(mode);
-  };
-
-  function startNumberRemover(
-    x: number,
-    y: number,
-    data: CrossWordBoxData[][],
-  ): CrossWordBoxData[][] {
     let deletionNumber = data[y][x].number;
 
     if (!deletionNumber) {
@@ -642,14 +634,28 @@ export default function Crossword() {
 
     setCurrentEditNumber(currentEditNumber - 1);
 
-    return downShifted;
-  }
+    setBuildData([...downShifted]);
+  };
 
-  function toggleBlack(
-    x: number,
-    y: number,
-    data: CrossWordBoxData[][],
-  ): CrossWordBoxData[][] {
+  const toggleBlack = () => {
+    if (!buildData) {
+      triggerNotification("Failed to toggle black", "error", "Data not found");
+      return;
+    }
+
+    if (!currentSelectionNumberXY) {
+      triggerNotification(
+        "Failed to toggle black",
+        "error",
+        "Current location not found",
+      );
+      return;
+    }
+
+    const data = buildData.map((row) => [...row]);
+    let x = currentSelectionNumberXY[0];
+    let y = currentSelectionNumberXY[1];
+
     const calcTempData = (): CrossWordBoxData[][] | false => {
       if (data[y][x].number != undefined) {
         let num = data[y][x].number;
@@ -689,10 +695,11 @@ export default function Crossword() {
       tempData[y][x].state = "normal";
     } else {
       tempData[y][x].state = "black";
+      setCurrentSelectionNumberXY(undefined);
     }
 
-    return tempData;
-  }
+    setBuildData([...tempData]);
+  };
 
   function downShift(
     data: CrossWordBoxData[][],
@@ -763,20 +770,6 @@ export default function Crossword() {
     tempData = clearHighlightAndSelection(tempData);
 
     tempData = startLetterPlacer(x, y, tempData);
-
-    // if (mode == "play") {
-    //   tempData = startLetterPlacer(x, y, tempData);
-    // } else {
-    //   if (editMode == "editBlack") {
-    //     tempData = toggleBlack(x, y, tempData);
-    //   } else if (editMode == "placeNumbers") {
-    //     tempData = startNumberPlacer(x, y, tempData);
-    //   } else if (editMode == "removeNumbers") {
-    //     tempData = startNumberRemover(x, y, tempData);
-    //   } else if (editMode == "placeLetters") {
-    //     tempData = startLetterPlacer(x, y, tempData);
-    //   }
-    // }
 
     setBuildData(tempData);
   };
@@ -854,7 +847,7 @@ export default function Crossword() {
     y: number,
     data: CrossWordBoxData[][],
   ): CrossWordBoxData[][] {
-    if (data[y][x].state == "black") {
+    if (data[y][x].state == "black" && mode == "play") {
       triggerNotification(
         "Failed to start letter placer",
         "warning",
@@ -868,7 +861,11 @@ export default function Crossword() {
     if (!next) {
       setCurrentTrend(data[y][x].next);
       data = clearHighlightAndSelection(data);
-      data = selectCurrent(x, y, data);
+      if (data[y][x].state != "black") {
+        data = selectCurrent(x, y, data);
+      } else {
+        data = selectCurrent(x, y, data);
+      }
     } else {
       if (
         currentSelectionNumberXY != undefined &&
@@ -882,18 +879,21 @@ export default function Crossword() {
           updateHintFromWordBoxes(boxes, "down"); //TODO: if in build, open hint edit box here.
           setWordBoxes(boxes);
           setCurrentTrend("down");
+          setCurrentEditDirection("down");
         } else {
           data = highlight(x, y, "across", mode == "play" ? false : true, data);
           const boxes = getBoxesInDirection(x, y, "across", data);
           updateHintFromWordBoxes(boxes, "across");
           setWordBoxes(boxes);
           setCurrentTrend("across");
+          setCurrentEditDirection("across");
         }
       } else {
         const boxes = getBoxesInDirection(x, y, next, data);
         updateHintFromWordBoxes(boxes, next);
         setWordBoxes(boxes);
         setCurrentTrend(data[y][x].next);
+        setCurrentEditDirection(data[y][x].next);
         data = highlight(x, y, next, mode == "play" ? false : true, data);
       }
     }
@@ -932,27 +932,6 @@ export default function Crossword() {
     }
   }
 
-  function startNumberPlacer(
-    x: number,
-    y: number,
-    data: CrossWordBoxData[][],
-  ): CrossWordBoxData[][] {
-    if (data[y][x].state == "black") {
-      triggerNotification(
-        "Failed to start number placer",
-        "warning",
-        "Cant place numbers on black squares",
-      );
-      return data;
-    }
-
-    data = clearHighlightAndSelection(data);
-    data = selectCurrent(x, y, data);
-    setCurrentSelectionNumberXY([x, y]);
-
-    return data;
-  }
-
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       const key = event.key;
@@ -971,18 +950,22 @@ export default function Crossword() {
           handleDownKey();
           break;
         case "Enter":
+          if (mode == "play") return;
           event.preventDefault();
           handleEnterForNumberPlace();
           break;
         case "Backspace":
-          if (
-            (mode == "build" &&
-              editMode == "placeLetters" &&
-              !showHintCreationPopup) ||
-            mode == "play"
-          ) {
-            handleBackspaceForLetters();
-          }
+          handleBackspaceForLetters();
+          break;
+        case " ":
+          if (mode == "play") return;
+          event.preventDefault();
+          toggleBlack();
+          break;
+        case "Escape":
+          if (mode == "play") return;
+          event.preventDefault();
+          startNumberRemover();
           break;
         default:
           break;
@@ -996,11 +979,12 @@ export default function Crossword() {
     };
   }, [
     mode,
-    editMode,
     currentSelectionNumberXY,
     highlightMode,
     buildData,
     hintNumber,
+    boxesToCheck,
+    wordBoxes,
   ]);
 
   const handleBackspaceForLetters = () => {
@@ -1026,7 +1010,10 @@ export default function Crossword() {
     let trend = currentTrend;
 
     if (mode == "play") {
+      let boxes: { x: number; y: number }[] = [...boxesToCheck];
       tempData[startY][startX].guess = "";
+      boxes = boxes.filter((box) => box.x != startX || box.y != startY);
+      setBoxesToCheck([...boxes]);
     } else {
       tempData[startY][startX].answer = "";
     }
@@ -1081,8 +1068,14 @@ export default function Crossword() {
       );
       return;
     }
+
     if (mode == "play") {
       tempData[location[1]][location[0]].guess = key;
+      let boxes: { x: number; y: number }[] = [...boxesToCheck];
+      boxes = boxes.filter(
+        (box) => box.x != location[0] || box.y != location[1],
+      );
+      setBoxesToCheck([...boxes]);
     } else {
       tempData[location[1]][location[0]].answer = key;
     }
@@ -1615,6 +1608,13 @@ export default function Crossword() {
       return "bg-green-200";
     }
   }
+
+  const checkWord = () => {
+    let boxes: { x: number; y: number }[] = [...boxesToCheck];
+    wordBoxes.boxes.map((box) => boxes.push(box));
+    setBoxesToCheck([...boxes]);
+  };
+
   return (
     <main className="w-5/6 ml-auto mr-auto">
       <h1 className="font-heading text-center mb-4 text-8xl max-sm:text-7xl max-xs:text-6xl">
@@ -1660,9 +1660,11 @@ export default function Crossword() {
                     x == width - 1 ? "border-r-2 border-r-black" : ""
                   }
                   ${box.state == "highlighted" ? "bg-secondary-300" : ""} ${
-                    box.state == "selected" ? "bg-primary-300" : null
+                    box.state == "selected" ? "!bg-primary-300" : null
                   } ${
-                    box.state == "black" ? "bg-accent-900 cursor-default" : null
+                    box.state == "black"
+                      ? "!bg-accent-900 cursor-default"
+                      : null
                   } ${
                     (showAssociations || debug) && mode == "build"
                       ? `${determineAssociationColor(box)}`
@@ -1683,20 +1685,16 @@ export default function Crossword() {
                     </p>
                     <p
                       className={`max-sm:text-[0.7rem] ${
-                        (checked ||
-                          (singleWordChecked &&
-                            wordBoxes.boxes.some(
-                              (wordBox) => wordBox.x === x && wordBox.y === y,
-                            ))) &&
-                        box.state != "black" &&
-                        mode == "play"
+                        boxesToCheck.some(
+                          (wordBox) => wordBox.x === x && wordBox.y === y,
+                        )
                           ? `${
                               box.guess == box.answer
                                 ? "text-green-700"
                                 : "text-red-700"
                             }`
                           : ""
-                      } `}
+                      }`}
                     >{`${mode == "play" ? box.guess : box.answer} `}</p>
                     <p className="absolute text-sm bottom-[1px] left-1">
                       {mode == "build" && debug ? box.belongsTo.join(",") : ""}
@@ -1720,20 +1718,16 @@ export default function Crossword() {
           {mode == "play" ? (
             <div className="flex gap-2">
               <Button
-                onClick={() => setChecked(!checked)}
+                onClick={checkWord}
                 title="Check Board"
                 classModifier={`p-5 bg-secondary-400 hover:bg-secondary-500 ${
                   checked ? "bg-secondary-500" : ""
                 }`}
               />
               <Button
-                onClick={() => setSingleWordChecked(!singleWordChecked)}
+                onClick={checkWord}
                 title="Check Word"
-                classModifier={
-                  singleWordChecked
-                    ? "bg-secondary-500"
-                    : "bg-secondary-400 hover:bg-secondary-500"
-                }
+                classModifier="bg-secondary-400 hover:bg-secondary-500"
               />
               <Button
                 onClick={clearBoard}
@@ -1742,44 +1736,7 @@ export default function Crossword() {
               />
             </div>
           ) : (
-            <div className="flex gap-2">
-              <Button
-                onClick={() => editModeSelector("editBlack")}
-                title="Edit Black"
-                classModifier={`p-5 ${
-                  editMode == "editBlack"
-                    ? "bg-secondary-500"
-                    : "bg-secondary-400 hover:bg-secondary-500"
-                }`}
-              />
-              <Button
-                onClick={() => editModeSelector("placeNumbers")}
-                title="Place Numbers"
-                classModifier={`p-5 ${
-                  editMode == "placeNumbers"
-                    ? "bg-secondary-500"
-                    : "bg-secondary-400 hover:bg-secondary-500"
-                }`}
-              />
-              <Button
-                onClick={() => editModeSelector("removeNumbers")}
-                title="Remove Numbers"
-                classModifier={`p-5 ${
-                  editMode == "removeNumbers"
-                    ? "bg-secondary-500"
-                    : "bg-secondary-400 hover:bg-secondary-500"
-                }`}
-              />
-              <Button
-                onClick={() => editModeSelector("placeLetters")}
-                title="Place Letters"
-                classModifier={`p-5 ${
-                  editMode == "placeLetters"
-                    ? "bg-secondary-500"
-                    : "bg-secondary-400 hover:bg-secondary-500"
-                }`}
-              />
-            </div>
+            <div className="flex gap-2"></div>
           )}
           {showHintCreationPopup ? (
             <section>
