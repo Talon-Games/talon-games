@@ -878,7 +878,7 @@ export default function Crossword() {
         if (currentTrend == "across") {
           data = highlight(x, y, "down", mode == "play" ? false : true, data);
           const boxes = getBoxesInDirection(x, y, "down", data);
-          updateHintFromWordBoxes(boxes, "down"); //TODO: if in build, open hint edit box here.
+          updateHintFromWordBoxes(boxes, "down");
           setWordBoxes(boxes);
           setCurrentTrend("down");
           setCurrentEditDirection("down");
@@ -909,7 +909,7 @@ export default function Crossword() {
     boxes: { num: number; boxes: { x: number; y: number }[] },
     direction: "down" | "across",
   ) {
-    if (mode == "build" || !buildHints) {
+    if (!buildHints) {
       return;
     }
 
@@ -920,6 +920,9 @@ export default function Crossword() {
         if (buildHints.across[i].number == boxes.num) {
           setHint(buildHints.across[i].hint);
           setHintNumber(buildHints.across[i].number);
+          if (mode == "build") {
+            setShowHintCreationPopup(true);
+          }
           return;
         }
       }
@@ -928,6 +931,9 @@ export default function Crossword() {
         if (buildHints.down[i].number == boxes.num) {
           setHint(buildHints.down[i].hint);
           setHintNumber(buildHints.down[i].number);
+          if (mode == "build") {
+            setShowHintCreationPopup(true);
+          }
           return;
         }
       }
@@ -936,11 +942,14 @@ export default function Crossword() {
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
+      if (showHintCreationPopup) return;
       const key = event.key;
 
       if (key >= "a" && key <= "z") {
         handleKeyPressForLetters(key.toUpperCase());
       }
+
+      console.log(event);
 
       switch (key) {
         case "ArrowRight":
@@ -1764,7 +1773,11 @@ export default function Crossword() {
             <section>
               <input
                 type="text"
-                placeholder={`${hintNumber}. Edit Hint`}
+                placeholder={`${hintNumber}${
+                  hintDirection
+                    ? `${hintDirection == "across" ? "A" : "D"}`
+                    : ""
+                }. Edit Hint`}
                 className="bg-accent-200 p-2 rounded w-full placeholder:text-secondary-900 focus:outline-none"
                 value={hint}
                 onChange={(event) => editHint(event)}
