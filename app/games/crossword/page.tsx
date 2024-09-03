@@ -951,8 +951,6 @@ export default function Crossword() {
         handleKeyPressForLetters(key.toUpperCase());
       }
 
-      console.log(event);
-
       switch (key) {
         case "ArrowRight":
           event.preventDefault();

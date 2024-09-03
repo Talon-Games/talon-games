@@ -26,7 +26,7 @@ export default function GameCard({ game }: { game: Game }) {
         )}`}
       >
         <Image
-          className="max-lg:w-[300px] max-lg:h-[300px]"
+          className="p-5 max-lg:w-[300px] max-lg:h-[300px]"
           src={`/game-icons/${game.icon}`}
           alt={game.name}
           width="400"
