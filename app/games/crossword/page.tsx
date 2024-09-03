@@ -83,7 +83,6 @@ export default function Crossword() {
     "down" | "across" | undefined
   >(undefined);
   const [checked, setChecked] = useState(false);
-  const [singleWordChecked, setSingleWordChecked] = useState(false);
   const [wordBoxes, setWordBoxes] = useState<{
     num: number;
     boxes: { x: number; y: number }[];
@@ -91,6 +90,7 @@ export default function Crossword() {
   const [boxesToCheck, setBoxesToCheck] = useState<{ x: number; y: number }[]>(
     [],
   );
+  const [placeBlack, setPlaceBlack] = useState(false);
 
   const [showHintCreationPopup, setShowHintCreationPopup] = useState(false);
   const [hintNumber, setHintNumber] = useState<number | undefined>(undefined);
@@ -406,13 +406,16 @@ export default function Crossword() {
           belongsTo.push(valueToPush);
         }
         data[startY][x].belongsTo = belongsTo;
-
-        data[startY][x].next = currentState.direction;
+        if (!data[startY][x].number && !data[startY][x].next) {
+          data[startY][x].next = currentState.direction;
+        }
 
         if (nextBlock == undefined || nextBlock.state == "black") {
           break;
         }
       }
+
+      data[startY][startX].next = "across";
     } else {
       for (let y = startY; y < height; y++) {
         const getNextBlock = () => {
@@ -454,12 +457,15 @@ export default function Crossword() {
         }
         data[y][startX].belongsTo = belongsTo;
 
-        data[y][startX].next = currentState.direction;
-
+        if (!data[y][startX].number && !data[y][startX].next) {
+          data[y][startX].next = currentState.direction;
+        }
         if (nextBlock == undefined || nextBlock.state == "black") {
           break;
         }
       }
+
+      data[startY][startX].next = "down";
     }
 
     if (!skipAdd) {
@@ -538,20 +544,6 @@ export default function Crossword() {
     setBuildData(tempData);
   };
 
-  const clearLetters = () => {
-    if (!buildData) {
-      triggerNotification("Failed to clear letters", "error", "Data not found");
-      return;
-    }
-    const tempData = buildData.map((row) =>
-      row.map((box) => ({
-        ...box,
-        answer: "",
-      })),
-    );
-    setBuildData(tempData);
-  };
-
   const clearAssociations = () => {
     if (!buildData) {
       triggerNotification(
@@ -601,6 +593,7 @@ export default function Crossword() {
       }
     }
 
+    if (data[y][x].state == "black") return data;
     data[y][x].state = "selected";
 
     return data;
@@ -641,25 +634,11 @@ export default function Crossword() {
     setBuildData([...downShifted]);
   };
 
-  const toggleBlack = () => {
-    if (!buildData) {
-      triggerNotification("Failed to toggle black", "error", "Data not found");
-      return;
-    }
-
-    if (!currentSelectionNumberXY) {
-      triggerNotification(
-        "Failed to toggle black",
-        "error",
-        "Current location not found",
-      );
-      return;
-    }
-
-    const data = buildData.map((row) => [...row]);
-    let x = currentSelectionNumberXY[0];
-    let y = currentSelectionNumberXY[1];
-
+  function toggleBlack(
+    x: number,
+    y: number,
+    data: CrossWordBoxData[][],
+  ): CrossWordBoxData[][] {
     const calcTempData = (): CrossWordBoxData[][] | false => {
       if (data[y][x].number != undefined) {
         let num = data[y][x].number;
@@ -702,8 +681,8 @@ export default function Crossword() {
       setCurrentSelectionNumberXY(undefined);
     }
 
-    setBuildData([...tempData]);
-  };
+    return data;
+  }
 
   function downShift(
     data: CrossWordBoxData[][],
@@ -772,9 +751,11 @@ export default function Crossword() {
 
     let tempData = buildData.map((row) => row.map((box) => ({ ...box })));
     tempData = clearHighlightAndSelection(tempData);
-
-    tempData = startLetterPlacer(x, y, tempData);
-
+    if (!placeBlack) {
+      tempData = startLetterPlacer(x, y, tempData);
+    } else {
+      tempData = toggleBlack(x, y, tempData);
+    }
     setBuildData(tempData);
   };
 
@@ -971,7 +952,7 @@ export default function Crossword() {
         case " ":
           if (mode == "play") return;
           event.preventDefault();
-          toggleBlack();
+          setPlaceBlack(!placeBlack);
           break;
         case "Escape":
           if (mode == "play") return;
@@ -1647,11 +1628,11 @@ export default function Crossword() {
   };
 
   return (
-    <main className="w-5/6 ml-auto mr-auto">
+    <main className="w-9/12 ml-auto mr-auto">
       <h1 className="font-heading text-center mb-4 text-8xl max-sm:text-7xl max-xs:text-6xl">
         Crossword
       </h1>
-      <section className="flex justify-center gap-2 max-xl:flex-col w-full">
+      <section className="flex justify-center gap-5 max-xl:flex-col w-full">
         <div className="flex flex-col gap-2">
           {mode == "play" ? (
             <section className="flex gap-2 w-full">
@@ -1674,7 +1655,32 @@ export default function Crossword() {
               />
             </section>
           ) : (
-            <section className="flex gap-2"></section>
+            <section className="flex gap-2">
+              <Button
+                onClick={fillNoneLettersBlack}
+                title="Blackout"
+                classModifier="bg-secondary-400 hover:font-bold hover:bg-secondary-500"
+              />
+              <Button
+                onClick={fillBlackEmpty}
+                title="Whiteout"
+                classModifier="bg-secondary-400 hover:bg-secondary-500"
+              />
+              <Button
+                onClick={clearAssociations}
+                title="Clear Numbers"
+                classModifier="bg-secondary-400 hover:bg-secondary-500"
+              />
+              <Button
+                onClick={() => setDebug(!debug)}
+                title="Debug"
+                classModifier={
+                  showAssociations
+                    ? "bg-secondary-500"
+                    : "bg-secondary-400 hover:bg-secondary-500"
+                }
+              />
+            </section>
           )}
           <section className="flex flex-col max-xl:items-center">
             {buildData?.map((row: CrossWordBoxData[], y) => (
@@ -1683,7 +1689,7 @@ export default function Crossword() {
                   <div
                     key={x}
                     onClick={() => takeAction(x, y)}
-                    className={`w-[35px] h-[35px] max-md:w-[35px] max-md:h-[35px] max-sm:w-[25px] max-sm:h-[25px] max-xs:w-[20px] max-xs:h-[20px] border-[0.5px] border-secondary-900 cursor-pointer flex items-center justify-center relative 
+                    className={`w-[37px] h-[37px] max-md:w-[35px] max-md:h-[35px] max-sm:w-[25px] max-sm:h-[25px] max-xs:w-[20px] max-xs:h-[20px] border-[0.5px] border-secondary-900 cursor-pointer flex items-center justify-center relative 
                   ${y == 0 ? "border-t-2 border-t-black" : ""} ${
                     y == height - 1 ? "border-b-2 border-b-black" : ""
                   } ${x == 0 ? "border-l-2 border-l-black" : ""} ${
@@ -1743,13 +1749,13 @@ export default function Crossword() {
               </div>
             ))}
           </section>
-          <div className="rounded bg-secondary-300 justify-between p-5 max-xs:p-2 w-full flex items-center justify-left">
+          <div className="rounded justify-between -mt-2 w-full flex items-center">
             <p>{`Crossword by ${author}`}</p>
             <p>{`Published ${published}`}</p>
           </div>
         </div>
-        <section className="flex flex-col gap-2 w-full">
-          <section className="w-full flex gap-2">
+        <section className="flex flex-col gap-2 w-7/12">
+          <section className="flex gap-2">
             <div className="rounded bg-secondary-300 max-xs:p-2 w-full flex items-center justify-left">
               {hint ? (
                 <p className="pl-2">{`${hintNumber}${
@@ -1761,7 +1767,7 @@ export default function Crossword() {
                 <div className="block bg-secondary-300 max-xs:p-2 w-full"></div>
               )}
             </div>
-            <div className="rounded bg-secondary-300 p-5 max-xs:p-2 w-1/6 flex items-center justify-center">
+            <div className="rounded bg-secondary-300 p-2 max-xs:p-2 w-1/6 flex items-center justify-center">
               <Stopwatch
                 start={isRunning}
                 reset={isReset}
@@ -1794,11 +1800,11 @@ export default function Crossword() {
               />
             </section>
           ) : null}
-          <section className="flex border-black border-t-2 gap-2 max-h-80 justify-between max-sm:flex-col">
+          <section className="flex border-black border-t-2 gap-2 h-full justify-between max-sm:flex-col">
             <div className="w-full">
               <p className="font-bold text-xl text-center">Down</p>
               {buildHints ? (
-                <div className="flex flex-col gap-[0.15rem] overflow-scroll max-h-72">
+                <div className="flex flex-col gap-[0.15rem] overflow-scroll h-[550px]">
                   {buildHints.down.map((hint: CrossWordHint, key) => (
                     <p
                       key={key}
@@ -1813,11 +1819,11 @@ export default function Crossword() {
                 </div>
               ) : null}
             </div>
-            <div className="max-sm:hidden h-[17.5rem] mt-1 border border-black block"></div>
+            <div className="max-sm:hidden h-[550px] mt-1 border border-black block"></div>
             <div className="w-full">
               <p className="font-bold text-xl text-center">Across</p>
               {buildHints ? (
-                <div className="flex flex-col gap-[0.15rem] max-h-72 overflow-scroll">
+                <div className="flex flex-col gap-[0.15rem] h-[550px] overflow-scroll">
                   {buildHints.across.map((hint: CrossWordHint, key) => (
                     <p
                       key={key}
@@ -1853,55 +1859,6 @@ export default function Crossword() {
           ) : null}
           {mode === "build" ? (
             <>
-              <section>
-                <p className="mb-2 text-red-500 text-center italic">
-                  There is no undo. I will not make one. Dont mess up.
-                </p>
-                <div className="flex gap-2">
-                  <Button
-                    onClick={fillNoneLettersBlack}
-                    title="Blackout"
-                    classModifier="bg-secondary-400 hover:bg-secondary-500"
-                  />
-                  <Button
-                    onClick={fillBlackEmpty}
-                    title="Whiteout"
-                    classModifier="bg-secondary-400 hover:bg-secondary-500"
-                  />
-                </div>
-                <div className="flex gap-2 mt-2">
-                  <Button
-                    onClick={clearLetters}
-                    title="Clear Letters"
-                    classModifier="bg-secondary-400 hover:bg-secondary-500"
-                  />
-                  <Button
-                    onClick={clearAssociations}
-                    title="Clear Numbers"
-                    classModifier="bg-secondary-400 hover:bg-secondary-500"
-                  />
-                </div>
-                <div className="mt-2 flex flex-col gap-2">
-                  <Button
-                    onClick={() => setShowAssociations(!showAssociations)}
-                    title="Toggle Associations"
-                    classModifier={
-                      showAssociations
-                        ? "bg-secondary-500"
-                        : "bg-secondary-400 hover:bg-secondary-500"
-                    }
-                  />
-                  <Button
-                    onClick={() => setDebug(!debug)}
-                    title="Debug"
-                    classModifier={
-                      showAssociations
-                        ? "bg-secondary-500"
-                        : "bg-secondary-400 hover:bg-secondary-500"
-                    }
-                  />
-                </div>
-              </section>
               <section className="flex gap-2 items-center justify-between">
                 <Button
                   onClick={cancelBuildWorkflow}
