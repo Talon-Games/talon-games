@@ -21,7 +21,7 @@ export default function GameCard({ game }: { game: Game }) {
   return (
     <div className="flex w-5/6 min-h-96 max-sm:w-[98%] max-sm:flex-col rounded-xl hover:drop-shadow-lg bg-accent-100 transition-all duration-300 ease-in-out">
       <div
-        className={`flex items-center justify-center w-4/6 max-lg:w-3/6 rounded-tl-xl max-sm:w-full max-sm:rounded-tr-xl sm:rouned-bl-xl ${getColor(
+        className={`flex items-center justify-center w-4/6 max-lg:w-3/6 rounded-tl-xl max-sm:w-full max-sm:rounded-tr-xl sm:rounded-bl-xl ${getColor(
           game.color,
         )}`}
       >

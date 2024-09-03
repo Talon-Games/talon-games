@@ -152,7 +152,9 @@ export default function Crossword() {
     title: string,
     type: "success" | "error" | "warning",
     message: string,
+    showInPlay?: boolean,
   ) => {
+    if (mode == "play" && !showInPlay) return;
     setNotification(true);
     setNotificationTitle(title);
     setNotificationType(type);
