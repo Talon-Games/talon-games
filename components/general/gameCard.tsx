@@ -44,7 +44,8 @@ export default function GameCard({ game }: { game: Game }) {
           onClick={() => router.push(`/games/${game.route}`)}
           disabled={game.commingSoon ? true : false}
           title={game.commingSoon ? "Comming Soon" : "Play"}
-          classModifier="p-5 bg-secondary-400 hover:bg-secondary-500 !w-5/6"
+          style="normal"
+          classModifier="p-5 !w-5/6"
         />
       </div>
     </div>

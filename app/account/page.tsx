@@ -8,6 +8,8 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { auth, db } from "@/firebase/config";
 import getRoles from "@/firebase/db/getRoles";
+import Button from "@/components/general/button";
+import ConnectedButton from "@/components/general/connectedButtons";
 
 interface User {
   isMaksim: boolean;
@@ -201,60 +203,54 @@ export default function Account() {
   };
 
   return (
-    <main className="flex flex-col gap-2 items-center py-2">
+    <main className="flex flex-col gap-2 items-center w-9/12 ml-auto mr-auto">
       <h1 className="font-heading text-center text-8xl max-sm:text-7xl max-xs:text-6xl">
         Account
       </h1>
+      <h1 className="text-xl font-bold font-heading">User Management</h1>
+      <input
+        type="text"
+        placeholder="Search Users"
+        className="bg-accent-200 p-2 rounded w-full placeholder:text-secondary-900 focus:outline-none"
+        onChange={searchUsers}
+      />
       {isAdmin ? (
-        <section className="w-full p-5 h-[26rem] bg-accent-100 rounded-xl">
-          <h1 className="text-xl font-bold font-heading">User Management</h1>
-          <input
-            type="text"
-            placeholder="Search Users"
-            className="bg-accent-200 p-2 rounded-lg w-full placeholder:text-secondary-900 focus:outline-none"
-            onChange={searchUsers}
-          />
-          <div className="flex flex-col gap-2 mt-2 overflow-y-scroll h-72">
+        <section className="w-full h-[35rem] rounded-xl overflow-y-scroll">
+          <div className="grid grid-cols-3 gap-2 mt-2 overflow-y-scroll w-full items-center">
             {filteredUserList.map((user: any) => (
               <div
                 key={user.uid}
-                className=" bg-accent-200 p-2 rounded-lg bg-opacity-70"
+                className="border-t-2 border-secondary-400 hover:drop-shadow rounded-t-lg rounded-b-lg bg-accent-100 p-2 rounded-none h-56 transition-all duration-200 ease-in-out flex flex-col justify-between"
               >
-                <h2 className="px-1">{user.name}</h2>
-                <p className="px-1">{user.email}</p>
-                <section className="flex gap-2">
+                <div>
+                  <h2 className="px-1">{user.name}</h2>
+                  <p className="px-1">{user.email}</p>
+                </div>
+                <section className="flex w-full gap-2 mt-2">
                   {isAdmin ? (
-                    <div className="py-2 w-2/12 max-sm:w-3/12 max-xs:w-4/12">
-                      <p className="bg-secondary-100 text-center p-1 rounded-tl-lg rounded-tr-lg">
+                    <div className="w-full">
+                      <p className="bg-secondary-100 text-center p-1 rounded-t">
                         {user.isHelper ? "Helper" : "Not Helper"}
                       </p>
-                      <button
+                      <Button
                         onClick={() => updateUsersHelperStatus(user)}
-                        className={`${
-                          user.isHelper
-                            ? "bg-red-300 hover:bg-red-400"
-                            : "bg-green-300 hover:bg-green-400"
-                        } p-1 text-center w-full rounded-bl-lg rounded-br-lg transition-all duration-200 ease-in-out`}
-                      >
-                        {user.isHelper ? "Remove" : "Add"}
-                      </button>
+                        title={user.isHelper ? "Remove" : "Add"}
+                        style={user.isHelper ? "red" : "green"}
+                        classModifier="rounded-t-none rounded-b !p-1"
+                      />
                     </div>
                   ) : null}
                   {isMaksim ? (
-                    <div className="py-2 w-2/12 max-sm:w-3/12 max-xs:w-4/12">
+                    <div className="w-full">
                       <p className="bg-secondary-100 text-center p-1 rounded-tl-lg rounded-tr-lg">
                         {user.isAdmin ? "Admin" : "Not Admin"}
                       </p>
-                      <button
+                      <Button
                         onClick={() => updateUsersAdminStatus(user)}
-                        className={`${
-                          user.isAdmin
-                            ? "bg-red-300 hover:bg-red-400"
-                            : "bg-green-300 hover:bg-green-400"
-                        } p-1 text-center w-full rounded-bl-lg rounded-br-lg transition-all duration-200 ease-in-out`}
-                      >
-                        {user.isAdmin ? "Remove" : "Add"}
-                      </button>
+                        title={user.isAdmin ? "Remove" : "Add"}
+                        style={user.isAdmin ? "red" : "green"}
+                        classModifier="rounded-t-none rounded-b !p-1"
+                      />
                     </div>
                   ) : null}
                 </section>
@@ -263,30 +259,24 @@ export default function Account() {
           </div>
         </section>
       ) : null}
-      <button
-        className="bg-red-300 p-5 rounded-lg w-full hover:bg-red-400 transition-all duration-200 ease-in-out"
+      <Button
         onClick={startDeleteWorkflow}
-      >
-        Delete Account
-      </button>
+        title="Delete Account"
+        style="red"
+        classModifier="p-5 text-lg"
+      />
       {confirmDeletePopup ? (
         <section className="fixed flex items-center justify-center left-0 top-0 w-full h-full bg-accent-900 bg-opacity-50">
           <div className="p-10 bg-background-50 rounded-xl">
             <p>Are you sure you want to delete your account?</p>
-            <div className="flex mt-2">
-              <button
-                onClick={deleteAccountHandler}
-                className="w-full p-2 bg-red-200 hover:bg-red-300 rounded-tl-lg rounded-bl-lg transition-all duration-200 ease-in-out"
-              >
-                Yes
-              </button>
-              <button
-                onClick={stopDeleteWorkflow}
-                className="w-full p-2 bg-secondary-200 hover:bg-secondary-300 rounded-tr-lg rounded-br-lg transition-all duration-200 ease-in-out"
-              >
-                No
-              </button>
-            </div>
+            <ConnectedButton
+              leftStyle="red"
+              rightStyle="normal"
+              onClickLeft={deleteAccountHandler}
+              onClickRight={stopDeleteWorkflow}
+              leftTitle="Yes"
+              rightTitle="No"
+            />
           </div>
         </section>
       ) : null}

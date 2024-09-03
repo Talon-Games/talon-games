@@ -1,7 +1,12 @@
+import Button from "./button";
+
 type Props = {
   leftTitle: string;
   rightTitle: string;
-  disabled?: boolean;
+  leftStyle: "normal" | "red" | "green";
+  rightStyle: "normal" | "red" | "green";
+  leftActive?: boolean;
+  rightActive?: boolean;
   rightDisabled?: boolean;
   leftDisabled?: boolean;
   onClickLeft: (event: any) => void;
@@ -14,7 +19,10 @@ type Props = {
 export default function ConnectedButton({
   leftTitle,
   rightTitle,
-  disabled,
+  leftStyle,
+  rightStyle,
+  leftActive,
+  rightActive,
   rightDisabled,
   leftDisabled,
   onClickLeft,
@@ -27,40 +35,22 @@ export default function ConnectedButton({
     <div
       className={`flex ${containerClassModifier ? containerClassModifier : ""}`}
     >
-      <button
-        type="button"
-        className={`w-full p-2 rounded-tl rounded-bl transition-all duration-200 ease-in-out ${
-          leftClassModifier ? leftClassModifier : ""
-        } ${
-          disabled || leftDisabled
-            ? "cursor-default bg-gray-500 hover:bg-gray-500 dark:bg-gray-500 dark:hover:bg-gray-500"
-            : "cursor-pointer active:tracking-widest"
-        }`}
-        onClick={(e) => {
-          if (!disabled && !leftDisabled) {
-            onClickLeft(e);
-          }
-        }}
-      >
-        {leftTitle}
-      </button>
-      <button
-        type="button"
-        className={`w-full p-2 rounded-tr rounded-br transition-all duration-200 ease-in-out ${
-          rightClassModifier ? rightClassModifier : ""
-        } ${
-          disabled || rightDisabled
-            ? "cursor-default bg-gray-500 hover:bg-gray-500 dark:bg-gray-500 dark:hover:bg-gray-500"
-            : "cursor-pointer active:tracking-widest"
-        }`}
-        onClick={(e) => {
-          if (!disabled && !rightDisabled) {
-            onClickRight(e);
-          }
-        }}
-      >
-        {rightTitle}
-      </button>
+      <Button
+        onClick={onClickLeft}
+        title={leftTitle}
+        style={leftStyle}
+        active={leftActive}
+        disabled={leftDisabled}
+        classModifier={`${leftClassModifier} rounded-tr-none rounded-br-none`}
+      />
+      <Button
+        onClick={onClickRight}
+        title={rightTitle}
+        style={rightStyle}
+        active={rightActive}
+        disabled={rightDisabled}
+        classModifier={`${rightClassModifier} rounded-tl-none rounded-bl-none`}
+      />
     </div>
   );
 }

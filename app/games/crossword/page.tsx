@@ -63,7 +63,6 @@ export default function Crossword() {
   const [fromDbData, setFromDbData] = useState<CrossWordBoxData[][]>();
   const [buildHints, setBuildHints] = useState<CrosswordHints>();
   const [fromDbHints, setFromDbHints] = useState<CrosswordHints>();
-  const [showAssociations, setShowAssociations] = useState(false);
   const [debug, setDebug] = useState(false);
 
   const [author, setAuthor] = useState("");
@@ -82,7 +81,6 @@ export default function Crossword() {
   const [currentTrend, setCurrentTrend] = useState<
     "down" | "across" | undefined
   >(undefined);
-  const [checked, setChecked] = useState(false);
   const [wordBoxes, setWordBoxes] = useState<{
     num: number;
     boxes: { x: number; y: number }[];
@@ -215,7 +213,6 @@ export default function Crossword() {
       );
     }
 
-    setChecked(false);
     setIsRunning(false);
     setIsReset(true);
     setStoppedTime(null);
@@ -858,20 +855,27 @@ export default function Crossword() {
         currentSelectionNumberXY[0] == x &&
         currentSelectionNumberXY[1] == y
       ) {
-        if (currentTrend == "across") {
+        if (currentTrend == "across" && data[y + 1][x].state != "black") {
           data = highlight(x, y, "down", mode == "play" ? false : true, data);
           const boxes = getBoxesInDirection(x, y, "down", data);
           updateHintFromWordBoxes(boxes, "down");
           setWordBoxes(boxes);
           setCurrentTrend("down");
           setCurrentEditDirection("down");
-        } else {
+        } else if (currentTrend == "down" && data[y][x + 1].state != "black") {
           data = highlight(x, y, "across", mode == "play" ? false : true, data);
           const boxes = getBoxesInDirection(x, y, "across", data);
           updateHintFromWordBoxes(boxes, "across");
           setWordBoxes(boxes);
           setCurrentTrend("across");
           setCurrentEditDirection("across");
+        } else {
+          const boxes = getBoxesInDirection(x, y, next, data);
+          updateHintFromWordBoxes(boxes, next);
+          setWordBoxes(boxes);
+          setCurrentTrend(data[y][x].next);
+          setCurrentEditDirection(data[y][x].next);
+          data = highlight(x, y, next, mode == "play" ? false : true, data);
         }
       } else {
         const boxes = getBoxesInDirection(x, y, next, data);
@@ -1636,49 +1640,32 @@ export default function Crossword() {
         <div className="flex flex-col gap-2">
           {mode == "play" ? (
             <section className="flex gap-2 w-full">
-              <Button
-                onClick={checkBoard}
-                title="Check Board"
-                classModifier={`bg-secondary-400 hover:bg-secondary-500 ${
-                  checked ? "bg-secondary-500" : ""
-                }`}
-              />
-              <Button
-                onClick={checkWord}
-                title="Check Word"
-                classModifier="bg-secondary-400 hover:bg-secondary-500"
-              />
-              <Button
-                onClick={clearBoard}
-                title="Clear Board"
-                classModifier="bg-secondary-400 hover:bg-secondary-500"
-              />
+              <Button onClick={checkBoard} title="Check Board" style="normal" />
+              <Button onClick={checkWord} title="Check Word" style="normal" />
+              <Button onClick={clearBoard} title="Clear Board" style="normal" />
             </section>
           ) : (
             <section className="flex gap-2">
               <Button
                 onClick={fillNoneLettersBlack}
                 title="Blackout"
-                classModifier="bg-secondary-400 hover:font-bold hover:bg-secondary-500"
+                style="normal"
               />
               <Button
                 onClick={fillBlackEmpty}
                 title="Whiteout"
-                classModifier="bg-secondary-400 hover:bg-secondary-500"
+                style="normal"
               />
               <Button
                 onClick={clearAssociations}
                 title="Clear Numbers"
-                classModifier="bg-secondary-400 hover:bg-secondary-500"
+                style="normal"
               />
               <Button
                 onClick={() => setDebug(!debug)}
                 title="Debug"
-                classModifier={
-                  showAssociations
-                    ? "bg-secondary-500"
-                    : "bg-secondary-400 hover:bg-secondary-500"
-                }
+                style="normal"
+                active={debug}
               />
             </section>
           )}
@@ -1702,7 +1689,7 @@ export default function Crossword() {
                       ? "!bg-accent-900 cursor-default"
                       : null
                   } ${
-                    (showAssociations || debug) && mode == "build"
+                    debug && mode == "build"
                       ? `${determineAssociationColor(box)}`
                       : ""
                   }`}
@@ -1754,7 +1741,7 @@ export default function Crossword() {
             <p>{`Published ${published}`}</p>
           </div>
         </div>
-        <section className="flex flex-col gap-2 w-7/12">
+        <section className="flex flex-col gap-2 w-7/12 max-xl:w-full">
           <section className="flex gap-2">
             <div className="rounded bg-secondary-300 max-xs:p-2 w-full flex items-center justify-left">
               {hint ? (
@@ -1792,6 +1779,8 @@ export default function Crossword() {
               <ConnectedButton
                 onClickLeft={saveEditHint}
                 onClickRight={deactivateHintEditPopup}
+                leftStyle="green"
+                rightStyle="red"
                 leftTitle="Save"
                 rightTitle="Cancel"
                 containerClassModifier="mt-2"
@@ -1800,11 +1789,11 @@ export default function Crossword() {
               />
             </section>
           ) : null}
-          <section className="flex border-black border-t-2 gap-2 h-full justify-between max-sm:flex-col">
+          <section className="flex border-black border-t-2 gap-2 h-[30rem] justify-between max-sm:flex-col">
             <div className="w-full">
               <p className="font-bold text-xl text-center">Down</p>
               {buildHints ? (
-                <div className="flex flex-col gap-[0.15rem] overflow-scroll h-[550px]">
+                <div className="flex flex-col gap-[0.15rem] overflow-scroll h-full">
                   {buildHints.down.map((hint: CrossWordHint, key) => (
                     <p
                       key={key}
@@ -1819,11 +1808,11 @@ export default function Crossword() {
                 </div>
               ) : null}
             </div>
-            <div className="max-sm:hidden h-[550px] mt-1 border border-black block"></div>
+            <div className="max-sm:hidden h-full mt-1 border border-black block"></div>
             <div className="w-full">
               <p className="font-bold text-xl text-center">Across</p>
               {buildHints ? (
-                <div className="flex flex-col gap-[0.15rem] h-[550px] overflow-scroll">
+                <div className="flex flex-col gap-[0.15rem] h-full overflow-scroll">
                   {buildHints.across.map((hint: CrossWordHint, key) => (
                     <p
                       key={key}
@@ -1843,6 +1832,8 @@ export default function Crossword() {
             <ConnectedButton
               onClickLeft={toggleMode}
               onClickRight={toggleMode}
+              leftStyle="normal"
+              rightStyle="normal"
               leftTitle="Play"
               rightTitle="Build"
               leftClassModifier={
@@ -1863,12 +1854,14 @@ export default function Crossword() {
                 <Button
                   onClick={cancelBuildWorkflow}
                   title="Cancel"
-                  classModifier="p-5 bg-red-500 hover:bg-red-600"
+                  classModifier="p-5"
+                  style="red"
                 />
                 <Button
                   onClick={updateCrossword}
                   title="Update"
-                  classModifier="p-5 bg-secondary-400 hover:bg-secondary-500"
+                  classModifier="p-5"
+                  style="normal"
                 />
               </section>
             </>
@@ -1903,11 +1896,13 @@ export default function Crossword() {
             <Button
               onClick={playAgain}
               title="Play Again"
-              classModifier="p-5 bg-secondary-400 hover:bg-secondary-500"
+              style="normal"
+              classModifier="p-5"
             />
             <Button
               onClick={() => router.push("/")}
               title="Browse Games"
+              style="normal"
               classModifier="p-5 bg-secondary-400 hover:bg-secondary-500"
             />
           </div>
