@@ -91,6 +91,7 @@ export default function Crossword() {
     num: number;
     boxes: { x: number; y: number }[];
   }>({ num: 0, boxes: [] });
+  const [checkedBoxes, setBoxesToCheck] = useState(false);
 
   const [showHintCreationPopup, setShowHintCreationPopup] = useState(false);
   const [hintNumber, setHintNumber] = useState<number | undefined>(undefined);
@@ -761,19 +762,21 @@ export default function Crossword() {
     let tempData = buildData.map((row) => row.map((box) => ({ ...box })));
     tempData = clearHighlightAndSelection(tempData);
 
-    if (mode == "play") {
-      tempData = startLetterPlacer(x, y, tempData);
-    } else {
-      if (editMode == "editBlack") {
-        tempData = toggleBlack(x, y, tempData);
-      } else if (editMode == "placeNumbers") {
-        tempData = startNumberPlacer(x, y, tempData);
-      } else if (editMode == "removeNumbers") {
-        tempData = startNumberRemover(x, y, tempData);
-      } else if (editMode == "placeLetters") {
-        tempData = startLetterPlacer(x, y, tempData);
-      }
-    }
+    tempData = startLetterPlacer(x, y, tempData);
+
+    // if (mode == "play") {
+    //   tempData = startLetterPlacer(x, y, tempData);
+    // } else {
+    //   if (editMode == "editBlack") {
+    //     tempData = toggleBlack(x, y, tempData);
+    //   } else if (editMode == "placeNumbers") {
+    //     tempData = startNumberPlacer(x, y, tempData);
+    //   } else if (editMode == "removeNumbers") {
+    //     tempData = startNumberRemover(x, y, tempData);
+    //   } else if (editMode == "placeLetters") {
+    //     tempData = startLetterPlacer(x, y, tempData);
+    //   }
+    // }
 
     setBuildData(tempData);
   };
@@ -908,6 +911,8 @@ export default function Crossword() {
       return;
     }
 
+    setHintDirection(direction);
+
     if (direction == "across") {
       for (let i = 0; i < buildHints.across.length; i++) {
         if (buildHints.across[i].number == boxes.num) {
@@ -953,48 +958,21 @@ export default function Crossword() {
       const key = event.key;
 
       if (key >= "a" && key <= "z") {
-        if (
-          (mode == "build" &&
-            editMode == "placeLetters" &&
-            !showHintCreationPopup) ||
-          mode == "play"
-        ) {
-          handleKeyPressForLetters(key.toUpperCase());
-        }
+        handleKeyPressForLetters(key.toUpperCase());
       }
 
       switch (key) {
         case "ArrowRight":
-          if (
-            (mode == "build" &&
-              (editMode == "placeNumbers" || editMode == "placeLetters") &&
-              !showHintCreationPopup) ||
-            mode == "play"
-          ) {
-            event.preventDefault();
-            handleRightKey();
-          }
+          event.preventDefault();
+          handleRightKey();
           break;
         case "ArrowDown":
-          if (
-            (mode == "build" &&
-              (editMode == "placeNumbers" || editMode == "placeLetters") &&
-              !showHintCreationPopup) ||
-            mode == "play"
-          ) {
-            event.preventDefault();
-            handleDownKey();
-          }
+          event.preventDefault();
+          handleDownKey();
           break;
         case "Enter":
-          if (
-            mode == "build" &&
-            editMode == "placeNumbers" &&
-            !showHintCreationPopup
-          ) {
-            event.preventDefault();
-            handleEnterForNumberPlace();
-          }
+          event.preventDefault();
+          handleEnterForNumberPlace();
           break;
         case "Backspace":
           if (
@@ -1396,6 +1374,7 @@ export default function Crossword() {
 
     if (mode == "play") {
       tempData = gotoWord(number, direction, tempData);
+      setHintDirection(direction);
       setHintNumber(number);
       setHint(hint);
     } else {
@@ -1646,7 +1625,11 @@ export default function Crossword() {
           <section className="flex gap-2 w-full">
             <div className="rounded bg-secondary-300 max-xs:p-2 w-full flex items-center justify-left">
               {isRunning == true && hint ? (
-                <p className="pl-2">{`${hintNumber}. ${hint}`}</p>
+                <p className="pl-2">{`${hintNumber}${
+                  hintDirection
+                    ? `${hintDirection == "across" ? "A" : "D"}`
+                    : ""
+                }. ${hint}`}</p>
               ) : (
                 <div className="flex w-full justify-between items-center px-2">
                   <p>{`Crossword by ${author}`}</p>
