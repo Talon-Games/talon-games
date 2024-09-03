@@ -916,14 +916,14 @@ export default function Crossword() {
     }
 
     setHintDirection(direction);
-
+    //TODO: fix hint open on click number
     if (direction == "across") {
       for (let i = 0; i < buildHints.across.length; i++) {
         if (buildHints.across[i].number == boxes.num) {
           setHint(buildHints.across[i].hint);
           setHintNumber(buildHints.across[i].number);
           if (mode == "build") {
-            setShowHintCreationPopup(true);
+            //setShowHintCreationPopup(true);
           }
           return;
         }
@@ -934,7 +934,7 @@ export default function Crossword() {
           setHint(buildHints.down[i].hint);
           setHintNumber(buildHints.down[i].number);
           if (mode == "build") {
-            setShowHintCreationPopup(true);
+            //setShowHintCreationPopup(true);
           }
           return;
         }
@@ -1653,30 +1653,29 @@ export default function Crossword() {
       </h1>
       <section className="flex justify-center gap-2 max-xl:flex-col w-full">
         <div className="flex flex-col gap-2">
-          <section className="flex gap-2 w-full">
-            <div className="rounded bg-secondary-300 max-xs:p-2 w-full flex items-center justify-left">
-              {isRunning == true && hint ? (
-                <p className="pl-2">{`${hintNumber}${
-                  hintDirection
-                    ? `${hintDirection == "across" ? "A" : "D"}`
-                    : ""
-                }. ${hint}`}</p>
-              ) : (
-                <div className="flex w-full justify-between items-center px-2">
-                  <p>{`Crossword by ${author}`}</p>
-                  <p>{`Published ${published}`}</p>
-                </div>
-              )}
-            </div>
-            <div className="rounded bg-secondary-300 p-5 max-xs:p-2 w-1/6 flex items-center justify-center">
-              <Stopwatch
-                start={isRunning}
-                reset={isReset}
-                onResetComplete={handleResetComplete}
-                onStop={handleStopTime}
+          {mode == "play" ? (
+            <section className="flex gap-2 w-full">
+              <Button
+                onClick={checkBoard}
+                title="Check Board"
+                classModifier={`bg-secondary-400 hover:bg-secondary-500 ${
+                  checked ? "bg-secondary-500" : ""
+                }`}
               />
-            </div>
-          </section>
+              <Button
+                onClick={checkWord}
+                title="Check Word"
+                classModifier="bg-secondary-400 hover:bg-secondary-500"
+              />
+              <Button
+                onClick={clearBoard}
+                title="Clear Board"
+                classModifier="bg-secondary-400 hover:bg-secondary-500"
+              />
+            </section>
+          ) : (
+            <section className="flex gap-2"></section>
+          )}
           <section className="flex flex-col max-xl:items-center">
             {buildData?.map((row: CrossWordBoxData[], y) => (
               <div key={y} className="flex">
@@ -1684,7 +1683,7 @@ export default function Crossword() {
                   <div
                     key={x}
                     onClick={() => takeAction(x, y)}
-                    className={`w-[40px] h-[40px] max-md:w-[35px] max-md:h-[35px] max-sm:w-[25px] max-sm:h-[25px] max-xs:w-[20px] max-xs:h-[20px] border-[0.5px] border-secondary-900 cursor-pointer flex items-center justify-center relative 
+                    className={`w-[35px] h-[35px] max-md:w-[35px] max-md:h-[35px] max-sm:w-[25px] max-sm:h-[25px] max-xs:w-[20px] max-xs:h-[20px] border-[0.5px] border-secondary-900 cursor-pointer flex items-center justify-center relative 
                   ${y == 0 ? "border-t-2 border-t-black" : ""} ${
                     y == height - 1 ? "border-b-2 border-b-black" : ""
                   } ${x == 0 ? "border-l-2 border-l-black" : ""} ${
@@ -1744,31 +1743,33 @@ export default function Crossword() {
               </div>
             ))}
           </section>
+          <div className="rounded bg-secondary-300 justify-between p-5 max-xs:p-2 w-full flex items-center justify-left">
+            <p>{`Crossword by ${author}`}</p>
+            <p>{`Published ${published}`}</p>
+          </div>
         </div>
         <section className="flex flex-col gap-2 w-full">
-          {mode == "play" ? (
-            <div className="flex gap-2">
-              <Button
-                onClick={checkBoard}
-                title="Check Board"
-                classModifier={`p-5 bg-secondary-400 hover:bg-secondary-500 ${
-                  checked ? "bg-secondary-500" : ""
-                }`}
-              />
-              <Button
-                onClick={checkWord}
-                title="Check Word"
-                classModifier="bg-secondary-400 hover:bg-secondary-500"
-              />
-              <Button
-                onClick={clearBoard}
-                title="Clear Board"
-                classModifier="bg-secondary-400 hover:bg-secondary-500"
+          <section className="w-full flex gap-2">
+            <div className="rounded bg-secondary-300 max-xs:p-2 w-full flex items-center justify-left">
+              {hint ? (
+                <p className="pl-2">{`${hintNumber}${
+                  hintDirection
+                    ? `${hintDirection == "across" ? "A" : "D"}`
+                    : ""
+                }. ${hint}`}</p>
+              ) : (
+                <div className="block bg-secondary-300 max-xs:p-2 w-full"></div>
+              )}
+            </div>
+            <div className="rounded bg-secondary-300 p-5 max-xs:p-2 w-1/6 flex items-center justify-center">
+              <Stopwatch
+                start={isRunning}
+                reset={isReset}
+                onResetComplete={handleResetComplete}
+                onStop={handleStopTime}
               />
             </div>
-          ) : (
-            <div className="flex gap-2"></div>
-          )}
+          </section>
           {showHintCreationPopup ? (
             <section>
               <input
@@ -1797,14 +1798,14 @@ export default function Crossword() {
             <div className="w-full">
               <p className="font-bold text-xl text-center">Down</p>
               {buildHints ? (
-                <div className="flex flex-col gap-2 overflow-scroll max-h-72">
+                <div className="flex flex-col gap-[0.15rem] overflow-scroll max-h-72">
                   {buildHints.down.map((hint: CrossWordHint, key) => (
                     <p
                       key={key}
                       onClick={() =>
                         handleClickOnHint("down", hint.number, hint.hint)
                       }
-                      className="hover:bg-secondary-400 rounded p-2 transition-all duration-200 ease-out cursor-pointer"
+                      className="hover:bg-secondary-400 rounded p-1 transition-all duration-200 ease-out cursor-pointer"
                     >{`${hint.number}. ${
                       hint.hint == "" ? "Edit Hint" : hint.hint
                     }`}</p>
@@ -1816,14 +1817,14 @@ export default function Crossword() {
             <div className="w-full">
               <p className="font-bold text-xl text-center">Across</p>
               {buildHints ? (
-                <div className="flex flex-col gap-2 max-h-72 overflow-scroll">
+                <div className="flex flex-col gap-[0.15rem] max-h-72 overflow-scroll">
                   {buildHints.across.map((hint: CrossWordHint, key) => (
                     <p
                       key={key}
                       onClick={() =>
                         handleClickOnHint("across", hint.number, hint.hint)
                       }
-                      className="hover:bg-secondary-400 rounded p-2 transition-all duration-200 ease-out cursor-pointer"
+                      className="hover:bg-secondary-400 rounded p-1 transition-all duration-200 ease-out cursor-pointer"
                     >{`${hint.number}. ${
                       hint.hint == "" ? "Edit Hint" : hint.hint
                     }`}</p>
