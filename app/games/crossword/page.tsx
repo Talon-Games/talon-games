@@ -632,6 +632,8 @@ export default function Crossword() {
     data[y][x].number = undefined;
     let downShifted = downShift(data, deletionNumber);
 
+    downShifted = clearHighlightAndSelection(downShifted);
+
     setCurrentEditNumber(currentEditNumber - 1);
 
     setBuildData([...downShifted]);
@@ -1615,6 +1617,26 @@ export default function Crossword() {
     setBoxesToCheck([...boxes]);
   };
 
+  const checkBoard = () => {
+    if (!buildData) {
+      triggerNotification("Failed to check board", "error", "Data not found");
+      return;
+    }
+    let boxes: { x: number; y: number }[] = [...boxesToCheck];
+
+    for (let y = 0; y < buildData.length; y++) {
+      for (let x = 0; x < buildData.length; x++) {
+        if (buildData[y][x].state == "black") {
+          continue;
+        }
+
+        boxes.push({ x: x, y: y });
+      }
+    }
+
+    setBoxesToCheck([...boxes]);
+  };
+
   return (
     <main className="w-5/6 ml-auto mr-auto">
       <h1 className="font-heading text-center mb-4 text-8xl max-sm:text-7xl max-xs:text-6xl">
@@ -1718,7 +1740,7 @@ export default function Crossword() {
           {mode == "play" ? (
             <div className="flex gap-2">
               <Button
-                onClick={checkWord}
+                onClick={checkBoard}
                 title="Check Board"
                 classModifier={`p-5 bg-secondary-400 hover:bg-secondary-500 ${
                   checked ? "bg-secondary-500" : ""
