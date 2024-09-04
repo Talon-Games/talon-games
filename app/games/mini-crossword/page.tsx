@@ -18,6 +18,7 @@ import getHighScore from "@/firebase/db/games/crossword/getHighScore";
 import setHighScore from "@/firebase/db/games/crossword/setHighScore";
 import Button from "@/components/general/button";
 import ConnectedButton from "@/components/general/connectedButtons";
+import ToolTip from "@/components/general/tooltip";
 import isMobile from "@/utils/isMobile";
 
 export type Crossword = {
@@ -1053,19 +1054,15 @@ export default function Crossword() {
     }
     // move the selector back
     if (trend) {
-      if (
-        trend == "across" &&
-        tempData[startY][startX - 1].state != "black" &&
-        startX - 1 >= 0
-      ) {
+      if (trend == "across" && startX - 1 >= 0) {
+        if (tempData[startY][startX - 1].state == "black") return;
+
         tempData[startY][startX].state = "highlighted";
         tempData[startY][startX - 1].state = "selected";
         setCurrentSelectionNumberXY([startX - 1, startY]);
-      } else if (
-        trend == "down" &&
-        tempData[startY - 1][startX].state != "black" &&
-        startY - 1 >= 0
-      ) {
+      } else if (trend == "down" && startY - 1 >= 0) {
+        if (tempData[startY - 1][startX].state == "black") return;
+
         tempData[startY][startX].state = "highlighted";
         tempData[startY - 1][startX].state = "selected";
         setCurrentSelectionNumberXY([startX, startY - 1]);
@@ -1808,12 +1805,18 @@ export default function Crossword() {
     setImporteData("");
     triggerNotification("Imported data!", "success", "Imported crossword data");
   };
+
+  const loadCurrent = () => {
+    setBuildData(fromDbData);
+    setBuildHints(fromDbHints);
+  };
+
   return (
-    <main className="w-9/12 ml-auto mr-auto">
+    <main className="w-9/12 ml-auto mr-auto max-sm:w-11/12">
       <h1 className="font-heading text-center mb-4 text-8xl max-sm:text-7xl max-xs:text-6xl">
         Mini Crossword
       </h1>
-      <section className="flex justify-center gap-5 max-xl:flex-col w-full">
+      <section className="flex justify-center gap-2 max-xl:flex-col w-full">
         <div className="flex flex-col gap-2">
           {mode == "play" ? (
             <section className="flex gap-2 w-full">
@@ -1821,75 +1824,7 @@ export default function Crossword() {
               <Button onClick={checkWord} title="Check Word" style="normal" />
               <Button onClick={clearBoard} title="Clear Board" style="normal" />
             </section>
-          ) : (
-            <section className="flex gap-2">
-              <Button
-                onClick={fillNoneLettersBlack}
-                title="Blackout"
-                style="normal"
-              />
-              <Button
-                onClick={fillBlackEmpty}
-                title="Whiteout"
-                style="normal"
-              />
-              <Button
-                onClick={() => setDebug(!debug)}
-                title="Debug"
-                style="normal"
-                active={debug}
-              />
-              <div
-                className="flex items-center justify-center cursor-pointer bg-secondary-400 hover:bg-secondary-500 transition-all duration-200 ease-in-out px-2 rounded"
-                onClick={exportData}
-              >
-                <svg
-                  width="30"
-                  height="30"
-                  viewBox="0 0 15 15"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    fill-rule="evenodd"
-                    clip-rule="evenodd"
-                    d="M7.5 1.05a.45.45 0 0 1 .45.45v6.914l2.232-2.232a.45.45 0 1 1 .636.636l-3 3a.45.45 0 0 1-.636 0l-3-3a.45.45 0 1 1 .636-.636L7.05 8.414V1.5a.45.45 0 0 1 .45-.45M2.5 10a.5.5 0 0 1 .5.5V12c0 .554.446 1 .996 1h7.005A1 1 0 0 0 12 12v-1.5a.5.5 0 0 1 1 0V12a2 2 0 0 1-1.999 2H3.996A1.997 1.997 0 0 1 2 12v-1.5a.5.5 0 0 1 .5-.5"
-                    fill="#000"
-                  />
-                </svg>
-              </div>
-              <div
-                className="flex items-center justify-center cursor-pointer bg-secondary-400 hover:bg-secondary-500 transition-all duration-200 ease-in-out px-2 rounded"
-                onClick={() => setImportPopup(true)}
-              >
-                <svg
-                  width="30"
-                  height="30"
-                  viewBox="0 0 15 15"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    fill-rule="evenodd"
-                    clip-rule="evenodd"
-                    d="M7.818 1.182a.45.45 0 0 0-.636 0l-3 3a.45.45 0 1 0 .636.636L7.05 2.586V9.5a.45.45 0 1 0 .9 0V2.586l2.232 2.232a.45.45 0 1 0 .636-.636zM2.5 10a.5.5 0 0 1 .5.5V12c0 .554.446 1 .996 1h7.005A1 1 0 0 0 12 12v-1.5a.5.5 0 1 1 1 0V12a2 2 0 0 1-1.999 2H3.996A1.997 1.997 0 0 1 2 12v-1.5a.5.5 0 0 1 .5-.5"
-                    fill="#000"
-                  />
-                </svg>
-              </div>
-              <div
-                className="flex items-center justify-center cursor-pointer bg-secondary-400 hover:bg-secondary-500 transition-all duration-200 ease-in-out px-2 rounded"
-                onClick={() => setHelpPopup(true)}
-              >
-                <svg
-                  width="30"
-                  height="30"
-                  viewBox="0 0 56 56"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path d="M26.887 37.504c1.617 0 2.367-1.125 2.367-2.625v-.797c.047-3.094 1.172-4.383 4.922-6.96 4.008-2.72 6.562-5.86 6.562-10.384 0-7.031-5.718-11.062-12.82-11.062-5.297 0-9.961 2.508-11.953 7.031-.492 1.102-.703 2.18-.703 3.07 0 1.336.773 2.274 2.203 2.274 1.195 0 1.992-.703 2.344-1.852 1.218-4.453 4.148-6.14 7.945-6.14 4.57 0 8.133 2.578 8.133 6.656 0 3.351-2.086 5.226-5.086 7.336-3.68 2.555-6.375 5.297-6.375 9.422v1.476c0 1.5.82 2.555 2.46 2.555m0 12.82c1.851 0 3.328-1.5 3.328-3.328a3.31 3.31 0 0 0-3.328-3.328c-1.828 0-3.352 1.477-3.352 3.328 0 1.828 1.524 3.328 3.352 3.328" />
-                </svg>
-              </div>
-            </section>
-          )}
+          ) : null}
           <section className="flex flex-col max-xl:items-center">
             {buildData?.map((row: CrossWordBoxData[], y) => (
               <div key={y} className="flex">
@@ -1897,7 +1832,7 @@ export default function Crossword() {
                   <div
                     key={x}
                     onClick={() => takeAction(x, y)}
-                    className={`w-[120px] h-[120px] max-md:w-[35px] max-md:h-[35px] max-sm:w-[25px] max-sm:h-[25px] max-xs:w-[20px] max-xs:h-[20px] border-[0.5px] border-secondary-900 cursor-pointer flex items-center justify-center relative 
+                    className={`w-[100px] h-[100px] max-sm:w-[80px] max-sm:h-[80px] max-xs:w-[70px] max-xs:h-[70px] border-[0.5px] border-secondary-900 cursor-pointer flex items-center justify-center relative 
                   ${y == 0 ? "border-t-2 border-t-black" : ""} ${
                     y == height - 1 ? "border-b-2 border-b-black" : ""
                   } ${x == 0 ? "border-l-2 border-l-black" : ""} ${
@@ -1915,7 +1850,7 @@ export default function Crossword() {
                       : ""
                   }`}
                   >
-                    <p className="absolute text-sm top-[1px] right-1">
+                    <p className="absolute text-xl top-[1px] right-1">
                       {mode == "build" && debug
                         ? `${
                             box.number != undefined
@@ -1924,11 +1859,11 @@ export default function Crossword() {
                           }`
                         : ""}
                     </p>
-                    <p className="absolute text-[0.7rem] max-sm:text-[0.5rem] top-[1px] left-1">
+                    <p className="absolute text-xl top-[1px] left-1">
                       {box.number}
                     </p>
                     <p
-                      className={`max-sm:text-[0.7rem] ${
+                      className={`text-2xl${
                         boxesToCheck.some(
                           (wordBox) => wordBox.x === x && wordBox.y === y,
                         )
@@ -1940,10 +1875,10 @@ export default function Crossword() {
                           : ""
                       }`}
                     >{`${mode == "play" ? box.guess : box.answer} `}</p>
-                    <p className="absolute text-sm bottom-[1px] left-1">
+                    <p className="absolute text-xl bottom-[1px] left-1">
                       {mode == "build" && debug ? box.belongsTo.join(",") : ""}
                     </p>
-                    <p className="absolute text-sm bottom-[1px] right-1">
+                    <p className="absolute text-xl bottom-[1px] right-1">
                       {mode == "build" && debug
                         ? `${
                             box.next
@@ -1962,6 +1897,155 @@ export default function Crossword() {
             <p>{`Published ${published}`}</p>
           </div>
         </div>
+        {mode == "build" ? (
+          <section className="flex flex-col gap-2 max-xl:flex-row">
+            <ToolTip content="Clear Board" delay={20}>
+              <div
+                className="flex items-center justify-center cursor-pointer bg-secondary-400 hover:bg-secondary-500 transition-all duration-200 ease-in-out p-2 rounded"
+                onClick={cancelBuildWorkflow}
+              >
+                <svg
+                  width="30"
+                  height="30"
+                  viewBox="0 0 1920 1920"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path d="M954.64 826.418 426.667 298.445 298.445 426.667 826.418 954.64l-527.973 527.973 128.222 128.222 527.973-527.973 527.973 527.973 128.222-128.222-527.973-527.973 527.973-527.973-128.222-128.222z" />
+                </svg>{" "}
+              </div>
+            </ToolTip>
+            <ToolTip content="Blackout" delay={20}>
+              <div
+                className="flex items-center justify-center cursor-pointer bg-secondary-400 hover:bg-secondary-500 transition-all duration-200 ease-in-out p-2 rounded"
+                onClick={fillNoneLettersBlack}
+              >
+                <svg
+                  width="30"
+                  height="30"
+                  viewBox="0 0 50 50"
+                  version="1.2"
+                  baseProfile="tiny"
+                  xmlns="http://www.w3.org/2000/svg"
+                  overflow="inherit"
+                >
+                  <path d="M1 1h48v48h-48z" />
+                </svg>{" "}
+              </div>
+            </ToolTip>
+            <ToolTip content="Whiteout" delay={20}>
+              <div
+                className="flex items-center justify-center cursor-pointer bg-secondary-400 hover:bg-secondary-500 transition-all duration-200 ease-in-out p-2 rounded"
+                onClick={fillBlackEmpty}
+              >
+                <svg
+                  width="30"
+                  height="30"
+                  viewBox="0 0 15 15"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    clip-rule="evenodd"
+                    d="M1 1h13v13H1zm1 1v11h11V2z"
+                    fill="#000"
+                  />
+                </svg>{" "}
+              </div>
+            </ToolTip>
+            <ToolTip content="Load Current" delay={20}>
+              <div
+                className="flex items-center justify-center cursor-pointer bg-secondary-400 hover:bg-secondary-500 transition-all duration-200 ease-in-out p-2 rounded"
+                onClick={loadCurrent}
+              >
+                <svg
+                  height="30"
+                  width="30"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M20 24H0V0h14.41L20 5.59v4.38h-2V8h-6V2H2v20h18zM14 6h3.59L14 2.41zm-3 10 4.71-4.71 1.41 1.41-2.29 2.3h8.59v2h-8.59l2.29 2.29-1.41 1.41z" />
+                </svg>{" "}
+              </div>
+            </ToolTip>
+            <ToolTip content="Debug" delay={20}>
+              <div
+                className={`flex items-center justify-center cursor-pointer bg-secondary-400 hover:bg-secondary-500 transition-all duration-200 ease-in-out p-2 rounded ${
+                  debug ? "bg-secondary-500" : ""
+                }`}
+                onClick={() => setDebug(!debug)}
+              >
+                <svg
+                  width="30"
+                  height="30"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path d="m3.463 12.86-.005-.07zm7.264.69-3.034-3.049 1.014-1.014 3.209 3.225 3.163-3.163 1.014 1.014-3.034 3.034 3.034 3.05-1.014 1.014-3.209-3.225L8.707 17.6l-1.014-1.014 3.034-3.034z" />
+                  <path
+                    fill-rule="evenodd"
+                    clip-rule="evenodd"
+                    d="M16.933 5.003V6h1.345l2.843-2.842 1.014 1.014-2.692 2.691.033.085a13.8 13.8 0 0 1 .885 4.912q0 .503-.034.995l-.005.075h3.54v1.434h-3.72l-.01.058c-.303 1.653-.891 3.16-1.692 4.429l-.06.094 3.423 3.44-1.017 1.012-3.274-3.29-.099.11c-1.479 1.654-3.395 2.646-5.483 2.646-2.12 0-4.063-1.023-5.552-2.723l-.098-.113-3.209 3.208-1.014-1.014 3.366-3.365-.059-.095c-.772-1.25-1.34-2.725-1.636-4.34l-.01-.057H0V12.93h3.538l-.005-.075a14 14 0 0 1-.034-.995c0-1.743.31-3.39.863-4.854l.032-.084-2.762-2.776L2.65 3.135 5.5 6h1.427v-.997a5.003 5.003 0 0 1 10.006 0m-8.572 0V6H15.5v-.997a3.569 3.569 0 0 0-7.138 0zm9.8 2.522-.034-.09H5.733l-.034.09a12.3 12.3 0 0 0-.766 4.335c0 2.76.862 5.201 2.184 6.92 1.32 1.716 3.036 2.649 4.813 2.649s3.492-.933 4.813-2.65c1.322-1.718 2.184-4.16 2.184-6.919 0-1.574-.28-3.044-.766-4.335"
+                  />
+                </svg>{" "}
+              </div>
+            </ToolTip>
+            <ToolTip content="Export" delay={20}>
+              <div
+                className="flex items-center justify-center cursor-pointer bg-secondary-400 hover:bg-secondary-500 transition-all duration-200 ease-in-out p-2 rounded"
+                onClick={exportData}
+              >
+                <svg
+                  width="30"
+                  height="30"
+                  viewBox="0 0 15 15"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    clip-rule="evenodd"
+                    d="M7.818 1.182a.45.45 0 0 0-.636 0l-3 3a.45.45 0 1 0 .636.636L7.05 2.586V9.5a.45.45 0 1 0 .9 0V2.586l2.232 2.232a.45.45 0 1 0 .636-.636zM2.5 10a.5.5 0 0 1 .5.5V12c0 .554.446 1 .996 1h7.005A1 1 0 0 0 12 12v-1.5a.5.5 0 1 1 1 0V12a2 2 0 0 1-1.999 2H3.996A1.997 1.997 0 0 1 2 12v-1.5a.5.5 0 0 1 .5-.5"
+                    fill="#000"
+                  />
+                </svg>
+              </div>
+            </ToolTip>
+            <ToolTip content="Import" delay={20}>
+              <div
+                className="flex items-center justify-center cursor-pointer bg-secondary-400 hover:bg-secondary-500 transition-all duration-200 ease-in-out p-2 rounded"
+                onClick={() => setImportPopup(true)}
+              >
+                <svg
+                  width="30"
+                  height="30"
+                  viewBox="0 0 15 15"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    clip-rule="evenodd"
+                    d="M7.5 1.05a.45.45 0 0 1 .45.45v6.914l2.232-2.232a.45.45 0 1 1 .636.636l-3 3a.45.45 0 0 1-.636 0l-3-3a.45.45 0 1 1 .636-.636L7.05 8.414V1.5a.45.45 0 0 1 .45-.45M2.5 10a.5.5 0 0 1 .5.5V12c0 .554.446 1 .996 1h7.005A1 1 0 0 0 12 12v-1.5a.5.5 0 0 1 1 0V12a2 2 0 0 1-1.999 2H3.996A1.997 1.997 0 0 1 2 12v-1.5a.5.5 0 0 1 .5-.5"
+                    fill="#000"
+                  />
+                </svg>
+              </div>
+            </ToolTip>
+            <ToolTip content="Help" delay={20}>
+              <div
+                className="flex items-center justify-center cursor-pointer bg-secondary-400 hover:bg-secondary-500 transition-all duration-200 ease-in-out p-2 rounded"
+                onClick={() => setHelpPopup(true)}
+              >
+                <svg
+                  width="30"
+                  height="30"
+                  viewBox="0 0 56 56"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path d="M26.887 37.504c1.617 0 2.367-1.125 2.367-2.625v-.797c.047-3.094 1.172-4.383 4.922-6.96 4.008-2.72 6.562-5.86 6.562-10.384 0-7.031-5.718-11.062-12.82-11.062-5.297 0-9.961 2.508-11.953 7.031-.492 1.102-.703 2.18-.703 3.07 0 1.336.773 2.274 2.203 2.274 1.195 0 1.992-.703 2.344-1.852 1.218-4.453 4.148-6.14 7.945-6.14 4.57 0 8.133 2.578 8.133 6.656 0 3.351-2.086 5.226-5.086 7.336-3.68 2.555-6.375 5.297-6.375 9.422v1.476c0 1.5.82 2.555 2.46 2.555m0 12.82c1.851 0 3.328-1.5 3.328-3.328a3.31 3.31 0 0 0-3.328-3.328c-1.828 0-3.352 1.477-3.352 3.328 0 1.828 1.524 3.328 3.352 3.328" />
+                </svg>
+              </div>
+            </ToolTip>
+          </section>
+        ) : null}
         <section className="flex flex-col gap-2 w-7/12 max-xl:w-full">
           <section className="flex gap-2">
             <div className="rounded bg-secondary-300 max-xs:p-2 w-full flex items-center justify-left">
@@ -2010,7 +2094,7 @@ export default function Crossword() {
               />
             </section>
           ) : null}
-          <section className="flex border-black border-t-2 gap-2 h-[30rem] justify-between max-sm:flex-col">
+          <section className="flex border-black border-t-2 gap-2 h-[30rem] justify-between">
             <div className="w-full">
               <p className="font-bold text-xl text-center">Down</p>
               {buildHints ? (
