@@ -112,9 +112,7 @@ export default function Crossword() {
   const [alreadyCompleted, setAlreadyCompleted] = useState(false);
 
   const [mobileDevice, setMobileDevice] = useState(false);
-
   const [importPopup, setImportPopup] = useState(false);
-  const [importedData, setImporteData] = useState("");
 
   const playAgain = () => {
     setIsRunning(false);
@@ -938,7 +936,7 @@ export default function Crossword() {
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (showHintCreationPopup || importPopup) return;
+      if (showHintCreationPopup) return;
       const key = event.key;
 
       if (key >= "a" && key <= "z") {
@@ -984,8 +982,6 @@ export default function Crossword() {
     };
   }, [
     mode,
-    showHintCreationPopup,
-    importPopup,
     currentSelectionNumberXY,
     highlightMode,
     buildData,
@@ -1688,99 +1684,8 @@ export default function Crossword() {
       });
   };
 
-  const importData = () => {
-    if (importedData === "") {
-      triggerNotification(
-        "Failed to import data",
-        "error",
-        "Data can't be empty",
-      );
-      return;
-    }
+  const importData = () => {};
 
-    let crossword: Crossword;
-
-    try {
-      crossword = decodeJsonData(importedData);
-    } catch (e) {
-      triggerNotification(
-        "Failed to import data",
-        "error",
-        "Invalid JSON format",
-      );
-      return;
-    }
-
-    let crosswordData: CrossWordBoxData[][];
-    let hintData: CrosswordHints;
-
-    try {
-      crosswordData = JSON.parse(crossword.data);
-      if (
-        !Array.isArray(crosswordData) ||
-        !crosswordData.every((row) => Array.isArray(row))
-      ) {
-        throw new Error("Invalid crossword data structure");
-      }
-      crosswordData.forEach((row) => {
-        row.forEach((box) => {
-          if (
-            typeof box.answer !== "string" ||
-            typeof box.guess !== "string" ||
-            typeof box.state !== "string"
-          ) {
-            throw new Error("Invalid CrossWordBoxData structure");
-          }
-          if (box.number !== undefined && typeof box.number !== "number") {
-            throw new Error("Invalid number type in CrossWordBoxData");
-          }
-          if (
-            !Array.isArray(box.belongsTo) ||
-            !box.belongsTo.every((num) => typeof num === "number")
-          ) {
-            throw new Error("Invalid belongsTo array in CrossWordBoxData");
-          }
-          if (
-            box.next !== undefined &&
-            box.next !== "down" &&
-            box.next !== "across"
-          ) {
-            throw new Error("Invalid next direction in CrossWordBoxData");
-          }
-        });
-      });
-    } catch (e: any) {
-      triggerNotification("Failed to import data", "error", e.message);
-      return;
-    }
-
-    try {
-      hintData = JSON.parse(crossword.hints);
-      if (typeof hintData !== "object" || !hintData.across || !hintData.down) {
-        throw new Error("Invalid hints data structure");
-      }
-
-      (["across", "down"] as const).forEach((direction) => {
-        hintData[direction].forEach((hint: CrossWordHint) => {
-          if (
-            typeof hint.hint !== "string" ||
-            typeof hint.number !== "number"
-          ) {
-            throw new Error("Invalid CrossWordHint structure");
-          }
-        });
-      });
-    } catch (e: any) {
-      triggerNotification("Failed to import data", "error", e.message);
-      return;
-    }
-
-    setBuildData(crosswordData);
-    setBuildHints(hintData);
-    setImportPopup(false);
-    setImporteData("");
-    triggerNotification("Imported data!", "success", "Imported crossword data");
-  };
   return (
     <main className="w-9/12 ml-auto mr-auto">
       <h1 className="font-heading text-center mb-4 text-8xl max-sm:text-7xl max-xs:text-6xl">
@@ -1833,7 +1738,7 @@ export default function Crossword() {
               </div>
               <div
                 className="flex items-center justify-center cursor-pointer bg-secondary-400 hover:bg-secondary-500 transition-all duration-200 ease-in-out px-2 rounded"
-                onClick={() => setImportPopup(true)}
+                onClick={importData}
               >
                 <svg
                   width="30"
@@ -2053,28 +1958,19 @@ export default function Crossword() {
       </section>
       {importPopup ? (
         <section className="fixed flex flex-col items-center justify-center left-0 top-0 w-full h-full bg-accent-900 bg-opacity-50">
-          <div className="p-10 bg-background-50 rounded-xl w-3/6">
-            <textarea
-              cols={30}
-              rows={10}
-              value={importedData}
-              onChange={(event) => setImporteData(event.target.value)}
-              placeholder="Paste exported crossword data"
-              className="bg-accent-200 p-2 rounded w-full placeholder:text-secondary-900 focus:outline-none"
-            ></textarea>
-          </div>
+          <div className="p-10 bg-background-50 rounded-xl w-3/6"></div>
           <div className="flex gap-2 mt-2 w-3/6">
             <Button
-              onClick={() => setImportPopup(false)}
-              title="Cancel"
-              style="red"
+              onClick={playAgain}
+              title="Play Again"
+              style="normal"
               classModifier="p-5"
             />
             <Button
-              onClick={importData}
-              title="Import"
+              onClick={() => router.push("/")}
+              title="Browse Games"
               style="normal"
-              classModifier="p-5"
+              classModifier="p-5 bg-secondary-400 hover:bg-secondary-500"
             />
           </div>
         </section>
@@ -2114,7 +2010,7 @@ export default function Crossword() {
               onClick={() => router.push("/")}
               title="Browse Games"
               style="normal"
-              classModifier="p-5"
+              classModifier="p-5 bg-secondary-400 hover:bg-secondary-500"
             />
           </div>
         </section>

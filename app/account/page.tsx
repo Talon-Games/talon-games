@@ -203,7 +203,7 @@ export default function Account() {
   };
 
   return (
-    <main className="flex flex-col gap-2 items-center w-9/12 ml-auto mr-auto">
+    <main className="flex flex-col gap-2 items-center w-9/12 ml-auto mr-auto max-sm:w-11/12">
       <h1 className="font-heading text-center text-8xl max-sm:text-7xl max-xs:text-6xl">
         Account
       </h1>
@@ -216,7 +216,7 @@ export default function Account() {
       />
       {isAdmin ? (
         <section className="w-full h-[35rem] rounded-xl overflow-y-scroll">
-          <div className="grid grid-cols-3 gap-2 mt-2 overflow-y-scroll w-full items-center">
+          <div className="grid grid-cols-3 gap-2 mt-2 overflow-y-scroll w-full items-center max-lg:grid-cols-2 max-sm:grid-cols-1">
             {filteredUserList.map((user: any) => (
               <div
                 key={user.uid}
