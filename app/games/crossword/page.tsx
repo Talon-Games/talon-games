@@ -47,8 +47,8 @@ export type CrossWordHint = {
 };
 
 export default function Crossword() {
-  const width = 16;
-  const height = 16;
+  const width = 12;
+  const height = 12;
 
   const router = useRouter();
   const { user } = useAuthContext() as { user: any };
@@ -1897,7 +1897,7 @@ export default function Crossword() {
                   <div
                     key={x}
                     onClick={() => takeAction(x, y)}
-                    className={`w-[37px] h-[37px] max-md:w-[35px] max-md:h-[35px] max-sm:w-[25px] max-sm:h-[25px] max-xs:w-[20px] max-xs:h-[20px] border-[0.5px] border-secondary-900 cursor-pointer flex items-center justify-center relative 
+                    className={`w-[50px] h-[50px] max-md:w-[35px] max-md:h-[35px] max-sm:w-[25px] max-sm:h-[25px] max-xs:w-[20px] max-xs:h-[20px] border-[0.5px] border-secondary-900 cursor-pointer flex items-center justify-center relative 
                   ${y == 0 ? "border-t-2 border-t-black" : ""} ${
                     y == height - 1 ? "border-b-2 border-b-black" : ""
                   } ${x == 0 ? "border-l-2 border-l-black" : ""} ${
@@ -2152,7 +2152,6 @@ export default function Crossword() {
           </div>
         </section>
       ) : null}
-
       {won ? (
         <section className="fixed flex flex-col items-center justify-center left-0 top-0 w-full h-full bg-accent-900 bg-opacity-50">
           <div className="p-10 bg-background-50 rounded-xl w-3/6">
