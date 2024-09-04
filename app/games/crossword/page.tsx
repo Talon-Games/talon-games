@@ -1811,7 +1811,7 @@ export default function Crossword() {
   return (
     <main className="w-9/12 ml-auto mr-auto">
       <h1 className="font-heading text-center mb-4 text-8xl max-sm:text-7xl max-xs:text-6xl">
-        Crossword
+        Mini Crossword
       </h1>
       <section className="flex justify-center gap-5 max-xl:flex-col w-full">
         <div className="flex flex-col gap-2">
