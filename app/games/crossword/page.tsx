@@ -780,7 +780,7 @@ export default function Crossword() {
 
     if (direction == "across") {
       // scan left till number black or edge
-      for (let x = startX; x > 0; x--) {
+      for (let x = startX; x >= 0; x--) {
         if (data[startY][x].state == "black") {
           break;
         } else if (data[startY][x].number != undefined) {
@@ -806,7 +806,7 @@ export default function Crossword() {
       }
     } else {
       // scan up till number black or edge
-      for (let y = startY; y > 0; y--) {
+      for (let y = startY; y >= 0; y--) {
         if (data[y][startX].state == "black") {
           break;
         } else if (data[y][startX].number != undefined) {

@@ -58,7 +58,7 @@ export default function MiniGrid({
               </p>
               <p className="absolute text-xl top-[1px] left-1">{box.number}</p>
               <p
-                className={`text-2xl${
+                className={`${
                   boxesToCheck.some(
                     (wordBox) => wordBox.x === x && wordBox.y === y,
                   )
@@ -68,7 +68,7 @@ export default function MiniGrid({
                           : "text-red-700"
                       }`
                     : ""
-                }`}
+                } text-2xl`}
               >{`${mode == "play" ? box.guess : box.answer} `}</p>
               <p className="absolute text-xl bottom-[1px] left-1">
                 {mode == "build" && debug ? box.belongsTo.join(",") : ""}
