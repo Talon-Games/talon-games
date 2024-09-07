@@ -22,6 +22,15 @@ import ToolTip from "@/components/general/tooltip";
 import isMobile from "@/utils/isMobile";
 import FullGrid from "@/components/games/crossword/fullGrid";
 import MiniGrid from "@/components/games/crossword/miniGrid";
+import getBoxesInDirection from "@/utils/games/crossword/getBoxesInDirection";
+import formatTime from "@/utils/games/formatTime";
+import generateNewTable from "@/utils/games/crossword/generateNewTable";
+import initNewHints from "@/utils/games/crossword/initNewHints";
+import highlight from "@/utils/games/crossword/highlight";
+import clearHighlightAndSelection from "@/utils/games/crossword/clearHighlightAndSelection";
+import selectCurrent from "@/utils/games/crossword/selectCurrent";
+import detectWin from "@/utils/games/crossword/detectWin";
+import findNextSelectionSpot from "@/utils/games/crossword/findNextSelectionSpot";
 
 export type Crossword = {
   data: string; // as json
@@ -140,15 +149,6 @@ export default function Crossword() {
     setStoppedTime(time);
   };
 
-  const formatTime = (time: number) => {
-    const minutes = Math.floor(time / 60);
-    const seconds = time % 60;
-    return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(
-      2,
-      "0",
-    )}`;
-  };
-
   useEffect(() => {
     const mobile = isMobile();
 
@@ -196,37 +196,6 @@ export default function Crossword() {
     });
   }, []);
 
-  const generateNewTable = () => {
-    let table: CrossWordBoxData[][] = [];
-
-    for (let i = 0; i < crosswordSize.height; i++) {
-      let row: CrossWordBoxData[] = [];
-
-      for (let j = 0; j < crosswordSize.width; j++) {
-        let box: CrossWordBoxData = {
-          answer: "",
-          guess: "",
-          belongsTo: [],
-          state: "normal",
-        };
-        row.push(box);
-      }
-
-      table.push(row);
-    }
-
-    return table;
-  };
-
-  const initNewHints = () => {
-    let hints: CrosswordHints = {
-      across: [],
-      down: [],
-    };
-
-    return hints;
-  };
-
   const toggleMode = () => {
     if (!user) {
       triggerNotification(
@@ -262,7 +231,7 @@ export default function Crossword() {
   const startBuildWorkflow = () => {
     setHighlightMode("both");
     setCurrentEditNumber(1);
-    let table = generateNewTable();
+    let table = generateNewTable(crosswordSize.width, crosswordSize.height);
     let newHints = initNewHints();
 
     setBuildHints(newHints);
@@ -276,91 +245,19 @@ export default function Crossword() {
     setShowHintCreationPopup(false);
     setPlaceBlack(false);
 
-    let table = generateNewTable();
+    let table = generateNewTable(crosswordSize.width, crosswordSize.height);
     let newHints = initNewHints();
 
     setBuildHints(newHints);
     setBuildData(table);
   };
 
-  function highlight(
-    x: number,
-    y: number,
-    direction: "across" | "down" | "both",
-    onlyDirections: boolean,
+  function setNumber(
+    direction: "down" | "across",
+    startX: number,
+    startY: number,
     data: CrossWordBoxData[][],
   ): CrossWordBoxData[][] {
-    if (data[y][x].state === "black") return data;
-
-    // Rest non-black boxes
-    data.forEach((row) =>
-      row.forEach((box) => {
-        if (box.state !== "black") box.state = "normal";
-      }),
-    );
-
-    // Highlight in specified directions
-    if (direction === "across" || direction === "both") {
-      if (!onlyDirections) {
-        for (let i = x; i >= 0; i--) {
-          if (data[y][i].state === "black") break;
-          if (data[y][i].number) {
-            data[y][i].state = "highlighted";
-            break;
-          }
-          data[y][i].state = "highlighted";
-        }
-      }
-      for (let i = x; i < crosswordSize.width; i++) {
-        if (data[y][i].state === "black") break;
-        data[y][i].state = "highlighted";
-      }
-    }
-
-    if (direction === "down" || direction === "both") {
-      if (!onlyDirections) {
-        for (let i = y; i >= 0; i--) {
-          if (data[i][x].state === "black") break;
-          if (data[i][x].number) {
-            data[i][x].state = "highlighted";
-            break;
-          }
-          data[i][x].state = "highlighted";
-        }
-      }
-      for (let i = y; i < crosswordSize.height; i++) {
-        if (data[i][x].state === "black") break;
-        data[i][x].state = "highlighted";
-      }
-    }
-
-    data[y][x].state = "selected";
-    return data;
-  }
-
-  function setNumber(data: CrossWordBoxData[][]): CrossWordBoxData[][] {
-    let direction = currentEditDirection;
-    if (!direction) {
-      triggerNotification(
-        "Failed to set number",
-        "error",
-        "Direction not found",
-      );
-      return data;
-    }
-    let location = currentSelectionNumberXY;
-    if (!location) {
-      triggerNotification(
-        "Failed to set number",
-        "error",
-        "Location not found",
-      );
-      return data;
-    }
-
-    const startX = location[0];
-    const startY = location[1];
-
     if (data[startY][startX].state == "black") return data;
 
     let skipAdd = data[startY][startX].number ? true : false;
@@ -576,37 +473,6 @@ export default function Crossword() {
     setBuildData(tempData);
   };
 
-  function clearHighlightAndSelection(data: CrossWordBoxData[][]) {
-    return data.map((row) =>
-      row.map((box) => ({
-        ...box,
-        state:
-          box.state === "highlighted" || box.state === "selected"
-            ? "normal"
-            : box.state,
-      })),
-    );
-  }
-
-  function selectCurrent(
-    x: number,
-    y: number,
-    data: CrossWordBoxData[][],
-  ): CrossWordBoxData[][] {
-    for (let y = 0; y < crosswordSize.height; y++) {
-      for (let x = 0; x < crosswordSize.width; x++) {
-        if (data[y][x].state == "selected") {
-          data[y][x].state = "normal";
-        }
-      }
-    }
-
-    if (data[y][x].state == "black") return data;
-    data[y][x].state = "selected";
-
-    return data;
-  }
-
   const startNumberRemover = () => {
     if (!buildData) {
       triggerNotification("Failed to toggle black", "error", "Data not found");
@@ -766,74 +632,6 @@ export default function Crossword() {
     }
     setBuildData(tempData);
   };
-
-  function getBoxesInDirection(
-    startX: number,
-    startY: number,
-    direction: "across" | "down",
-    data: CrossWordBoxData[][],
-  ): { num: number; boxes: { x: number; y: number }[] } {
-    let boxes: { num: number; boxes: { x: number; y: number }[] } = {
-      num: 0,
-      boxes: [],
-    };
-
-    if (direction == "across") {
-      // scan left till number black or edge
-      for (let x = startX; x >= 0; x--) {
-        if (data[startY][x].state == "black") {
-          break;
-        } else if (data[startY][x].number != undefined) {
-          let num = data[startY][x].number;
-          if (!num) {
-            return boxes;
-          }
-          boxes.num = num;
-          boxes.boxes.push({ x: x, y: startY });
-          break;
-        } else {
-          boxes.boxes.push({ x: x, y: startY });
-        }
-      }
-
-      // scan right till black or edge
-      for (let x = startX + 1; x < data.length; x++) {
-        if (data[startY][x].state == "black") {
-          break;
-        } else {
-          boxes.boxes.push({ x: x, y: startY });
-        }
-      }
-    } else {
-      // scan up till number black or edge
-      for (let y = startY; y >= 0; y--) {
-        if (data[y][startX].state == "black") {
-          break;
-        } else if (data[y][startX].number != undefined) {
-          let num = data[y][startX].number;
-          if (!num) {
-            return boxes;
-          }
-          boxes.num = num;
-          boxes.boxes.push({ x: startX, y: y });
-          break;
-        } else {
-          boxes.boxes.push({ x: startX, y: y });
-        }
-      }
-
-      // scan down till black or edge
-      for (let y = startY + 1; y < data.length; y++) {
-        if (data[y][startX].state == "black") {
-          break;
-        } else {
-          boxes.boxes.push({ x: startX, y: y });
-        }
-      }
-    }
-
-    return boxes;
-  }
 
   function startLetterPlacer(
     x: number,
@@ -1115,6 +913,7 @@ export default function Crossword() {
         let next = findNextSelectionSpot(
           tempData,
           "across",
+          mode,
           location[0],
           location[1],
         );
@@ -1129,6 +928,7 @@ export default function Crossword() {
         let next = findNextSelectionSpot(
           tempData,
           "down",
+          mode,
           location[0],
           location[1],
         );
@@ -1220,57 +1020,6 @@ export default function Crossword() {
     });
   }, [stoppedTime, user, won]);
 
-  function detectWin(data: CrossWordBoxData[][]): boolean {
-    for (let y = 0; y < data.length; y++) {
-      for (let x = 0; x < data.length; x++) {
-        if (data[y][x].state == "black") {
-          continue;
-        }
-
-        if (data[y][x].guess != data[y][x].answer) {
-          return false;
-        }
-      }
-    }
-
-    return true;
-  }
-
-  function findNextSelectionSpot(
-    data: CrossWordBoxData[][],
-    direction: "across" | "down",
-    startX: number,
-    startY: number,
-  ): { x: number; y: number } {
-    if (direction == "across") {
-      for (let x = startX + 1; x < data.length; x++) {
-        if (
-          ((mode == "play" && data[startY][x].guess == "") ||
-            (mode == "build" && data[startY][x].answer == "")) &&
-          data[startY][x].state != "black"
-        ) {
-          return { x: x, y: startY };
-        } else if (data[startY][x].state == "black") {
-          return { x: x - 1, y: startY };
-        }
-      }
-    } else {
-      for (let y = startY + 1; y < data.length; y++) {
-        if (
-          ((data[y][startX].guess == "" && mode == "play") ||
-            (mode == "build" && data[y][startX].answer == "")) &&
-          data[y][startX].state != "black"
-        ) {
-          return { x: startX, y: y };
-        } else if (data[y][startX].state == "black") {
-          return { x: startX, y: y - 1 };
-        }
-      }
-    }
-
-    return { x: startX, y: startY };
-  }
-
   const handleEnterForNumberPlace = () => {
     if (!buildData) {
       triggerNotification(
@@ -1290,9 +1039,22 @@ export default function Crossword() {
       return;
     }
 
+    if (!currentSelectionNumberXY) {
+      triggerNotification(
+        "Failed to hanlde enter for number",
+        "error",
+        "Location not found",
+      );
+      return;
+    }
     let tempData = buildData.map((row) => row.map((box) => ({ ...box })));
 
-    tempData = setNumber(tempData);
+    tempData = setNumber(
+      currentEditDirection,
+      currentSelectionNumberXY[0],
+      currentSelectionNumberXY[1],
+      tempData,
+    );
 
     setBuildData(tempData);
   };
