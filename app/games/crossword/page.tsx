@@ -20,6 +20,8 @@ import Button from "@/components/general/button";
 import ConnectedButton from "@/components/general/connectedButtons";
 import ToolTip from "@/components/general/tooltip";
 import isMobile from "@/utils/isMobile";
+import FullGrid from "@/components/games/crossword/fullGrid";
+import MiniGrid from "@/components/games/crossword/miniGrid";
 
 export type Crossword = {
   data: string; // as json
@@ -48,8 +50,11 @@ export type CrossWordHint = {
 };
 
 export default function Crossword() {
-  const width = 12;
-  const height = 12;
+  const [crosswordSize, setCrosswordSize] = useState<{
+    width: number;
+    height: number;
+    size: "mini" | "full";
+  }>({ width: 12, height: 12, size: "full" });
 
   const router = useRouter();
   const { user } = useAuthContext() as { user: any };
@@ -174,7 +179,19 @@ export default function Crossword() {
   };
 
   useEffect(() => {
-    getCrossword("full").then((data) => {
+    const url = new URL(window.location.href);
+    let type = url.searchParams.get("type");
+
+    let size: "full" | "mini" = "full";
+    if (type == "mini") {
+      size = "mini";
+    }
+
+    if (size == "mini") {
+      setCrosswordSize({ width: 5, height: 5, size: "mini" });
+    }
+
+    getCrossword(size).then((data) => {
       loadStringData(data);
     });
   }, []);
@@ -182,10 +199,10 @@ export default function Crossword() {
   const generateNewTable = () => {
     let table: CrossWordBoxData[][] = [];
 
-    for (let i = 0; i < height; i++) {
+    for (let i = 0; i < crosswordSize.height; i++) {
       let row: CrossWordBoxData[] = [];
 
-      for (let j = 0; j < width; j++) {
+      for (let j = 0; j < crosswordSize.width; j++) {
         let box: CrossWordBoxData = {
           answer: "",
           guess: "",
@@ -294,7 +311,7 @@ export default function Crossword() {
           data[y][i].state = "highlighted";
         }
       }
-      for (let i = x; i < width; i++) {
+      for (let i = x; i < crosswordSize.width; i++) {
         if (data[y][i].state === "black") break;
         data[y][i].state = "highlighted";
       }
@@ -311,7 +328,7 @@ export default function Crossword() {
           data[i][x].state = "highlighted";
         }
       }
-      for (let i = y; i < height; i++) {
+      for (let i = y; i < crosswordSize.height; i++) {
         if (data[i][x].state === "black") break;
         data[i][x].state = "highlighted";
       }
@@ -382,9 +399,9 @@ export default function Crossword() {
     }
 
     if (direction == "across") {
-      for (let x = startX; x < width; x++) {
+      for (let x = startX; x < crosswordSize.width; x++) {
         const getNextBlock = () => {
-          if (x + 1 != width) {
+          if (x + 1 != crosswordSize.width) {
             return data[startY][x + 1];
           } else {
             return undefined;
@@ -432,9 +449,9 @@ export default function Crossword() {
 
       data[startY][startX].next = "across";
     } else {
-      for (let y = startY; y < height; y++) {
+      for (let y = startY; y < crosswordSize.height; y++) {
         const getNextBlock = () => {
-          if (y + 1 != height) {
+          if (y + 1 != crosswordSize.height) {
             return data[y + 1][startX];
           } else {
             return undefined;
@@ -559,30 +576,6 @@ export default function Crossword() {
     setBuildData(tempData);
   };
 
-  const clearAssociations = () => {
-    if (!buildData) {
-      triggerNotification(
-        "Failed to clear associations",
-        "error",
-        "Data not found",
-      );
-      return;
-    }
-    const tempData = buildData.map((row) =>
-      row.map((box) => ({
-        ...box,
-        answer: "",
-        number: undefined,
-        belongsTo: [],
-        next: undefined,
-      })),
-    );
-
-    setCurrentEditNumber(1);
-    setBuildHints(initNewHints());
-    setBuildData(tempData);
-  };
-
   function clearHighlightAndSelection(data: CrossWordBoxData[][]) {
     return data.map((row) =>
       row.map((box) => ({
@@ -600,8 +593,8 @@ export default function Crossword() {
     y: number,
     data: CrossWordBoxData[][],
   ): CrossWordBoxData[][] {
-    for (let y = 0; y < height; y++) {
-      for (let x = 0; x < width; x++) {
+    for (let y = 0; y < crosswordSize.height; y++) {
+      for (let x = 0; x < crosswordSize.width; x++) {
         if (data[y][x].state == "selected") {
           data[y][x].state = "normal";
         }
@@ -703,8 +696,8 @@ export default function Crossword() {
     data: CrossWordBoxData[][],
     deletionNumber: number,
   ): CrossWordBoxData[][] {
-    for (let y = 0; y < height; y++) {
-      for (let x = 0; x < width; x++) {
+    for (let y = 0; y < crosswordSize.height; y++) {
+      for (let x = 0; x < crosswordSize.width; x++) {
         if (data[y][x].state == "black") {
           continue;
         }
@@ -995,6 +988,7 @@ export default function Crossword() {
     hintNumber,
     boxesToCheck,
     wordBoxes,
+    crosswordSize,
   ]);
 
   const openHintEditorForCurrentWord = () => {
@@ -1114,7 +1108,7 @@ export default function Crossword() {
     if (currentTrend) {
       if (
         currentTrend == "across" &&
-        location[0] + 1 != width &&
+        location[0] + 1 != crosswordSize.width &&
         tempData[location[1]][location[0] + 1].state != "black"
       ) {
         tempData[location[1]][location[0]].state = "highlighted";
@@ -1128,7 +1122,7 @@ export default function Crossword() {
         setCurrentSelectionNumberXY([next.x, next.y]);
       } else if (
         currentTrend == "down" &&
-        location[1] + 1 != height &&
+        location[1] + 1 != crosswordSize.height &&
         tempData[location[1] + 1][location[0]].state != "black"
       ) {
         tempData[location[1]][location[0]].state = "highlighted";
@@ -1186,26 +1180,35 @@ export default function Crossword() {
 
     let alreadyPlayed = false;
 
-    getCompletedCrosswords(auth.currentUser, "full").then(
+    getCompletedCrosswords(auth.currentUser, crosswordSize.size).then(
       (completed: string[]) => {
         if (completed.includes(simpleHash)) {
           alreadyPlayed = true;
           setAlreadyCompleted(true);
           return;
         } else {
-          updateCompletedCrosswords(auth.currentUser, simpleHash, "full");
+          updateCompletedCrosswords(
+            auth.currentUser,
+            simpleHash,
+            crosswordSize.size,
+          );
         }
       },
     );
 
-    getHighScore(auth.currentUser, "full").then((score) => {
+    getHighScore(auth.currentUser, crosswordSize.size).then((score) => {
       if (
         !score ||
         score.time == undefined ||
         !score.date == undefined ||
         (stoppedTime < score.time && !alreadyPlayed)
       ) {
-        setHighScore(auth.currentUser, stoppedTime, formattedDate, "full");
+        setHighScore(
+          auth.currentUser,
+          stoppedTime,
+          formattedDate,
+          crosswordSize.size,
+        );
         setHighScoreTime(formatTime(stoppedTime));
         setHighScoreDate(formattedDate);
         return;
@@ -1402,8 +1405,8 @@ export default function Crossword() {
       setHintNumber(number);
       setHint(hint);
     } else {
-      for (let y = 0; y < height; y++) {
-        for (let x = 0; x < width; x++) {
+      for (let y = 0; y < crosswordSize.height; y++) {
+        for (let x = 0; x < crosswordSize.width; x++) {
           if (buildData[y][x].number == number) {
             setCurrentTrend(direction);
             setCurrentSelectionNumberXY([x, y]);
@@ -1487,8 +1490,8 @@ export default function Crossword() {
     direction: "across" | "down",
     data: CrossWordBoxData[][],
   ): CrossWordBoxData[][] {
-    for (let y = 0; y < height; y++) {
-      for (let x = 0; x < width; x++) {
+    for (let y = 0; y < crosswordSize.height; y++) {
+      for (let x = 0; x < crosswordSize.width; x++) {
         if (data[y][x].number == number) {
           setCurrentTrend(direction);
           setCurrentSelectionNumberXY([x, y]);
@@ -1594,7 +1597,7 @@ export default function Crossword() {
     };
 
     const jsonCrosswordString = JSON.stringify(crossword);
-    saveCrossword(jsonCrosswordString, "full");
+    saveCrossword(jsonCrosswordString, crosswordSize.size);
 
     loadStringData(jsonCrosswordString);
 
@@ -1825,73 +1828,29 @@ export default function Crossword() {
               <Button onClick={clearBoard} title="Clear Board" style="normal" />
             </section>
           ) : null}
-          <section className="flex flex-col max-xl:items-center">
-            {buildData?.map((row: CrossWordBoxData[], y) => (
-              <div key={y} className="flex">
-                {row.map((box: CrossWordBoxData, x) => (
-                  <div
-                    key={x}
-                    onClick={() => takeAction(x, y)}
-                    className={`w-[50px] h-[50px] max-sm:w-[40px] max-sm:h-[40px] max-xs:w-[30px] max-xs:h-[30px] border-[0.5px] border-secondary-900 cursor-pointer flex items-center justify-center relative 
-                  ${y == 0 ? "border-t-2 border-t-black" : ""} ${
-                    y == height - 1 ? "border-b-2 border-b-black" : ""
-                  } ${x == 0 ? "border-l-2 border-l-black" : ""} ${
-                    x == width - 1 ? "border-r-2 border-r-black" : ""
-                  }
-                  ${box.state == "highlighted" ? "bg-secondary-300" : ""} ${
-                    box.state == "selected" ? "!bg-primary-300" : null
-                  } ${
-                    box.state == "black"
-                      ? "!bg-accent-900 cursor-default"
-                      : null
-                  } ${
-                    debug && mode == "build"
-                      ? `${determineAssociationColor(box)}`
-                      : ""
-                  }`}
-                  >
-                    <p className="absolute text-md top-[1px] right-1">
-                      {mode == "build" && debug
-                        ? `${
-                            box.number != undefined
-                              ? `${box.belongsTo.length == 1 ? "p" : "c"}`
-                              : ""
-                          }`
-                        : ""}
-                    </p>
-                    <p className="absolute text-md max-sm:text-sm top-[1px] left-1">
-                      {box.number}
-                    </p>
-                    <p
-                      className={`max-sm:text-md ${
-                        boxesToCheck.some(
-                          (wordBox) => wordBox.x === x && wordBox.y === y,
-                        )
-                          ? `${
-                              box.guess == box.answer
-                                ? "text-green-700"
-                                : "text-red-700"
-                            }`
-                          : ""
-                      }`}
-                    >{`${mode == "play" ? box.guess : box.answer} `}</p>
-                    <p className="absolute text-sm bottom-[1px] left-1">
-                      {mode == "build" && debug ? box.belongsTo.join(",") : ""}
-                    </p>
-                    <p className="absolute text-sm bottom-[1px] right-1">
-                      {mode == "build" && debug
-                        ? `${
-                            box.next
-                              ? `${box.next == "across" ? "a" : "d"}`
-                              : ""
-                          }`
-                        : ""}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            ))}
-          </section>
+          {crosswordSize.size == "full" ? (
+            <FullGrid
+              data={buildData}
+              mode={mode}
+              debug={debug}
+              width={crosswordSize.width}
+              height={crosswordSize.height}
+              determineAssociationColor={determineAssociationColor}
+              takeAction={takeAction}
+              boxesToCheck={boxesToCheck}
+            />
+          ) : (
+            <MiniGrid
+              data={buildData}
+              mode={mode}
+              debug={debug}
+              width={crosswordSize.width}
+              height={crosswordSize.height}
+              determineAssociationColor={determineAssociationColor}
+              takeAction={takeAction}
+              boxesToCheck={boxesToCheck}
+            />
+          )}
           <div className="rounded justify-between -mt-2 w-full flex items-center">
             <p>{`Crossword by ${author}`}</p>
             <p>{`Published ${published}`}</p>
