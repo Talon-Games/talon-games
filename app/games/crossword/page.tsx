@@ -31,6 +31,7 @@ import clearHighlightAndSelection from "@/utils/games/crossword/clearHighlightAn
 import selectCurrent from "@/utils/games/crossword/selectCurrent";
 import detectWin from "@/utils/games/crossword/detectWin";
 import findNextSelectionSpot from "@/utils/games/crossword/findNextSelectionSpot";
+import Keyboard from "@/components/games/keyboard";
 
 export type Crossword = {
   data: string; // as json
@@ -67,6 +68,9 @@ export default function Crossword() {
 
   const router = useRouter();
   const { user } = useAuthContext() as { user: any };
+  const [keyStats, setKeyStats] = useState<{
+    [key: string]: "correct" | "incorrect" | "default";
+  }>({});
 
   const [notification, setNotification] = useState(false);
   const [notificationTitle, setNotificationTitle] = useState("");
@@ -613,7 +617,6 @@ export default function Crossword() {
   }
 
   const takeAction = (x: number, y: number) => {
-    //TODO: something for mobile support prob here
     if (!buildData) {
       triggerNotification("Failed take action", "error", "Data not found");
       return;
@@ -838,22 +841,28 @@ export default function Crossword() {
 
     if (mode == "play") {
       let boxes: { x: number; y: number }[] = [...boxesToCheck];
-      tempData[startY][startX].guess = "";
       boxes = boxes.filter((box) => box.x != startX || box.y != startY);
       setBoxesToCheck([...boxes]);
+      tempData[startY][startX].guess = "";
     } else {
       tempData[startY][startX].answer = "";
     }
     // move the selector back
     if (trend) {
       if (trend == "across" && startX - 1 >= 0) {
-        if (tempData[startY][startX - 1].state == "black") return;
+        if (tempData[startY][startX - 1].state == "black") {
+          setBuildData(tempData);
+          return;
+        }
 
         tempData[startY][startX].state = "highlighted";
         tempData[startY][startX - 1].state = "selected";
         setCurrentSelectionNumberXY([startX - 1, startY]);
       } else if (trend == "down" && startY - 1 >= 0) {
-        if (tempData[startY - 1][startX].state == "black") return;
+        if (tempData[startY - 1][startX].state == "black") {
+          setBuildData(tempData);
+          return;
+        }
 
         tempData[startY][startX].state = "highlighted";
         tempData[startY - 1][startX].state = "selected";
@@ -1576,6 +1585,18 @@ export default function Crossword() {
     setBuildHints(fromDbHints);
   };
 
+  const onChar = (key: string) => {
+    handleKeyPressForLetters(key.toUpperCase());
+  };
+
+  const onDelete = () => {
+    handleBackspaceForLetters();
+  };
+
+  const onEnter = () => {
+    checkWord();
+  };
+
   return (
     <main className="w-9/12 ml-auto mr-auto max-sm:w-11/12">
       <h1 className="font-heading text-center mb-4 text-8xl max-sm:text-7xl max-xs:text-6xl">
@@ -1614,8 +1635,8 @@ export default function Crossword() {
             />
           )}
           <div className="rounded justify-between -mt-2 w-full flex items-center">
-            <p>{`Crossword by ${author}`}</p>
-            <p>{`Published ${published}`}</p>
+            <p className="text-center">{`Crossword by ${author}`}</p>
+            <p className="text-center">{`Published ${published}`}</p>
           </div>
         </div>
         {mode == "build" ? (
@@ -1768,6 +1789,16 @@ export default function Crossword() {
           </section>
         ) : null}
         <section className="flex flex-col gap-2 w-7/12 max-xl:w-full">
+          <div className={mobileDevice == true ? "" : "hidden"}>
+            <Keyboard
+              onChar={onChar}
+              onDelete={onDelete}
+              onEnter={onEnter}
+              keyStats={keyStats}
+              dontListen={true}
+              locked={won}
+            />
+          </div>
           <section className="flex gap-2">
             <div className="rounded bg-secondary-300 max-xs:p-2 w-full flex items-center justify-left">
               {hint ? (
