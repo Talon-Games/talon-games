@@ -208,56 +208,59 @@ export default function Account() {
         Account
       </h1>
       <h1 className="text-xl font-bold font-heading">User Management</h1>
-      <input
-        type="text"
-        placeholder="Search Users"
-        className="bg-accent-200 p-2 rounded w-full placeholder:text-secondary-900 focus:outline-none"
-        onChange={searchUsers}
-      />
       {isAdmin ? (
-        <section className="w-full h-[35rem] rounded-xl overflow-y-scroll">
-          <div className="grid grid-cols-3 gap-2 mt-2 overflow-y-scroll w-full items-center max-lg:grid-cols-2 max-sm:grid-cols-1">
-            {filteredUserList.map((user: any) => (
-              <div
-                key={user.uid}
-                className="border-t-2 border-secondary-400 hover:drop-shadow rounded-t-lg rounded-b-lg bg-accent-100 p-2 rounded-none h-56 transition-all duration-200 ease-in-out flex flex-col justify-between"
-              >
-                <div>
-                  <h2 className="px-1">{user.name}</h2>
-                  <p className="px-1">{user.email}</p>
+        <>
+          <input
+            type="text"
+            placeholder="Search Users"
+            className="bg-accent-200 p-2 rounded w-full placeholder:text-secondary-900 focus:outline-none"
+            onChange={searchUsers}
+          />
+
+          <section className="w-full h-[35rem] rounded-xl overflow-y-scroll">
+            <div className="grid grid-cols-3 gap-2 mt-2 overflow-y-scroll w-full items-center max-lg:grid-cols-2 max-sm:grid-cols-1">
+              {filteredUserList.map((user: any) => (
+                <div
+                  key={user.uid}
+                  className="border-t-2 border-secondary-400 hover:drop-shadow rounded-t-lg rounded-b-lg bg-accent-100 p-2 rounded-none h-56 transition-all duration-200 ease-in-out flex flex-col justify-between"
+                >
+                  <div>
+                    <h2 className="px-1">{user.name}</h2>
+                    <p className="px-1">{user.email}</p>
+                  </div>
+                  <section className="flex w-full gap-2 mt-2">
+                    {isAdmin ? (
+                      <div className="w-full">
+                        <p className="bg-secondary-100 text-center p-1 rounded-t">
+                          {user.isHelper ? "Helper" : "Not Helper"}
+                        </p>
+                        <Button
+                          onClick={() => updateUsersHelperStatus(user)}
+                          title={user.isHelper ? "Remove" : "Add"}
+                          style={user.isHelper ? "red" : "green"}
+                          classModifier="rounded-t-none rounded-b !p-1"
+                        />
+                      </div>
+                    ) : null}
+                    {isMaksim ? (
+                      <div className="w-full">
+                        <p className="bg-secondary-100 text-center p-1 rounded-tl-lg rounded-tr-lg">
+                          {user.isAdmin ? "Admin" : "Not Admin"}
+                        </p>
+                        <Button
+                          onClick={() => updateUsersAdminStatus(user)}
+                          title={user.isAdmin ? "Remove" : "Add"}
+                          style={user.isAdmin ? "red" : "green"}
+                          classModifier="rounded-t-none rounded-b !p-1"
+                        />
+                      </div>
+                    ) : null}
+                  </section>
                 </div>
-                <section className="flex w-full gap-2 mt-2">
-                  {isAdmin ? (
-                    <div className="w-full">
-                      <p className="bg-secondary-100 text-center p-1 rounded-t">
-                        {user.isHelper ? "Helper" : "Not Helper"}
-                      </p>
-                      <Button
-                        onClick={() => updateUsersHelperStatus(user)}
-                        title={user.isHelper ? "Remove" : "Add"}
-                        style={user.isHelper ? "red" : "green"}
-                        classModifier="rounded-t-none rounded-b !p-1"
-                      />
-                    </div>
-                  ) : null}
-                  {isMaksim ? (
-                    <div className="w-full">
-                      <p className="bg-secondary-100 text-center p-1 rounded-tl-lg rounded-tr-lg">
-                        {user.isAdmin ? "Admin" : "Not Admin"}
-                      </p>
-                      <Button
-                        onClick={() => updateUsersAdminStatus(user)}
-                        title={user.isAdmin ? "Remove" : "Add"}
-                        style={user.isAdmin ? "red" : "green"}
-                        classModifier="rounded-t-none rounded-b !p-1"
-                      />
-                    </div>
-                  ) : null}
-                </section>
-              </div>
-            ))}
-          </div>
-        </section>
+              ))}
+            </div>
+          </section>
+        </>
       ) : null}
       <Button
         onClick={startDeleteWorkflow}
