@@ -135,6 +135,8 @@ export default function Crossword() {
   const [importPopup, setImportPopup] = useState(false);
   const [importedData, setImporteData] = useState("");
 
+  const [publishPopup, setPublishPopup] = useState(false);
+
   const [helpPopup, setHelpPopup] = useState(false);
 
   const playAgain = () => {
