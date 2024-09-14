@@ -36,7 +36,9 @@ import Keyboard from "@/components/games/keyboard";
 export type Crossword = {
   data: string; // as json
   hints: string; // as json
-  author: string;
+  realAuthor: string; // google user whos account was used
+  author: string; // the person given credit
+  name: string;
   published: string;
 };
 
@@ -136,6 +138,9 @@ export default function Crossword() {
   const [importedData, setImporteData] = useState("");
 
   const [publishPopup, setPublishPopup] = useState(false);
+  const [crosswordName, setCrosswordName] = useState("");
+  const [crosswordAuthor, setCrosswordAuthor] = useState("");
+  const [saveToArchive, setSaveToArchive] = useState(true);
 
   const [helpPopup, setHelpPopup] = useState(false);
 
@@ -169,7 +174,7 @@ export default function Crossword() {
         },
       );
     }
-  });
+  }, [user]);
 
   const triggerNotification = (
     title: string,
@@ -733,7 +738,8 @@ export default function Crossword() {
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (showHintCreationPopup || importPopup) return;
+      if (showHintCreationPopup || importPopup || helpPopup || publishPopup)
+        return;
       const key = event.key;
 
       if (key >= "a" && key <= "z") {
@@ -793,6 +799,8 @@ export default function Crossword() {
     boxesToCheck,
     wordBoxes,
     crosswordSize,
+    helpPopup,
+    publishPopup,
   ]);
 
   const openHintEditorForCurrentWord = () => {
@@ -1280,6 +1288,7 @@ export default function Crossword() {
 
   const updateCrossword = () => {
     let tempHints = buildHints;
+    setPublishPopup(false);
 
     if (!tempHints) {
       triggerNotification(
@@ -1366,7 +1375,9 @@ export default function Crossword() {
     let crossword: Crossword = {
       data: jsonDataString,
       hints: jsonHintString,
-      author: user.displayName,
+      realAuthor: user.displayName,
+      author: crosswordAuthor,
+      name: crosswordName,
       published: formattedDate,
     };
 
@@ -1466,6 +1477,8 @@ export default function Crossword() {
       data: jsonDataString,
       hints: jsonHintString,
       author: user.displayName,
+      realAuthor: user.displayName,
+      name: "Exported Crossword",
       published: formattedDate,
     };
 
@@ -1643,6 +1656,12 @@ export default function Crossword() {
 
   const onEnter = () => {
     checkWord();
+  };
+
+  const showPublishPopup = () => {
+    setCrosswordName("");
+    setCrosswordAuthor(user.displayName);
+    setPublishPopup(true);
   };
 
   return (
@@ -1963,7 +1982,7 @@ export default function Crossword() {
                   style="red"
                 />
                 <Button
-                  onClick={updateCrossword}
+                  onClick={showPublishPopup}
                   title="Update"
                   classModifier="p-5"
                   style="normal"
@@ -1973,6 +1992,49 @@ export default function Crossword() {
           ) : null}
         </section>
       </section>
+      {publishPopup ? (
+        <section className="fixed flex flex-col items-center justify-center left-0 top-0 w-full h-full bg-accent-900 bg-opacity-50">
+          <div className="p-10 bg-background-50 rounded-xl w-3/6">
+            <p>Crossword Name</p>
+            <input
+              type="text"
+              placeholder="Crossword Name"
+              className="bg-accent-200 p-2 rounded w-full placeholder:text-secondary-900 focus:outline-none mb-2"
+              value={crosswordName}
+              onChange={(event) => setCrosswordName(event.target.value)}
+            />
+            <p>Crossword Authors</p>
+            <input
+              type="text"
+              placeholder="Authors"
+              className="bg-accent-200 p-2 rounded w-full placeholder:text-secondary-900 focus:outline-none"
+              value={crosswordAuthor}
+              onChange={(event) => setCrosswordAuthor(event.target.value)}
+            />
+            <div className="flex gap-2 mt-2 items-center">
+              <div
+                onClick={() => setSaveToArchive(!saveToArchive)}
+                className={`block w-9 h-9 border rounded cursor-pointer hover:border-secondary-500 border-secondary-400 transition-all duration-200 ease-in-out ${saveToArchive ? "bg-secondary-400" : ""}`}
+              ></div>
+              <p>Save to Archive</p>
+            </div>
+          </div>
+          <div className="flex gap-2 mt-2 w-3/6">
+            <Button
+              onClick={() => setPublishPopup(false)}
+              title="Cancel"
+              style="red"
+              classModifier="p-5"
+            />
+            <Button
+              onClick={updateCrossword}
+              title="Update"
+              style="normal"
+              classModifier="p-5"
+            />
+          </div>
+        </section>
+      ) : null}
       {importPopup ? (
         <section className="fixed flex flex-col items-center justify-center left-0 top-0 w-full h-full bg-accent-900 bg-opacity-50">
           <div className="p-10 bg-background-50 rounded-xl w-3/6">

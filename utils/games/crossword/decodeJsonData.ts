@@ -7,6 +7,8 @@ export default function decodeJsonData(data: string): Crossword {
     data: jsonCrossword.data,
     hints: jsonCrossword.hints,
     author: jsonCrossword.author,
+    realAuthor: jsonCrossword.realAuthor,
+    name: jsonCrossword.name,
     published: jsonCrossword.published,
   };
 
