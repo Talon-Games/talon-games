@@ -1382,7 +1382,7 @@ export default function Crossword() {
     };
 
     const jsonCrosswordString = JSON.stringify(crossword);
-    saveCrossword(jsonCrosswordString, crosswordSize.size);
+    saveCrossword(jsonCrosswordString, crosswordSize.size, saveToArchive);
 
     loadStringData(jsonCrosswordString);
 

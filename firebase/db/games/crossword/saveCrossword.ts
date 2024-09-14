@@ -1,9 +1,10 @@
-import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { doc, getDoc, updateDoc, setDoc } from "firebase/firestore";
 import { db } from "@/firebase/config";
 
 export default async function saveCrossword(
   data: string,
   size: "full" | "mini",
+  saveToArchive: boolean,
 ) {
   const crosswordRef = doc(db, "games", "crossword");
   const docSnap = await getDoc(crosswordRef);
@@ -16,6 +17,26 @@ export default async function saveCrossword(
       await updateDoc(crosswordRef, {
         crosswordMini: data,
       });
+    }
+  }
+
+  if (docSnap.exists() && saveToArchive) {
+    if (size == "full") {
+      await setDoc(
+        crosswordRef,
+        {
+          fullCrosswordArchive: [data],
+        },
+        { merge: true },
+      );
+    } else {
+      await setDoc(
+        crosswordRef,
+        {
+          miniCrosswordArchive: [data],
+        },
+        { merge: true },
+      );
     }
   }
 }
