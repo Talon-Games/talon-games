@@ -508,8 +508,9 @@ export default function Crossword() {
     let downShifted = downShift(data, deletionNumber);
 
     downShifted = clearHighlightAndSelection(downShifted);
-
-    setCurrentEditNumber(currentEditNumber - 1);
+    if (currentEditNumber != 1) {
+      setCurrentEditNumber(currentEditNumber - 1);
+    }
 
     setBuildData([...downShifted]);
   };
@@ -1575,6 +1576,24 @@ export default function Crossword() {
       return;
     }
 
+    let highest = 1;
+
+    for (let y = 0; y < crosswordData.length; y++) {
+      for (let x = 0; x < crosswordData.length; x++) {
+        let number = crosswordData[y][x].number;
+
+        if (!number) {
+          continue;
+        }
+
+        if (number > highest) {
+          highest = number;
+        }
+      }
+    }
+
+    setCurrentEditNumber(highest + 1);
+
     setBuildData(crosswordData);
     setBuildHints(hintData);
     setImportPopup(false);
@@ -1583,7 +1602,34 @@ export default function Crossword() {
   };
 
   const loadCurrent = () => {
+    if (!fromDbData) {
+      triggerNotification(
+        "Failed to load current",
+        "error",
+        "DB data not found",
+      );
+      return;
+    }
+
     setBuildData(fromDbData);
+
+    let highest = 1;
+
+    for (let y = 0; y < fromDbData.length; y++) {
+      for (let x = 0; x < fromDbData.length; x++) {
+        let number = fromDbData[y][x].number;
+
+        if (!number) {
+          continue;
+        }
+
+        if (number > highest) {
+          highest = number;
+        }
+      }
+    }
+
+    setCurrentEditNumber(highest + 1);
     setBuildHints(fromDbHints);
   };
 
