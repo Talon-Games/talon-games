@@ -1129,6 +1129,13 @@ export default function Crossword() {
 
     let tempData = buildData.map((row) => row.map((box) => ({ ...box })));
 
+    if (
+      location[0] + 1 > tempData.length ||
+      tempData[location[1]][location[0] + 1].state == "black"
+    ) {
+      return;
+    }
+
     setCurrentEditDirection("across");
     setCurrentTrend("across");
     setHighlightMode("across");
@@ -1160,6 +1167,13 @@ export default function Crossword() {
     }
 
     let tempData = buildData.map((row) => row.map((box) => ({ ...box })));
+
+    if (
+      location[1] + 1 > tempData.length ||
+      tempData[location[1] + 1][location[0]].state == "black"
+    ) {
+      return;
+    }
 
     setCurrentEditDirection("down");
     setCurrentTrend("down");
@@ -1382,7 +1396,7 @@ export default function Crossword() {
     };
 
     const jsonCrosswordString = JSON.stringify(crossword);
-    saveCrossword(jsonCrosswordString, crosswordSize.size);
+    saveCrossword(jsonCrosswordString, crosswordSize.size, saveToArchive);
 
     loadStringData(jsonCrosswordString);
 
@@ -1667,7 +1681,7 @@ export default function Crossword() {
   return (
     <main className="w-9/12 ml-auto mr-auto max-sm:w-11/12">
       <h1 className="font-heading text-center mb-4 text-8xl max-sm:text-7xl max-xs:text-6xl">
-        Crossword
+        {crosswordSize.size == "full" ? "Crossword" : "Mini Crossword"}
       </h1>
       <section className="flex justify-center gap-2 max-xl:flex-col w-full">
         <div className="flex flex-col gap-2">
