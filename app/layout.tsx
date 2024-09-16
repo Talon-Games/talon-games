@@ -90,7 +90,7 @@ export default function RootLayout({
         </div>
         <footer className="text-sm p-4 w-full flex justify-between">
           <a
-            href="https://github.com/cqb13/talon-games/blob/main/LICENSE"
+            href="https://github.com/Talon-Games/talon-games/blob/archive/LICENSE"
             className="hover:text-secondary-600 transition-all duration-200 ease-in-out"
             target="_blank"
           >
