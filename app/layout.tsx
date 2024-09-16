@@ -15,7 +15,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://talon-games.shsdevs.com"),
+  metadataBase: new URL("https://games.shstalon.com"),
   title: "Talon Games",
   description: "Games for the Sharon Talon Newspaper",
   keywords: [
@@ -38,15 +38,15 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
-  manifest: "https://talon-games.shsdevs.com/manifest.json",
+  manifest: "https://games.shstalon.com/manifest.json",
   openGraph: {
     title: "Talon Games",
     description: "Games for the Sharon Talon Newspaper",
-    url: "https://talon-games.shsdevs.com",
+    url: "https://games.shstalon.com",
     siteName: "Talon Games",
     images: [
       {
-        url: "https://talon-games.shsdevs.com/logo/logo-without-name.png",
+        url: "https://games.shstalon.com/logo/logo-without-name.png",
         width: 600,
         height: 600,
         alt: "Logo",
