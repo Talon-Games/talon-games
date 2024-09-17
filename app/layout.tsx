@@ -46,7 +46,7 @@ export const metadata: Metadata = {
     siteName: "Talon Games",
     images: [
       {
-        url: "https://games.shstalon.com/logo/logo-without-name.png",
+        url: "https://games.shstalon.com/logo/TalonGamesC.png",
         width: 600,
         height: 600,
         alt: "Logo",
@@ -56,7 +56,7 @@ export const metadata: Metadata = {
     type: "website",
   },
   icons: {
-    icon: "/logo/logo-without-name.png",
+    icon: "/logo/TalonGamesC.png",
   },
   robots: {
     index: true,
