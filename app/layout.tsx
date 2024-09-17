@@ -1,8 +1,8 @@
+import { AuthContextProvider } from "@/lib/contexts/authContext";
+import NavBar from "@/components/general/navBar";
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { AuthContextProvider } from "@/lib/contexts/authContext";
-import NavBar from "@/components/general/navBar";
 
 const inter = Inter({ subsets: ["latin"] });
 

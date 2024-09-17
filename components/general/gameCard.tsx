@@ -1,7 +1,7 @@
 "use client";
 
-import { Game } from "@/lib/games";
 import { useRouter } from "next/navigation";
+import { Game } from "@/lib/games";
 import Image from "next/image";
 import Button from "./button";
 

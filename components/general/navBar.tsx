@@ -3,8 +3,8 @@
 import { useAuthContext } from "@/lib/contexts/authContext";
 import { useRouter, usePathname } from "next/navigation";
 import createUserDoc from "@/firebase/db/createUserDoc";
-import signOutUser from "@/firebase/auth/signOut";
 import googleSignIn from "@/firebase/auth/googleSignIn";
+import signOutUser from "@/firebase/auth/signOut";
 import useScroll from "@/lib/hooks/useScroll";
 import routes from "@/lib/routes";
 

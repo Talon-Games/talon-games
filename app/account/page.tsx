@@ -1,15 +1,15 @@
 "use client";
 
 import { collection, getDocs, setDoc, doc } from "firebase/firestore";
-import Notification from "@/components/general/notification";
-import deleteAccount from "@/firebase/db/deleteAccount";
-import { useAuthContext } from "@/lib/contexts/authContext";
-import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
-import { auth, db } from "@/firebase/config";
-import getRoles from "@/firebase/db/getRoles";
-import Button from "@/components/general/button";
 import ConnectedButton from "@/components/general/connectedButtons";
+import Notification from "@/components/general/notification";
+import { useAuthContext } from "@/lib/contexts/authContext";
+import deleteAccount from "@/firebase/db/deleteAccount";
+import Button from "@/components/general/button";
+import getRoles from "@/firebase/db/getRoles";
+import { auth, db } from "@/firebase/config";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 interface User {
   isMaksim: boolean;

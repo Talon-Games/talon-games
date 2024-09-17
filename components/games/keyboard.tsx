@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+
 type Props = {
   onChar: (value: string) => void;
   onDelete: () => void;
