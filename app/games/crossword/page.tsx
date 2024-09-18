@@ -144,8 +144,6 @@ export default function Crossword() {
 
   const [helpPopup, setHelpPopup] = useState(false);
 
-  const [currentView, setCurrentView] = useState<"play" | "archive">("play");
-
   const playAgain = () => {
     setIsRunning(false);
     setIsReset(true);
@@ -1680,43 +1678,9 @@ export default function Crossword() {
     setPublishPopup(true);
   };
 
-  const switchView = () => {
-    if (currentView == "play") {
-      /**
-       *  On the first switch to archive, load all of the archives
-       * */
-      setCurrentView("archive");
-    } else {
-      setCurrentView("play");
-    }
-  };
-
   return (
-    <main className="w-9/12 ml-auto mr-auto max-sm:w-11/12">
-      <h1 className="font-heading text-center mb-4 text-8xl max-sm:text-7xl max-xs:text-6xl">
-        {crosswordSize.size == "full" ? "Crossword" : "Mini Crossword"}
-      </h1>
-      {/*TOOD: normal play and archive toggle*/}
-      <ConnectedButton
-        onClickLeft={switchView}
-        onClickRight={switchView}
-        leftStyle="normal"
-        rightStyle="normal"
-        leftTitle="Todays Crossword"
-        rightTitle="Crossword Archives"
-        containerClassModifier="mb-2 px-4"
-        leftClassModifier={
-          currentView == "play"
-            ? "bg-secondary-500 border-r-2 border-secondary-400"
-            : "bg-secondary-400 hover:bg-secondary-500"
-        }
-        rightClassModifier={
-          currentView == "archive"
-            ? "bg-secondary-500 border-l-2 border-secondary-400"
-            : "bg-secondary-400 hover:bg-secondary-500"
-        }
-      />
-      <section className="flex justify-center gap-2 max-xl:flex-col w-full">
+    <>
+      <section className="flex justify-between gap-2 max-xl:flex-col w-full">
         <div className="flex flex-col gap-2">
           {mode == "play" ? (
             <section className="flex gap-2 w-full">
@@ -2194,6 +2158,6 @@ export default function Crossword() {
           updateNotification={(value) => setNotification(value)}
         />
       ) : null}
-    </main>
+    </>
   );
 }
