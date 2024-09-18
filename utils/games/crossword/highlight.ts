@@ -21,7 +21,7 @@ export default function highlight(
     if (!onlyDirections) {
       for (let i = x; i >= 0; i--) {
         if (data[y][i].state === "black") break;
-        if (data[y][i].number) {
+        if (data[y][i].number && data[y][i].next == "across") {
           data[y][i].state = "highlighted";
           break;
         }
@@ -38,7 +38,7 @@ export default function highlight(
     if (!onlyDirections) {
       for (let i = y; i >= 0; i--) {
         if (data[i][x].state === "black") break;
-        if (data[i][x].number) {
+        if (data[i][x].number && data[i][x].next == "down") {
           data[i][x].state = "highlighted";
           break;
         }
