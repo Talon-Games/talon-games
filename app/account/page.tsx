@@ -222,7 +222,7 @@ export default function Account() {
               {filteredUserList.map((user: any) => (
                 <div
                   key={user.uid}
-                  className="border-t-2 border-secondary-400 hover:drop-shadow rounded-t-lg rounded-b-lg bg-accent-100 p-2 rounded-none h-56 transition-all duration-200 ease-in-out flex flex-col justify-between"
+                  className="border-t-2 hover:border-t-4 border-secondary-400 hover:drop-shadow rounded-t-lg rounded-b-lg bg-accent-100 p-2 rounded-none h-56 transition-all duration-150 ease-in-out flex flex-col justify-between"
                 >
                   <div>
                     <h2 className="px-1">{user.name}</h2>

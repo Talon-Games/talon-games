@@ -22,6 +22,12 @@ export default function CrosswordLayout({ children }: { children: any }) {
       size = "mini";
     }
 
+    if (url.toString().includes("archive")) {
+      setCurrentView("archive");
+    } else {
+      setCurrentView("today");
+    }
+
     if (size == "mini") {
       updateSize("mini");
     } else {
