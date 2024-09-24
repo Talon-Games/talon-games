@@ -1,17 +1,19 @@
 "use client";
 
-import Button from "@/components/general/button";
 import getArchivedCrosswords from "@/utils/games/crossword/getArchivedCrosswords";
-import decodeJsonData from "@/utils/games/crossword/decodeJsonData";
-import { Crossword } from "../page";
 import { useCrosswordContext } from "@/lib/contexts/crosswordContext";
+import decodeJsonData from "@/utils/games/crossword/decodeJsonData";
+import Button from "@/components/general/button";
 import { useEffect, useState } from "react";
+import { Crossword } from "../page";
 
 export default function Archive() {
-  const { crosswordSize } = useCrosswordContext() as {
-    crosswordSize: { width: number; height: number; size: "mini" | "full" };
-    updateSize: (size: "mini" | "full") => void;
-  };
+  const { crosswordSize, updateCurrentCrossword, updateCurrentMode } =
+    useCrosswordContext() as {
+      crosswordSize: { width: number; height: number; size: "mini" | "full" };
+      updateCurrentCrossword: (crossword: Crossword) => void;
+      updateCurrentMode: (mode: "today" | "archive") => void;
+    };
 
   const [archivedCrosswords, setArchivedCrosswords] = useState<Crossword[]>([]);
 
@@ -38,10 +40,8 @@ export default function Archive() {
   }, [crosswordSize.size]);
 
   const loadArchivedCrossword = (crossword: Crossword) => {
-    /**
-     * update crossword context to store a crossword and set the crossword in here
-     * then swtich to the the play page for the crossword where the current crossword should be loaded
-     * */
+    updateCurrentCrossword(crossword);
+    updateCurrentMode("archive");
   };
 
   return (

@@ -7,10 +7,13 @@ import { useEffect, useState } from "react";
 
 export default function CrosswordLayout({ children }: { children: any }) {
   const router = useRouter();
-  const { crosswordSize, updateSize } = useCrosswordContext() as {
-    crosswordSize: { width: number; height: number; size: "mini" | "full" };
-    updateSize: (size: "mini" | "full") => void;
-  };
+  const { crosswordSize, updateSize, updateCurrentMode } =
+    useCrosswordContext() as {
+      crosswordSize: { width: number; height: number; size: "mini" | "full" };
+      updateSize: (size: "mini" | "full") => void;
+
+      updateCurrentMode: (mode: "today" | "archive") => void;
+    };
   const [currentView, setCurrentView] = useState<"today" | "archive">("today");
 
   useEffect(() => {
@@ -42,6 +45,7 @@ export default function CrosswordLayout({ children }: { children: any }) {
     } else {
       setCurrentView("today");
       router.push(`/games/crossword?type=${crosswordSize.size}`);
+      updateCurrentMode("today");
     }
   };
 

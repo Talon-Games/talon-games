@@ -7,29 +7,30 @@ import findNextSelectionSpot from "@/utils/games/crossword/findNextSelectionSpot
 import getBoxesInDirection from "@/utils/games/crossword/getBoxesInDirection";
 import generateNewTable from "@/utils/games/crossword/generateNewTable";
 import saveCrossword from "@/firebase/db/games/crossword/saveCrossword";
-import getHighScore from "@/firebase/db/games/crossword/getHighScore";
-import setHighScore from "@/firebase/db/games/crossword/setHighScore";
 import getCrossword from "@/firebase/db/games/crossword/getCrossword";
-import decodeJsonData from "@/utils/games/crossword/decodeJsonData";
+import setHighScore from "@/firebase/db/games/crossword/setHighScore";
+import { useCrosswordContext } from "@/lib/contexts/crosswordContext";
+import getHighScore from "@/firebase/db/games/crossword/getHighScore";
 import ConnectedButton from "@/components/general/connectedButtons";
+import decodeJsonData from "@/utils/games/crossword/decodeJsonData";
 import selectCurrent from "@/utils/games/crossword/selectCurrent";
 import initNewHints from "@/utils/games/crossword/initNewHints";
-import Notification from "@/components/general/notification";
 import FullGrid from "@/components/games/crossword/fullGrid";
 import MiniGrid from "@/components/games/crossword/miniGrid";
+import Notification from "@/components/general/notification";
 import { useAuthContext } from "@/lib/contexts/authContext";
+import detectWin from "@/utils/games/crossword/detectWin";
 import highlight from "@/utils/games/crossword/highlight";
 import generateSimpleHash from "@/utils/games/simpleHash";
-import detectWin from "@/utils/games/crossword/detectWin";
 import Stopwatch from "@/components/games/stopwatch";
-import ToolTip from "@/components/general/tooltip";
 import Keyboard from "@/components/games/keyboard";
+import ToolTip from "@/components/general/tooltip";
 import formatTime from "@/utils/games/formatTime";
 import Button from "@/components/general/button";
 import getRoles from "@/firebase/db/getRoles";
-import { useRouter } from "next/navigation";
 import formatDate from "@/utils/formatDate";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { auth } from "@/firebase/config";
 import isMobile from "@/utils/isMobile";
 
@@ -62,11 +63,12 @@ export type CrossWordHint = {
 };
 
 export default function Crossword() {
-  const [crosswordSize, setCrosswordSize] = useState<{
-    width: number;
-    height: number;
-    size: "mini" | "full";
-  }>({ width: 12, height: 12, size: "full" });
+  const { crosswordSize, currentCrossword, currentMode } =
+    useCrosswordContext() as {
+      crosswordSize: { width: number; height: number; size: "mini" | "full" };
+      currentCrossword: Crossword;
+      currentMode: "today" | "archive";
+    };
 
   const router = useRouter();
   const { user } = useAuthContext() as { user: any };
@@ -190,22 +192,11 @@ export default function Crossword() {
   };
 
   useEffect(() => {
-    const url = new URL(window.location.href);
-    let type = url.searchParams.get("type");
-
-    let size: "full" | "mini" = "full";
-    if (type == "mini") {
-      size = "mini";
-    }
-
-    if (size == "mini") {
-      setCrosswordSize({ width: 5, height: 5, size: "mini" });
-    }
-
-    getCrossword(size).then((data) => {
+    //TODO: load crossword based on currentMode
+    getCrossword(crosswordSize.size).then((data) => {
       loadStringData(data);
     });
-  }, []);
+  }, [crosswordSize]);
 
   const toggleMode = () => {
     if (!user) {
