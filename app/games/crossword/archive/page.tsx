@@ -4,10 +4,13 @@ import getArchivedCrosswords from "@/utils/games/crossword/getArchivedCrosswords
 import { useCrosswordContext } from "@/lib/contexts/crosswordContext";
 import decodeJsonData from "@/utils/games/crossword/decodeJsonData";
 import Button from "@/components/general/button";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Crossword } from "../page";
 
 export default function Archive() {
+  const router = useRouter();
+
   const { crosswordSize, updateCurrentCrossword, updateCurrentMode } =
     useCrosswordContext() as {
       crosswordSize: { width: number; height: number; size: "mini" | "full" };
@@ -34,6 +37,8 @@ export default function Archive() {
           decodedCrosswords.push(decodedData);
         }
 
+        decodedCrosswords = decodedCrosswords.reverse();
+
         setArchivedCrosswords(decodedCrosswords);
       },
     );
@@ -42,6 +47,7 @@ export default function Archive() {
   const loadArchivedCrossword = (crossword: Crossword) => {
     updateCurrentCrossword(crossword);
     updateCurrentMode("archive");
+    router.push(`/games/crossword/?type=${crosswordSize.size}`);
   };
 
   return (

@@ -192,11 +192,14 @@ export default function Crossword() {
   };
 
   useEffect(() => {
-    //TODO: load crossword based on currentMode
-    getCrossword(crosswordSize.size).then((data) => {
-      loadStringData(data);
-    });
-  }, [crosswordSize]);
+    if (currentMode == "today") {
+      getCrossword(crosswordSize.size).then((data) => {
+        loadStringData(data);
+      });
+    } else {
+      loadStringData(JSON.stringify(currentCrossword));
+    }
+  }, [crosswordSize, currentMode]);
 
   const toggleMode = () => {
     if (!user) {

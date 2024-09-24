@@ -1,4 +1,4 @@
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { doc, getDoc, updateDoc, arrayUnion } from "firebase/firestore";
 import { db } from "@/firebase/config";
 
 export default async function updateCompletedCrosswords(
@@ -10,21 +10,13 @@ export default async function updateCompletedCrosswords(
   const docSnap = await getDoc(crosswordRef);
   if (docSnap.exists()) {
     if (size == "full") {
-      await setDoc(
-        crosswordRef,
-        {
-          completedFull: [hash],
-        },
-        { merge: true },
-      );
+      await updateDoc(crosswordRef, {
+        completedFull: arrayUnion(hash),
+      });
     } else {
-      await setDoc(
-        crosswordRef,
-        {
-          completedMini: [hash],
-        },
-        { merge: true },
-      );
+      await updateDoc(crosswordRef, {
+        completedMini: arrayUnion(hash),
+      });
     }
   }
 }
