@@ -1374,8 +1374,8 @@ export default function Crossword() {
     let crossword: Crossword = {
       data: jsonDataString,
       hints: jsonHintString,
-      realAuthor: user.displayName,
       author: crosswordAuthor,
+      realAuthor: user.displayName,
       name: crosswordName,
       published: formattedDate,
     };
