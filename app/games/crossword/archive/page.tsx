@@ -3,6 +3,7 @@
 import getArchivedCrosswords from "@/utils/games/crossword/getArchivedCrosswords";
 import { useCrosswordContext } from "@/lib/contexts/crosswordContext";
 import decodeJsonData from "@/utils/games/crossword/decodeJsonData";
+import { useAuthContext } from "@/lib/contexts/authContext";
 import Button from "@/components/general/button";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -10,6 +11,10 @@ import { Crossword } from "../page";
 
 export default function Archive() {
   const router = useRouter();
+  const { isMaksim, isAdmin } = useAuthContext() as {
+    isMaksim: boolean;
+    isAdmin: boolean;
+  };
 
   const { crosswordSize, updateCurrentCrossword, updateCurrentMode } =
     useCrosswordContext() as {
@@ -51,7 +56,7 @@ export default function Archive() {
   };
 
   return (
-    <section className="grid grid-cols-3 gap-2">
+    <section className="grid grid-cols-3 gap-2 max-lg:grid-cols-2 max-sm:grid-cols-1 ">
       {archivedCrosswords.map((crossword: Crossword) => (
         <div
           key={crossword.published}

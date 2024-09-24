@@ -1,5 +1,5 @@
 "use client";
-// To the person who next works on this, im sorry
+
 import updateCompletedCrosswords from "@/firebase/db/games/crossword/updateCompletedCrosswords";
 import clearHighlightAndSelection from "@/utils/games/crossword/clearHighlightAndSelection";
 import getCompletedCrosswords from "@/firebase/db/games/crossword/getCompletedCrosswords";
@@ -71,7 +71,12 @@ export default function Crossword() {
     };
 
   const router = useRouter();
-  const { user } = useAuthContext() as { user: any };
+  const { user, isMaksim, isAdmin, isHelper } = useAuthContext() as {
+    user: any;
+    isMaksim: boolean;
+    isAdmin: boolean;
+    isHelper: boolean;
+  };
   const [keyStats, setKeyStats] = useState<{
     [key: string]: "correct" | "incorrect" | "default";
   }>({});
@@ -121,10 +126,6 @@ export default function Crossword() {
   >(undefined);
   const [hint, setHint] = useState("");
 
-  const [isMaksim, setIsMaksim] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [isHelper, setIsHelper] = useState(false);
-
   const [isRunning, setIsRunning] = useState(false);
   const [isReset, setIsReset] = useState(false);
   const [stoppedTime, setStoppedTime] = useState<number | null>(null);
@@ -166,17 +167,7 @@ export default function Crossword() {
     const mobile = isMobile();
 
     setMobileDevice(mobile);
-
-    if (user && !mobile) {
-      getRoles(auth.currentUser).then(
-        (roles: { isMaksim: boolean; isAdmin: boolean; isHelper: boolean }) => {
-          setIsMaksim(roles.isMaksim);
-          setIsAdmin(roles.isAdmin);
-          setIsHelper(roles.isHelper);
-        },
-      );
-    }
-  }, [user]);
+  }, []);
 
   const triggerNotification = (
     title: string,
