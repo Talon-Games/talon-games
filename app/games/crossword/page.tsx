@@ -1,5 +1,5 @@
 "use client";
-// To the person who next works on this, im sorry
+
 import updateCompletedCrosswords from "@/firebase/db/games/crossword/updateCompletedCrosswords";
 import clearHighlightAndSelection from "@/utils/games/crossword/clearHighlightAndSelection";
 import getCompletedCrosswords from "@/firebase/db/games/crossword/getCompletedCrosswords";
@@ -7,29 +7,30 @@ import findNextSelectionSpot from "@/utils/games/crossword/findNextSelectionSpot
 import getBoxesInDirection from "@/utils/games/crossword/getBoxesInDirection";
 import generateNewTable from "@/utils/games/crossword/generateNewTable";
 import saveCrossword from "@/firebase/db/games/crossword/saveCrossword";
-import getHighScore from "@/firebase/db/games/crossword/getHighScore";
-import setHighScore from "@/firebase/db/games/crossword/setHighScore";
 import getCrossword from "@/firebase/db/games/crossword/getCrossword";
-import decodeJsonData from "@/utils/games/crossword/decodeJsonData";
+import setHighScore from "@/firebase/db/games/crossword/setHighScore";
+import { useCrosswordContext } from "@/lib/contexts/crosswordContext";
+import getHighScore from "@/firebase/db/games/crossword/getHighScore";
 import ConnectedButton from "@/components/general/connectedButtons";
+import decodeJsonData from "@/utils/games/crossword/decodeJsonData";
 import selectCurrent from "@/utils/games/crossword/selectCurrent";
 import initNewHints from "@/utils/games/crossword/initNewHints";
-import Notification from "@/components/general/notification";
 import FullGrid from "@/components/games/crossword/fullGrid";
 import MiniGrid from "@/components/games/crossword/miniGrid";
+import Notification from "@/components/general/notification";
 import { useAuthContext } from "@/lib/contexts/authContext";
+import detectWin from "@/utils/games/crossword/detectWin";
 import highlight from "@/utils/games/crossword/highlight";
 import generateSimpleHash from "@/utils/games/simpleHash";
-import detectWin from "@/utils/games/crossword/detectWin";
 import Stopwatch from "@/components/games/stopwatch";
-import ToolTip from "@/components/general/tooltip";
 import Keyboard from "@/components/games/keyboard";
+import ToolTip from "@/components/general/tooltip";
 import formatTime from "@/utils/games/formatTime";
 import Button from "@/components/general/button";
 import getRoles from "@/firebase/db/getRoles";
-import { useRouter } from "next/navigation";
 import formatDate from "@/utils/formatDate";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { auth } from "@/firebase/config";
 import isMobile from "@/utils/isMobile";
 
@@ -62,14 +63,20 @@ export type CrossWordHint = {
 };
 
 export default function Crossword() {
-  const [crosswordSize, setCrosswordSize] = useState<{
-    width: number;
-    height: number;
-    size: "mini" | "full";
-  }>({ width: 12, height: 12, size: "full" });
+  const { crosswordSize, currentCrossword, currentMode } =
+    useCrosswordContext() as {
+      crosswordSize: { width: number; height: number; size: "mini" | "full" };
+      currentCrossword: Crossword;
+      currentMode: "today" | "archive";
+    };
 
   const router = useRouter();
-  const { user } = useAuthContext() as { user: any };
+  const { user, isMaksim, isAdmin, isHelper } = useAuthContext() as {
+    user: any;
+    isMaksim: boolean;
+    isAdmin: boolean;
+    isHelper: boolean;
+  };
   const [keyStats, setKeyStats] = useState<{
     [key: string]: "correct" | "incorrect" | "default";
   }>({});
@@ -119,10 +126,6 @@ export default function Crossword() {
   >(undefined);
   const [hint, setHint] = useState("");
 
-  const [isMaksim, setIsMaksim] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [isHelper, setIsHelper] = useState(false);
-
   const [isRunning, setIsRunning] = useState(false);
   const [isReset, setIsReset] = useState(false);
   const [stoppedTime, setStoppedTime] = useState<number | null>(null);
@@ -164,17 +167,7 @@ export default function Crossword() {
     const mobile = isMobile();
 
     setMobileDevice(mobile);
-
-    if (user && !mobile) {
-      getRoles(auth.currentUser).then(
-        (roles: { isMaksim: boolean; isAdmin: boolean; isHelper: boolean }) => {
-          setIsMaksim(roles.isMaksim);
-          setIsAdmin(roles.isAdmin);
-          setIsHelper(roles.isHelper);
-        },
-      );
-    }
-  }, [user]);
+  }, []);
 
   const triggerNotification = (
     title: string,
@@ -190,22 +183,14 @@ export default function Crossword() {
   };
 
   useEffect(() => {
-    const url = new URL(window.location.href);
-    let type = url.searchParams.get("type");
-
-    let size: "full" | "mini" = "full";
-    if (type == "mini") {
-      size = "mini";
+    if (currentMode == "today") {
+      getCrossword(crosswordSize.size).then((data) => {
+        loadStringData(data);
+      });
+    } else {
+      loadStringData(JSON.stringify(currentCrossword));
     }
-
-    if (size == "mini") {
-      setCrosswordSize({ width: 5, height: 5, size: "mini" });
-    }
-
-    getCrossword(size).then((data) => {
-      loadStringData(data);
-    });
-  }, []);
+  }, [crosswordSize, currentMode]);
 
   const toggleMode = () => {
     if (!user) {
@@ -1389,8 +1374,8 @@ export default function Crossword() {
     let crossword: Crossword = {
       data: jsonDataString,
       hints: jsonHintString,
-      realAuthor: user.displayName,
       author: crosswordAuthor,
+      realAuthor: user.displayName,
       name: crosswordName,
       published: formattedDate,
     };
@@ -1679,11 +1664,8 @@ export default function Crossword() {
   };
 
   return (
-    <main className="w-9/12 ml-auto mr-auto max-sm:w-11/12">
-      <h1 className="font-heading text-center mb-4 text-8xl max-sm:text-7xl max-xs:text-6xl">
-        {crosswordSize.size == "full" ? "Crossword" : "Mini Crossword"}
-      </h1>
-      <section className="flex justify-center gap-2 max-xl:flex-col w-full">
+    <>
+      <section className="flex justify-between gap-2 max-xl:flex-col w-full">
         <div className="flex flex-col gap-2">
           {mode == "play" ? (
             <section className="flex gap-2 w-full">
@@ -2161,6 +2143,6 @@ export default function Crossword() {
           updateNotification={(value) => setNotification(value)}
         />
       ) : null}
-    </main>
+    </>
   );
 }

@@ -1,4 +1,4 @@
-import { doc, getDoc, updateDoc, setDoc } from "firebase/firestore";
+import { doc, getDoc, updateDoc, arrayUnion } from "firebase/firestore";
 import { db } from "@/firebase/config";
 
 export default async function saveCrossword(
@@ -22,21 +22,13 @@ export default async function saveCrossword(
 
   if (docSnap.exists() && saveToArchive) {
     if (size == "full") {
-      await setDoc(
-        crosswordRef,
-        {
-          fullCrosswordArchive: [data],
-        },
-        { merge: true },
-      );
+      await updateDoc(crosswordRef, {
+        fullCrosswordArchive: arrayUnion(data),
+      });
     } else {
-      await setDoc(
-        crosswordRef,
-        {
-          miniCrosswordArchive: [data],
-        },
-        { merge: true },
-      );
+      await updateDoc(crosswordRef, {
+        miniCrosswordArchive: arrayUnion(data),
+      });
     }
   }
 }

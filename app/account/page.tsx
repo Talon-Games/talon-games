@@ -6,7 +6,6 @@ import Notification from "@/components/general/notification";
 import { useAuthContext } from "@/lib/contexts/authContext";
 import deleteAccount from "@/firebase/db/deleteAccount";
 import Button from "@/components/general/button";
-import getRoles from "@/firebase/db/getRoles";
 import { auth, db } from "@/firebase/config";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -22,13 +21,13 @@ interface User {
 
 export default function Account() {
   const router = useRouter();
-  const { user } = useAuthContext() as { user: any };
+  const { user, isMaksim, isAdmin } = useAuthContext() as {
+    user: any;
+    isMaksim: boolean;
+    isAdmin: boolean;
+  };
   const [userList, setUserList] = useState<User[]>([]);
   const [filteredUserList, setFilteredUserList] = useState<User[]>(userList);
-
-  const [isMaksim, setIsMaksim] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [isHelper, setIsHelper] = useState(false);
 
   const [notification, setNotification] = useState(false);
   const [notificationTitle, setNotificationTitle] = useState("");
@@ -54,30 +53,23 @@ export default function Account() {
     if (user == null) {
       router.push("/");
     } else {
-      getRoles(auth.currentUser).then(
-        (roles: { isMaksim: boolean; isAdmin: boolean; isHelper: boolean }) => {
-          setIsMaksim(roles.isMaksim);
-          setIsAdmin(roles.isAdmin);
-          setIsHelper(roles.isHelper);
-          if (roles.isMaksim || roles.isAdmin) {
-            const users = collection(db, "users");
-            getDocs(users)
-              .then((querySnapshot) => {
-                const data: any = [];
-                querySnapshot.forEach((doc) => {
-                  data.push(doc.data());
-                });
-                setUserList(data);
-                setFilteredUserList(data);
-              })
-              .catch((error) => {
-                console.error("Error:", error);
-              });
-          }
-        },
-      );
+      if (isMaksim || isAdmin) {
+        const users = collection(db, "users");
+        getDocs(users)
+          .then((querySnapshot) => {
+            const data: any = [];
+            querySnapshot.forEach((doc) => {
+              data.push(doc.data());
+            });
+            setUserList(data);
+            setFilteredUserList(data);
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+          });
+      }
     }
-  }, [user, router]);
+  }, [user, router, isAdmin]);
 
   useEffect(() => {
     setFilteredUserList(userList);
@@ -222,7 +214,7 @@ export default function Account() {
               {filteredUserList.map((user: any) => (
                 <div
                   key={user.uid}
-                  className="border-t-2 border-secondary-400 hover:drop-shadow rounded-t-lg rounded-b-lg bg-accent-100 p-2 rounded-none h-56 transition-all duration-200 ease-in-out flex flex-col justify-between"
+                  className="border-t-2 hover:border-t-4 border-secondary-400 hover:drop-shadow rounded-t-lg rounded-b-lg bg-accent-100 p-2 rounded-none h-56 transition-all duration-150 ease-in-out flex flex-col justify-between"
                 >
                   <div>
                     <h2 className="px-1">{user.name}</h2>
