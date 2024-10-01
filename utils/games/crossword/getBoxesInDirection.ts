@@ -1,5 +1,6 @@
 import { CrossWordBoxData } from "@/app/games/crossword/page";
 
+//TODO: Fix hint directions for words in directions with no real words
 export default function getBoxesInDirection(
   startX: number,
   startY: number,

@@ -27,7 +27,6 @@ import Keyboard from "@/components/games/keyboard";
 import ToolTip from "@/components/general/tooltip";
 import formatTime from "@/utils/games/formatTime";
 import Button from "@/components/general/button";
-import getRoles from "@/firebase/db/getRoles";
 import formatDate from "@/utils/formatDate";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -645,6 +644,9 @@ export default function Crossword() {
 
     let next = data[y][x].next;
 
+    //TODO: Fix hint directions for words in directions with no real words
+    // based on the word boxes, if the left or up most box has a number in it
+    // set the hint and hint direction to that of that number
     if (!next) {
       setCurrentTrend(data[y][x].next);
       data = clearHighlightAndSelection(data);
@@ -656,16 +658,25 @@ export default function Crossword() {
         currentSelectionNumberXY[0] == x &&
         currentSelectionNumberXY[1] == y
       ) {
-        if (currentTrend == "across" && data[y + 1][x].state != "black") {
+        if (
+          currentTrend == "across" &&
+          y + 1 < crosswordSize.width &&
+          data[y + 1][x].state != "black"
+        ) {
           data = highlight(x, y, "down", mode == "play" ? false : true, data);
           const boxes = getBoxesInDirection(x, y, "down", data);
           updateHintFromWordBoxes(boxes, "down");
           setWordBoxes(boxes);
           setCurrentTrend("down");
           setCurrentEditDirection("down");
-        } else if (currentTrend == "down" && data[y][x + 1].state != "black") {
+        } else if (
+          currentTrend == "down" &&
+          x + 1 < crosswordSize.height &&
+          data[y][x + 1].state != "black"
+        ) {
           data = highlight(x, y, "across", mode == "play" ? false : true, data);
           const boxes = getBoxesInDirection(x, y, "across", data);
+          updateHintFromWordBoxes(boxes, "down");
           updateHintFromWordBoxes(boxes, "across");
           setWordBoxes(boxes);
           setCurrentTrend("across");
