@@ -644,9 +644,6 @@ export default function Crossword() {
 
     let next = data[y][x].next;
 
-    //TODO: Fix hint directions for words in directions with no real words
-    // based on the word boxes, if the left or up most box has a number in it
-    // set the hint and hint direction to that of that number
     if (!next) {
       setCurrentTrend(data[y][x].next);
       data = clearHighlightAndSelection(data);

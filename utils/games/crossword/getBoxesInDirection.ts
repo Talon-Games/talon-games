@@ -1,6 +1,5 @@
 import { CrossWordBoxData } from "@/app/games/crossword/page";
 
-//TODO: Fix hint directions for words in directions with no real words
 export default function getBoxesInDirection(
   startX: number,
   startY: number,
@@ -17,7 +16,10 @@ export default function getBoxesInDirection(
     for (let x = startX; x >= 0; x--) {
       if (data[startY][x].state == "black") {
         break;
-      } else if (data[startY][x].number != undefined) {
+      } else if (
+        data[startY][x].number != undefined &&
+        data[startY][x].next == direction
+      ) {
         let num = data[startY][x].number;
         if (!num) {
           return boxes;
@@ -43,7 +45,10 @@ export default function getBoxesInDirection(
     for (let y = startY; y >= 0; y--) {
       if (data[y][startX].state == "black") {
         break;
-      } else if (data[y][startX].number != undefined) {
+      } else if (
+        data[y][startX].number != undefined &&
+        data[y][startX].next == direction
+      ) {
         let num = data[y][startX].number;
         if (!num) {
           return boxes;
