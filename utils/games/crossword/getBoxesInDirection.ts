@@ -16,17 +16,13 @@ export default function getBoxesInDirection(
     for (let x = startX; x >= 0; x--) {
       if (data[startY][x].state == "black") {
         break;
-      } else if (
-        data[startY][x].number != undefined &&
-        data[startY][x].next == direction
-      ) {
+      } else if (data[startY][x].number != undefined) {
         let num = data[startY][x].number;
         if (!num) {
           return boxes;
         }
         boxes.num = num;
         boxes.boxes.push({ x: x, y: startY });
-        break;
       } else {
         boxes.boxes.push({ x: x, y: startY });
       }
@@ -45,17 +41,13 @@ export default function getBoxesInDirection(
     for (let y = startY; y >= 0; y--) {
       if (data[y][startX].state == "black") {
         break;
-      } else if (
-        data[y][startX].number != undefined &&
-        data[y][startX].next == direction
-      ) {
+      } else if (data[y][startX].number != undefined) {
         let num = data[y][startX].number;
         if (!num) {
           return boxes;
         }
         boxes.num = num;
         boxes.boxes.push({ x: startX, y: y });
-        break;
       } else {
         boxes.boxes.push({ x: startX, y: y });
       }

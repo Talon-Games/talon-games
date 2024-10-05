@@ -633,66 +633,72 @@ export default function Crossword() {
     y: number,
     data: CrossWordBoxData[][],
   ): CrossWordBoxData[][] {
-    if (data[y][x].state == "black" && mode == "play") {
+    if (data[y][x].state === "black" && mode === "play") {
       triggerNotification(
         "Failed to start letter placer",
         "warning",
-        "Cant place letters on black squares",
+        "Can't place letters on black squares",
       );
       return data;
     }
 
-    let next = data[y][x].next;
+    const next = data[y][x].next;
 
     if (!next) {
       setCurrentTrend(data[y][x].next);
       data = clearHighlightAndSelection(data);
-      data = selectCurrent(x, y, data);
-    } else {
-      if (
-        currentSelectionNumberXY != undefined &&
-        currentSelectionNumberXY.length == 2 &&
-        currentSelectionNumberXY[0] == x &&
-        currentSelectionNumberXY[1] == y
-      ) {
-        if (
-          currentTrend == "across" &&
-          y + 1 < crosswordSize.width &&
-          data[y + 1][x].state != "black"
-        ) {
-          data = highlight(x, y, "down", mode == "play" ? false : true, data);
-          const boxes = getBoxesInDirection(x, y, "down", data);
-          updateHintFromWordBoxes(boxes, "down");
-          setWordBoxes(boxes);
-          setCurrentTrend("down");
-          setCurrentEditDirection("down");
-        } else if (
-          currentTrend == "down" &&
-          x + 1 < crosswordSize.height &&
-          data[y][x + 1].state != "black"
-        ) {
-          data = highlight(x, y, "across", mode == "play" ? false : true, data);
-          const boxes = getBoxesInDirection(x, y, "across", data);
-          updateHintFromWordBoxes(boxes, "down");
-          updateHintFromWordBoxes(boxes, "across");
-          setWordBoxes(boxes);
-          setCurrentTrend("across");
-          setCurrentEditDirection("across");
+      return selectCurrent(x, y, data);
+    }
+
+    const handleDirection = (direction: "down" | "across") => {
+      data = highlight(x, y, direction, mode !== "play", data);
+      const boxes = getBoxesInDirection(x, y, direction, data);
+      updateHintFromWordBoxes(boxes, direction);
+      setWordBoxes(boxes);
+      setCurrentTrend(direction);
+      setCurrentEditDirection(direction);
+    };
+
+    const canMoveDown =
+      y + 1 < crosswordSize.height && data[y + 1][x].state !== "black";
+    const canMoveAcross =
+      x + 1 < crosswordSize.width && data[y][x + 1].state !== "black";
+
+    if (
+      currentSelectionNumberXY &&
+      currentSelectionNumberXY[0] === x &&
+      currentSelectionNumberXY[1] === y
+    ) {
+      if (currentTrend === "across" && canMoveDown) {
+        handleDirection("down");
+      } else if (currentTrend === "down" && canMoveAcross) {
+        handleDirection("across");
+      } else {
+        if (canMoveDown) {
+          handleDirection("down");
+        } else if (canMoveAcross) {
+          handleDirection("across");
         } else {
           const boxes = getBoxesInDirection(x, y, next, data);
           updateHintFromWordBoxes(boxes, next);
           setWordBoxes(boxes);
-          setCurrentTrend(data[y][x].next);
-          setCurrentEditDirection(data[y][x].next);
-          data = highlight(x, y, next, mode == "play" ? false : true, data);
+          setCurrentTrend(next);
+          setCurrentEditDirection(next);
+          data = highlight(x, y, next, mode !== "play", data);
         }
+      }
+    } else {
+      if (canMoveDown) {
+        handleDirection("down");
+      } else if (canMoveAcross) {
+        handleDirection("across");
       } else {
         const boxes = getBoxesInDirection(x, y, next, data);
         updateHintFromWordBoxes(boxes, next);
         setWordBoxes(boxes);
-        setCurrentTrend(data[y][x].next);
-        setCurrentEditDirection(data[y][x].next);
-        data = highlight(x, y, next, mode == "play" ? false : true, data);
+        setCurrentTrend(next);
+        setCurrentEditDirection(next);
+        data = highlight(x, y, next, mode !== "play", data);
       }
     }
 
