@@ -2110,15 +2110,15 @@ export default function Crossword() {
       ) : null}
       {won ? (
         <section className="fixed flex flex-col items-center justify-center left-0 top-0 w-full h-full bg-accent-900 bg-opacity-50">
-          <div className="p-10 bg-background-50 rounded-xl w-3/6">
-            <h2 className="font-heading text-7xl mb-1 text-center">
+          <div className="p-10 bg-background-50 rounded-xl w-7/12 flex flex-col max-lg:w-5/6 max-sm:w-11/12">
+            <h2 className="font-heading text-7xl mb-1 text-center max-md:text-6xl max-sm:text-4xl max-xs:text-3xl">
               Congratulations
             </h2>
-            <h2 className="font-heading text-7xl mb-10 text-center">
+            <h2 className="font-heading text-7xl mb-10 text-center max-md:text-6xl max-sm:text-4xl max-xs:text-3xl">
               You Won!
             </h2>
-            <div className="flex gap-2 justify-center items-center">
-              <p className="text-2xl">
+            <div className="flex gap-2 justify-center items-center max-sm:flex-col">
+              <p className="text-2xl text-center">
                 Completion time:{" "}
                 {stoppedTime !== null
                   ? formatTime(stoppedTime)
@@ -2132,7 +2132,7 @@ export default function Crossword() {
               You have already played this crossword, your score is invalid
             </p>
           </div>
-          <div className="flex gap-2 mt-2 w-3/6">
+          <div className="flex gap-2 mt-2 w-7/12 max-lg:w-5/6 max-sm:w-11/12">
             <Button
               onClick={playAgain}
               title="Play Again"
