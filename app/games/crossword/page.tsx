@@ -2097,6 +2097,13 @@ export default function Crossword() {
               will be removed and all numbers greater than the removed number
               will be down shifted by 1
             </p>
+            <a
+              href="https://github.com/Talon-Games/word-finder"
+              target="_blank"
+              className="text-center hover:underline transition-all duration-300 block text-secondary-700"
+            >
+              Feel free to use our word finder tool to build your crossword
+            </a>
           </div>
           <div className="flex gap-2 mt-2 w-3/6">
             <Button
