@@ -645,6 +645,7 @@ export default function Crossword() {
     const next = data[y][x].next;
 
     if (!next) {
+      setCurrentSelectionNumberXY([x, y]);
       setCurrentTrend(data[y][x].next);
       data = clearHighlightAndSelection(data);
       return selectCurrent(x, y, data);
