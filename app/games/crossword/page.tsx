@@ -651,58 +651,33 @@ export default function Crossword() {
       return selectCurrent(x, y, data);
     }
 
-    const handleDirection = (direction: "down" | "across") => {
-      data = highlight(x, y, direction, mode !== "play", data);
-      const boxes = getBoxesInDirection(x, y, direction, data);
-      updateHintFromWordBoxes(boxes, direction);
-      setWordBoxes(boxes);
-      setCurrentTrend(direction);
-      setCurrentEditDirection(direction);
-    };
+    let direction: "across" | "down" = "across";
 
-    const canMoveDown =
-      y + 1 < crosswordSize.height && data[y + 1][x].state !== "black";
-    const canMoveAcross =
-      x + 1 < crosswordSize.width && data[y][x + 1].state !== "black";
-
-    if (
-      currentSelectionNumberXY &&
-      currentSelectionNumberXY[0] === x &&
-      currentSelectionNumberXY[1] === y
-    ) {
-      if (currentTrend === "across" && canMoveDown) {
-        handleDirection("down");
-      } else if (currentTrend === "down" && canMoveAcross) {
-        handleDirection("across");
+    if (currentEditDirection == "across" && y + 1 < crosswordSize.height) {
+      if (data[y + 1][x].state !== "black") {
+        direction = "down";
       } else {
-        if (canMoveDown) {
-          handleDirection("down");
-        } else if (canMoveAcross) {
-          handleDirection("across");
-        } else {
-          const boxes = getBoxesInDirection(x, y, next, data);
-          updateHintFromWordBoxes(boxes, next);
-          setWordBoxes(boxes);
-          setCurrentTrend(next);
-          setCurrentEditDirection(next);
-          data = highlight(x, y, next, mode !== "play", data);
-        }
+        direction = "across";
+      }
+    } else if (currentEditDirection == "down" && x + 1 < crosswordSize.width) {
+      if (data[y][x + 1].state !== "black") {
+        direction = "across";
+      } else {
+        direction = "down";
       }
     } else {
-      if (canMoveDown) {
-        handleDirection("down");
-      } else if (canMoveAcross) {
-        handleDirection("across");
+      if (currentEditDirection == "across") {
+        direction = "down";
       } else {
-        const boxes = getBoxesInDirection(x, y, next, data);
-        updateHintFromWordBoxes(boxes, next);
-        setWordBoxes(boxes);
-        setCurrentTrend(next);
-        setCurrentEditDirection(next);
-        data = highlight(x, y, next, mode !== "play", data);
+        direction = "across";
       }
     }
-
+    const boxes = getBoxesInDirection(x, y, direction, data);
+    updateHintFromWordBoxes(boxes, direction);
+    setWordBoxes(boxes);
+    setCurrentTrend(direction);
+    setCurrentEditDirection(direction);
+    data = highlight(x, y, direction, mode !== "play", data);
     setCurrentSelectionNumberXY([x, y]);
 
     return data;
