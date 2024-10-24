@@ -11,8 +11,7 @@ export type Game = {
 const games: Game[] = [
   {
     name: "Crossword",
-    description:
-      "A crossword game that challenges your vocabulary and problem-solving skills! Each puzzle is filled with clues that will test your knowledge across a variety of topics. As you fill in the grid, you’ll uncover hidden words and phrases, making each game a fun and educational experience.",
+    description: "",
     color: "crossword",
     route: "/crossword?type=full",
     icon: "crossword-icon.svg",
@@ -20,8 +19,7 @@ const games: Game[] = [
   },
   {
     name: "Mini Crossword",
-    description:
-      "A quick and fun 5x5 puzzle with just 10 clues! Perfect for a short break, this bite-sized crossword offers a challenge without taking up too much time. With a mix of straightforward and clever clues, it’s ideal for a quick brain workout.",
+    description: "",
     color: "mini-crossword",
     route: "/crossword?type=mini",
     icon: "mini-crossword-icon.svg",
