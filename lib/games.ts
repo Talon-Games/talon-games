@@ -25,6 +25,14 @@ const games: Game[] = [
     icon: "mini-crossword-icon.svg",
     commingSoon: false,
   },
+  {
+    name: "Wordsearch",
+    description: "",
+    color: "wordsearch",
+    route: "/wordsearch",
+    icon: "mini-crossword-icon.svg",
+    commingSoon: false,
+  },
 ];
 
 export default games;

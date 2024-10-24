@@ -15,25 +15,27 @@ export default function GameCard({ game }: { game: Game }) {
         return "bg-blue-300";
       case "mini-crossword":
         return "bg-green-300";
+      case "wordsearch":
+        return "bg-orange-300";
     }
   };
 
   return (
-    <div className="flex w-5/6 min-h-96 max-sm:w-[98%] max-sm:flex-col rounded-xl hover:drop-shadow-lg bg-accent-100 transition-all duration-300 ease-in-out">
+    <div className="flex-col w-full min-h-96 rounded-xl hover:drop-shadow-lg bg-accent-100 transition-all duration-300 ease-in-out">
       <div
-        className={`flex items-center justify-center w-4/6 max-lg:w-3/6 rounded-tl-xl max-sm:w-full max-sm:rounded-tr-xl sm:rounded-bl-xl ${getColor(
+        className={`flex items-center justify-center  rounded-t-xl ${getColor(
           game.color,
         )}`}
       >
         <Image
-          className="p-5 max-lg:w-[300px] max-lg:h-[300px]"
+          className="p-5"
           src={`/game-icons/${game.icon}`}
           alt={game.name}
-          width="400"
-          height="400"
+          width="300"
+          height="300"
         />
       </div>
-      <div className="w-2/6 p-4 flex flex-col items-center justify-between max-lg:w-3/6 max-sm:w-full">
+      <div className=" p-4 flex flex-col items-center justify-between max-lg:w-3/6 max-sm:w-full">
         <div>
           <h2 className="font-bold text-4xl text-center font-heading">
             {game.name}

@@ -2,7 +2,7 @@
 
 import deleteCrosswordFromArchive from "@/firebase/db/games/crossword/deleteCrosswordFromArchive";
 import getArchivedCrosswords from "@/utils/games/crossword/getArchivedCrosswords";
-import { useCrosswordContext } from "@/lib/contexts/crosswordContext";
+import { useGamesContext } from "@/lib/contexts/gamesContext";
 import decodeJsonData from "@/utils/games/crossword/decodeJsonData";
 import ConnectedButton from "@/components/general/connectedButtons";
 import { useAuthContext } from "@/lib/contexts/authContext";
@@ -19,7 +19,7 @@ export default function Archive() {
   };
 
   const { crosswordSize, updateCurrentCrossword, updateCurrentMode } =
-    useCrosswordContext() as {
+    useGamesContext() as {
       crosswordSize: { width: number; height: number; size: "mini" | "full" };
       updateCurrentCrossword: (crossword: Crossword) => void;
       updateCurrentMode: (mode: "today" | "archive") => void;

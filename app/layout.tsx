@@ -1,5 +1,5 @@
 import { AuthContextProvider } from "@/lib/contexts/authContext";
-import { CrosswordContextProvider } from "@/lib/contexts/crosswordContext";
+import { GamesContextProvider } from "@/lib/contexts/gamesContext";
 import NavBar from "@/components/general/navBar";
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
@@ -84,12 +84,12 @@ export default function RootLayout({
         className={`${inter.className} bg-background-white text-accent-900 flex flex-col items-center justify-between min-h-screen`}
       >
         <div className="w-full">
-          <CrosswordContextProvider>
+          <GamesContextProvider>
             <AuthContextProvider>
               <NavBar />
               {children}
             </AuthContextProvider>
-          </CrosswordContextProvider>
+          </GamesContextProvider>
         </div>
         <footer className="text-sm p-4 w-full flex justify-between">
           <a

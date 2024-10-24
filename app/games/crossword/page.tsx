@@ -9,15 +9,15 @@ import generateNewTable from "@/utils/games/crossword/generateNewTable";
 import saveCrossword from "@/firebase/db/games/crossword/saveCrossword";
 import getCrossword from "@/firebase/db/games/crossword/getCrossword";
 import setHighScore from "@/firebase/db/games/crossword/setHighScore";
-import { useCrosswordContext } from "@/lib/contexts/crosswordContext";
 import getHighScore from "@/firebase/db/games/crossword/getHighScore";
 import ConnectedButton from "@/components/general/connectedButtons";
 import decodeJsonData from "@/utils/games/crossword/decodeJsonData";
 import selectCurrent from "@/utils/games/crossword/selectCurrent";
 import initNewHints from "@/utils/games/crossword/initNewHints";
+import { useGamesContext } from "@/lib/contexts/gamesContext";
 import FullGrid from "@/components/games/crossword/fullGrid";
-import MiniGrid from "@/components/games/crossword/miniGrid";
 import Notification from "@/components/general/notification";
+import MiniGrid from "@/components/games/crossword/miniGrid";
 import { useAuthContext } from "@/lib/contexts/authContext";
 import detectWin from "@/utils/games/crossword/detectWin";
 import highlight from "@/utils/games/crossword/highlight";
@@ -63,7 +63,7 @@ export type CrossWordHint = {
 
 export default function Crossword() {
   const { crosswordSize, currentCrossword, currentMode } =
-    useCrosswordContext() as {
+    useGamesContext() as {
       crosswordSize: { width: number; height: number; size: "mini" | "full" };
       currentCrossword: Crossword;
       currentMode: "today" | "archive";
