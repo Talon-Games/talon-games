@@ -724,11 +724,19 @@ export default function Crossword() {
       switch (key) {
         case "ArrowRight":
           event.preventDefault();
-          handleRightKey();
+          handleHorizontalKey("right");
+          break;
+        case "ArrowLeft":
+          event.preventDefault();
+          handleHorizontalKey("left");
           break;
         case "ArrowDown":
           event.preventDefault();
-          handleDownKey();
+          handleVerticalKey("down");
+          break;
+        case "ArrowUp":
+          event.preventDefault();
+          handleVerticalKey("up");
           break;
         case "Enter":
           if (mode == "play") return;
@@ -1082,7 +1090,7 @@ export default function Crossword() {
     setBuildHints(tempHints);
   };
 
-  const handleRightKey = () => {
+  const handleHorizontalKey = (type: "left" | "right") => {
     const location = currentSelectionNumberXY;
     if (location == null || location?.length != 2) {
       triggerNotification(
@@ -1104,22 +1112,64 @@ export default function Crossword() {
 
     let tempData = buildData.map((row) => row.map((box) => ({ ...box })));
 
-    if (
-      location[0] + 1 > tempData.length ||
-      tempData[location[1]][location[0] + 1].state == "black"
-    ) {
-      return;
+    let modifier = 1;
+
+    if (type == "left") {
+      modifier = -1;
+      if (
+        location[0] - 1 < 0 ||
+        tempData[location[1]][location[0] + 1 * modifier].state == "black"
+      ) {
+        return;
+      }
+    } else {
+      if (
+        location[0] + 1 >= tempData.length ||
+        tempData[location[1]][location[0] + 1 * modifier].state == "black"
+      ) {
+        return;
+      }
     }
 
-    setCurrentEditDirection("across");
-    setCurrentTrend("across");
-    setHighlightMode("across");
-    tempData = highlight(location[0], location[1], "across", true, tempData);
+    if (currentEditDirection == "across") {
+      const boxes = getBoxesInDirection(
+        location[0] + 1 * modifier,
+        location[1],
+        "across",
+        tempData,
+      );
+      updateHintFromWordBoxes(boxes, "across");
+      setWordBoxes(boxes);
+      setCurrentSelectionNumberXY([location[0] + 1 * modifier, location[1]]);
+      setCurrentEditDirection("across");
+      setCurrentTrend("across");
+      setHighlightMode("across");
+      tempData = highlight(
+        location[0] + 1 * modifier,
+        location[1],
+        "across",
+        false,
+        tempData,
+      );
+    } else {
+      const boxes = getBoxesInDirection(
+        location[0],
+        location[1],
+        "across",
+        tempData,
+      );
+      updateHintFromWordBoxes(boxes, "across");
+      setWordBoxes(boxes);
+      setCurrentEditDirection("across");
+      setCurrentTrend("across");
+      setHighlightMode("across");
+      tempData = highlight(location[0], location[1], "across", false, tempData);
+    }
 
     setBuildData(tempData);
   };
 
-  const handleDownKey = () => {
+  const handleVerticalKey = (type: "up" | "down") => {
     const location = currentSelectionNumberXY;
 
     if (location == null || location?.length != 2) {
@@ -1143,17 +1193,59 @@ export default function Crossword() {
 
     let tempData = buildData.map((row) => row.map((box) => ({ ...box })));
 
-    if (
-      location[1] + 1 > tempData.length ||
-      tempData[location[1] + 1][location[0]].state == "black"
-    ) {
-      return;
+    let modifier = 1;
+
+    if (type == "up") {
+      modifier = -1;
+      if (
+        location[1] - 1 < 0 ||
+        tempData[location[1] - 1][location[0]].state == "black"
+      ) {
+        return;
+      }
+    } else {
+      if (
+        location[1] + 1 >= tempData.length ||
+        tempData[location[1] + 1][location[0]].state == "black"
+      ) {
+        return;
+      }
     }
 
-    setCurrentEditDirection("down");
-    setCurrentTrend("down");
-    setHighlightMode("down");
-    tempData = highlight(location[0], location[1], "down", true, tempData);
+    if (currentEditDirection == "down") {
+      const boxes = getBoxesInDirection(
+        location[0],
+        location[1] + 1 * modifier,
+        "down",
+        tempData,
+      );
+      updateHintFromWordBoxes(boxes, "down");
+      setWordBoxes(boxes);
+      setCurrentSelectionNumberXY([location[0], location[1] + 1 * modifier]);
+      setCurrentEditDirection("down");
+      setCurrentTrend("down");
+      setHighlightMode("down");
+      tempData = highlight(
+        location[0],
+        location[1] + 1 * modifier,
+        "down",
+        false,
+        tempData,
+      );
+    } else {
+      const boxes = getBoxesInDirection(
+        location[0],
+        location[1],
+        "down",
+        tempData,
+      );
+      updateHintFromWordBoxes(boxes, "down");
+      setWordBoxes(boxes);
+      setCurrentEditDirection("down");
+      setCurrentTrend("down");
+      setHighlightMode("down");
+      tempData = highlight(location[0], location[1], "down", false, tempData);
+    }
 
     setBuildData(tempData);
   };
