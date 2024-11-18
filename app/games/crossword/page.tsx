@@ -675,9 +675,14 @@ export default function Crossword() {
     const boxes = getBoxesInDirection(x, y, direction, data);
     updateHintFromWordBoxes(boxes, direction);
     setWordBoxes(boxes);
-    setCurrentTrend(direction);
-    setCurrentEditDirection(direction);
-    data = highlight(x, y, direction, mode !== "play", data);
+    if (data[y][x].belongsTo.length > 0) {
+      setCurrentEditDirection(direction);
+      setCurrentTrend(direction);
+      data = highlight(x, y, direction, mode !== "play", data);
+    } else {
+      setCurrentTrend(undefined);
+      setCurrentEditDirection(undefined);
+    }
     setCurrentSelectionNumberXY([x, y]);
 
     return data;
