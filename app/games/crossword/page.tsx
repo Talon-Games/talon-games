@@ -754,6 +754,11 @@ export default function Crossword() {
         case " ":
           if (mode == "play") return;
           event.preventDefault();
+          if (placeBlack == true) {
+            triggerNotification("No Placing black", "success", "");
+          } else {
+            triggerNotification("Placing Black", "success", "");
+          }
           setPlaceBlack(!placeBlack);
           break;
         case ".":
@@ -789,6 +794,7 @@ export default function Crossword() {
     crosswordSize,
     helpPopup,
     publishPopup,
+    placeBlack,
   ]);
 
   const openHintEditorForCurrentWord = () => {
