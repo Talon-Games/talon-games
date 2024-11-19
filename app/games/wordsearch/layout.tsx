@@ -1,7 +1,7 @@
 "use client";
 
-import { useGamesContext } from "@/lib/contexts/gamesContext";
 import ConnectedButton from "@/components/general/connectedButtons";
+import { useGamesContext } from "@/lib/contexts/gamesContext";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 

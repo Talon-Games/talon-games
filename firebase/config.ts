@@ -1,5 +1,5 @@
-import { getFirestore } from "firebase/firestore";
 import { initializeApp, getApps } from "firebase/app";
+import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 
 const firebaseConfig = {
@@ -9,7 +9,7 @@ const firebaseConfig = {
   storageBucket: "talon-59a0c.appspot.com",
   messagingSenderId: "864424270707",
   appId: "1:864424270707:web:dc6fe9642b3ecb04d0c306",
-  measurementId: "G-417W6PRD43"
+  measurementId: "G-417W6PRD43",
 };
 
 const app = initializeApp(firebaseConfig);
