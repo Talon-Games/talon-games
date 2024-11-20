@@ -19,7 +19,6 @@ export default function CrosswordLayout({ children }: { children: any }) {
   useEffect(() => {
     const url = new URL(window.location.href);
     let type = url.searchParams.get("type");
-
     let size: "full" | "mini" = "full";
     if (type == "mini") {
       size = "mini";
@@ -27,8 +26,10 @@ export default function CrosswordLayout({ children }: { children: any }) {
 
     if (url.toString().includes("archive")) {
       setCurrentView("archive");
+      updateCurrentMode("archive");
     } else {
       setCurrentView("today");
+      updateCurrentMode("today");
     }
 
     if (size == "mini") {
