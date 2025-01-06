@@ -722,7 +722,11 @@ export default function Crossword() {
         return;
       const key = event.key;
 
-      if (key >= "a" && key <= "z") {
+      if (
+        key.length == 1 &&
+        key.toLowerCase() >= "a" &&
+        key.toLowerCase() <= "z"
+      ) {
         handleKeyPressForLetters(key.toUpperCase());
       }
 
