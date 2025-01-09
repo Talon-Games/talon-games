@@ -1569,10 +1569,6 @@ export default function Crossword() {
     const jsonDataString = JSON.stringify(data);
     const jsonHintString = JSON.stringify(hints);
 
-    alert(
-      "Warning! Text data will soon be deprecated!\nWithin the next few weeks we will go from storing data as text to binary for better performance\nYou will not be able to import previously exported crossword after that point",
-    );
-
     let crossword: Crossword = {
       data: jsonDataString,
       hints: jsonHintString,
