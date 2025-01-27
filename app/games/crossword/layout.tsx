@@ -15,9 +15,9 @@ export default function CrosswordLayout({ children }: { children: any }) {
       updateCurrentMode: (mode: "today" | "archive") => void;
     };
   const [currentView, setCurrentView] = useState<"today" | "archive">("today");
+  const url = new URL(window.location.href);
 
   useEffect(() => {
-    const url = new URL(window.location.href);
     let type = url.searchParams.get("type");
     let size: "full" | "mini" = "full";
     if (type == "mini") {
@@ -39,15 +39,15 @@ export default function CrosswordLayout({ children }: { children: any }) {
     }
   }, []);
 
-  const switchView = () => {
-    if (currentView == "today") {
-      setCurrentView("archive");
-      router.push(`/games/crossword/archive?type=${crosswordSize.size}`);
-    } else {
-      setCurrentView("today");
-      router.push(`/games/crossword?type=${crosswordSize.size}`);
-      updateCurrentMode("today");
-    }
+  const gotoToday = () => {
+    setCurrentView("today");
+    router.push(`/games/crossword?type=${crosswordSize.size}`);
+    updateCurrentMode("today");
+  };
+
+  const gotoArchive = () => {
+    setCurrentView("archive");
+    router.push(`/games/crossword/archive?type=${crosswordSize.size}`);
   };
 
   return (
@@ -56,8 +56,8 @@ export default function CrosswordLayout({ children }: { children: any }) {
         {crosswordSize.size == "full" ? "Crossword" : "Mini Crossword"}
       </h1>
       <ConnectedButton
-        onClickLeft={switchView}
-        onClickRight={switchView}
+        onClickLeft={gotoToday}
+        onClickRight={gotoArchive}
         leftStyle="normal"
         rightStyle="normal"
         leftTitle="Todays Crossword"

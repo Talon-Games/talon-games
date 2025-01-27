@@ -1,66 +1,44 @@
 "use client";
 
 import ConnectedButton from "@/components/general/connectedButtons";
-import { useGamesContext } from "@/lib/contexts/gamesContext";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export default function CrosswordLayout({ children }: { children: any }) {
   const router = useRouter();
-  const { crosswordSize, updateSize, updateCurrentMode } =
-    useGamesContext() as {
-      crosswordSize: { width: number; height: number; size: "mini" | "full" };
-      updateSize: (size: "mini" | "full") => void;
-
-      updateCurrentMode: (mode: "today" | "archive") => void;
-    };
   const [currentView, setCurrentView] = useState<"today" | "archive">("today");
+  const url = new URL(window.location.href);
 
   useEffect(() => {
-    const url = new URL(window.location.href);
-    let type = url.searchParams.get("type");
-
-    let size: "full" | "mini" = "full";
-    if (type == "mini") {
-      size = "mini";
-    }
-
     if (url.toString().includes("archive")) {
       setCurrentView("archive");
     } else {
       setCurrentView("today");
     }
-
-    if (size == "mini") {
-      updateSize("mini");
-    } else {
-      updateSize("full");
-    }
   }, []);
 
-  const switchView = () => {
-    if (currentView == "today") {
-      setCurrentView("archive");
-      router.push(`/games/crossword/archive?type=${crosswordSize.size}`);
-    } else {
-      setCurrentView("today");
-      router.push(`/games/crossword?type=${crosswordSize.size}`);
-      updateCurrentMode("today");
-    }
+  const gotoToday = () => {
+    setCurrentView("today");
+    router.push(`/games/wordsearch`);
+  };
+
+  const gotoArchive = () => {
+    setCurrentView("archive");
+    router.push(`/games/wordsearch/archive`);
   };
 
   return (
     <main className="w-9/12 ml-auto mr-auto max-sm:w-11/12">
       <h1 className="font-heading text-center mb-4 text-8xl max-sm:text-7xl max-xs:text-6xl">
-        {crosswordSize.size == "full" ? "Crossword" : "Mini Crossword"}
+        Word Search
       </h1>
       <ConnectedButton
-        onClickLeft={switchView}
-        onClickRight={switchView}
+        onClickLeft={gotoToday}
+        onClickRight={gotoArchive}
         leftStyle="normal"
         rightStyle="normal"
-        leftTitle="Todays Crossword"
-        rightTitle="Crossword Archive"
+        leftTitle="Todays Word Search"
+        rightTitle="Word Search Archive"
         containerClassModifier="mb-2"
         leftClassModifier={
           currentView == "today"
