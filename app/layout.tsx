@@ -97,7 +97,7 @@ export default function RootLayout({
             className="hover:text-secondary-600 transition-all duration-200 ease-in-out"
             target="_blank"
           >
-            Copyright © 2024
+            Copyright © 2025
           </a>
           <a
             href="https://maksimstraus.dev"
