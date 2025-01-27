@@ -15,9 +15,9 @@ export default function CrosswordLayout({ children }: { children: any }) {
       updateCurrentMode: (mode: "today" | "archive") => void;
     };
   const [currentView, setCurrentView] = useState<"today" | "archive">("today");
-  const url = new URL(window.location.href);
 
   useEffect(() => {
+    const url = new URL(window.location.href);
     let type = url.searchParams.get("type");
     let size: "full" | "mini" = "full";
     if (type == "mini") {

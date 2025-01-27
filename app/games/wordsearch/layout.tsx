@@ -7,9 +7,9 @@ import { useEffect, useState } from "react";
 export default function CrosswordLayout({ children }: { children: any }) {
   const router = useRouter();
   const [currentView, setCurrentView] = useState<"today" | "archive">("today");
-  const url = new URL(window.location.href);
 
   useEffect(() => {
+    const url = new URL(window.location.href);
     if (url.toString().includes("archive")) {
       setCurrentView("archive");
     } else {
