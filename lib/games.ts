@@ -26,10 +26,10 @@ const games: Game[] = [
     commingSoon: false,
   },
   {
-    name: "Wordsearch",
+    name: "Word Ladder",
     description: "",
-    color: "wordsearch",
-    route: "/wordsearch",
+    color: "wordladder",
+    route: "/wordladder",
     icon: "mini-crossword-icon.svg",
     commingSoon: true,
   },

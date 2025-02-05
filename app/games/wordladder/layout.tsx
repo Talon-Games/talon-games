@@ -4,7 +4,7 @@ import ConnectedButton from "@/components/general/connectedButtons";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-export default function CrosswordLayout({ children }: { children: any }) {
+export default function WordLadderLayout({ children }: { children: any }) {
   const router = useRouter();
   const [currentView, setCurrentView] = useState<"today" | "archive">("today");
 
@@ -19,26 +19,26 @@ export default function CrosswordLayout({ children }: { children: any }) {
 
   const gotoToday = () => {
     setCurrentView("today");
-    router.push(`/games/wordsearch`);
+    router.push(`/games/wordladder`);
   };
 
   const gotoArchive = () => {
     setCurrentView("archive");
-    router.push(`/games/wordsearch/archive`);
+    router.push(`/games/wordladder/archive`);
   };
 
   return (
     <main className="w-9/12 ml-auto mr-auto max-sm:w-11/12">
       <h1 className="font-heading text-center mb-4 text-8xl max-sm:text-7xl max-xs:text-6xl">
-        Word Search
+        Word Ladder
       </h1>
       <ConnectedButton
         onClickLeft={gotoToday}
         onClickRight={gotoArchive}
         leftStyle="normal"
         rightStyle="normal"
-        leftTitle="Todays Word Search"
-        rightTitle="Word Search Archive"
+        leftTitle="Todays Word Ladder"
+        rightTitle="Word Ladder Archive"
         containerClassModifier="mb-2"
         leftClassModifier={
           currentView == "today"
