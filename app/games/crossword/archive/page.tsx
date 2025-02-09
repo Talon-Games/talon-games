@@ -6,6 +6,7 @@ import decodeJsonData from "@/utils/games/crossword/decodeJsonData";
 import ConnectedButton from "@/components/general/connectedButtons";
 import { useGamesContext } from "@/lib/contexts/gamesContext";
 import { useAuthContext } from "@/lib/contexts/authContext";
+import { sendGAEvent } from "@next/third-parties/google";
 import Button from "@/components/general/button";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -57,6 +58,15 @@ export default function Archive() {
   const loadArchivedCrossword = (crossword: Crossword) => {
     updateCurrentCrossword(crossword);
     updateCurrentMode("archive");
+    if (crosswordSize.size == "mini") {
+      sendGAEvent("event", "started_archived_mini_crossword", {
+        value: crosswordSize.size,
+      });
+    } else {
+      sendGAEvent("event", "started_archived_full_crossword", {
+        value: crosswordSize.size,
+      });
+    }
     router.push(`/games/crossword/?type=${crosswordSize.size}`);
   };
 

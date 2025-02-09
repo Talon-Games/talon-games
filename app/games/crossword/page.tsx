@@ -616,9 +616,15 @@ export default function Crossword() {
     }
 
     if (mode == "play" && !isRunning && !won) {
-      sendGAEvent("event", "started_playing_crossword", {
-        value: crosswordSize.size,
-      });
+      if (crosswordSize.size == "mini") {
+        sendGAEvent("event", "started_mini_crossword", {
+          value: crosswordSize.size,
+        });
+      } else {
+        sendGAEvent("event", "started_full_crossword", {
+          value: crosswordSize.size,
+        });
+      }
       setIsRunning(true);
     }
 
@@ -983,9 +989,15 @@ export default function Crossword() {
       return;
     }
 
-    sendGAEvent("event", "solved_crossword", {
-      value: crosswordSize.size,
-    });
+    if (crosswordSize.size == "mini") {
+      sendGAEvent("event", "solved_mini_crossword", {
+        value: crosswordSize.size,
+      });
+    } else {
+      sendGAEvent("event", "solved_full_crossword", {
+        value: crosswordSize.size,
+      });
+    }
 
     let data = buildData;
 
