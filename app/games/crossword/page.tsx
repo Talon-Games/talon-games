@@ -616,8 +616,7 @@ export default function Crossword() {
     }
 
     if (mode == "play" && !isRunning && !won) {
-      sendGAEvent({
-        event: "started-playing-crossword",
+      sendGAEvent("event", "started_playing_crossword", {
         value: crosswordSize.size,
       });
       setIsRunning(true);
@@ -984,8 +983,7 @@ export default function Crossword() {
       return;
     }
 
-    sendGAEvent({
-      event: "solved-crossword",
+    sendGAEvent("event", "solved_crossword", {
       value: crosswordSize.size,
     });
 

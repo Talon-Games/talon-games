@@ -56,7 +56,8 @@ export default function Button({
       onClick={(e) => {
         if (!disabled) {
           if (gaEvent) {
-            sendGAEvent({ event: "buttonClicked", value: gaEvent });
+            console.log(gaEvent);
+            sendGAEvent("event", "buttonClicked", { value: gaEvent });
           }
 
           onClickAction(e);
