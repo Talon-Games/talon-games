@@ -20,8 +20,9 @@ import Notification from "@/components/general/notification";
 import FullGrid from "@/components/games/crossword/fullGrid";
 import { useAuthContext } from "@/lib/contexts/authContext";
 import generateSimpleHash from "@/utils/games/simpleHash";
-import highlight from "@/utils/games/crossword/highlight";
 import detectWin from "@/utils/games/crossword/detectWin";
+import highlight from "@/utils/games/crossword/highlight";
+import { sendGAEvent } from "@next/third-parties/google";
 import Stopwatch from "@/components/games/stopwatch";
 import Keyboard from "@/components/games/keyboard";
 import ToolTip from "@/components/general/tooltip";
@@ -615,6 +616,10 @@ export default function Crossword() {
     }
 
     if (mode == "play" && !isRunning && !won) {
+      sendGAEvent({
+        event: "started-playing-crossword",
+        value: crosswordSize.size,
+      });
       setIsRunning(true);
     }
 
@@ -978,6 +983,11 @@ export default function Crossword() {
       triggerNotification("Failed to save time", "error", "Data not found");
       return;
     }
+
+    sendGAEvent({
+      event: "solved-crossword",
+      value: crosswordSize.size,
+    });
 
     let data = buildData;
 
@@ -1766,9 +1776,21 @@ export default function Crossword() {
         <div className="flex flex-col gap-2">
           {mode == "play" ? (
             <section className="flex gap-2 w-full">
-              <Button onClick={checkBoard} title="Check Board" style="normal" />
-              <Button onClick={checkWord} title="Check Word" style="normal" />
-              <Button onClick={clearBoard} title="Clear Board" style="normal" />
+              <Button
+                onClickAction={checkBoard}
+                title="Check Board"
+                style="normal"
+              />
+              <Button
+                onClickAction={checkWord}
+                title="Check Word"
+                style="normal"
+              />
+              <Button
+                onClickAction={clearBoard}
+                title="Clear Board"
+                style="normal"
+              />
             </section>
           ) : null}
           {crosswordSize.size == "full" ? (
@@ -2069,13 +2091,13 @@ export default function Crossword() {
             <>
               <section className="flex gap-2 items-center justify-between">
                 <Button
-                  onClick={cancelBuildWorkflow}
+                  onClickAction={cancelBuildWorkflow}
                   title="Cancel"
                   classModifier="p-5"
                   style="red"
                 />
                 <Button
-                  onClick={showPublishPopup}
+                  onClickAction={showPublishPopup}
                   title="Update"
                   classModifier="p-5"
                   style="normal"
@@ -2114,13 +2136,13 @@ export default function Crossword() {
           </div>
           <div className="flex gap-2 mt-2 w-3/6">
             <Button
-              onClick={() => setPublishPopup(false)}
+              onClickAction={() => setPublishPopup(false)}
               title="Cancel"
               style="red"
               classModifier="p-5"
             />
             <Button
-              onClick={updateCrossword}
+              onClickAction={updateCrossword}
               title="Update"
               style="normal"
               classModifier="p-5"
@@ -2142,13 +2164,13 @@ export default function Crossword() {
           </div>
           <div className="flex gap-2 mt-2 w-3/6">
             <Button
-              onClick={() => setImportPopup(false)}
+              onClickAction={() => setImportPopup(false)}
               title="Cancel"
               style="red"
               classModifier="p-5"
             />
             <Button
-              onClick={importData}
+              onClickAction={importData}
               title="Import"
               style="normal"
               classModifier="p-5"
@@ -2174,7 +2196,7 @@ export default function Crossword() {
             <p className="text-lg">
               Period: Opens the edit hint popup for the current word
             </p>
-            <p className="text-lg">Escape: Removes a number assocation</p>
+            <p className="text-lg">Escape: Removes a number association</p>
             <p className="pl-4">
               If the current square has a number in the top right corner, it
               will be removed and all numbers greater than the removed number
@@ -2190,7 +2212,7 @@ export default function Crossword() {
           </div>
           <div className="flex gap-2 mt-2 w-3/6">
             <Button
-              onClick={() => setHelpPopup(false)}
+              onClickAction={() => setHelpPopup(false)}
               title="Ok"
               style="normal"
               classModifier="p-5"
@@ -2224,13 +2246,14 @@ export default function Crossword() {
           </div>
           <div className="flex gap-2 mt-2 w-7/12 max-lg:w-5/6 max-sm:w-11/12">
             <Button
-              onClick={playAgain}
+              onClickAction={playAgain}
               title="Play Again"
               style="normal"
               classModifier="p-5"
+              gaEvent={`${crosswordSize.size}-crossword-play-again`}
             />
             <Button
-              onClick={() => router.push("/")}
+              onClickAction={() => router.push("/")}
               title="Browse Games"
               style="normal"
               classModifier="p-5"

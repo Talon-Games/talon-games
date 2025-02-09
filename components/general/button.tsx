@@ -1,19 +1,25 @@
+"use client";
+
+import { sendGAEvent } from "@next/third-parties/google";
+
 type Props = {
   title: string;
   disabled?: boolean;
   active?: boolean;
-  onClick: (event: any) => void;
+  onClickAction: (event: any) => void;
   style: "normal" | "green" | "red";
   classModifier?: string;
+  gaEvent?: string;
 };
 
 export default function Button({
   title,
   disabled,
   active,
-  onClick,
+  onClickAction,
   style,
   classModifier,
+  gaEvent,
 }: Props) {
   const getStyle = (style: "normal" | "green" | "red") => {
     switch (style) {
@@ -49,7 +55,11 @@ export default function Button({
       }`}
       onClick={(e) => {
         if (!disabled) {
-          onClick(e);
+          if (gaEvent) {
+            sendGAEvent({ event: "buttonClicked", value: gaEvent });
+          }
+
+          onClickAction(e);
         }
       }}
     >

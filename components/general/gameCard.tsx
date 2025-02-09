@@ -43,11 +43,12 @@ export default function GameCard({ game }: { game: Game }) {
           <p className="w-5-6">{game.description}</p>
         </div>
         <Button
-          onClick={() => router.push(`/games/${game.route}`)}
+          onClickAction={() => router.push(`/games/${game.route}`)}
           disabled={game.commingSoon ? true : false}
           title={game.commingSoon ? "Comming Soon" : "Play"}
           style="normal"
           classModifier="p-5 !w-5/6"
+          gaEvent={game.color + "-visit"}
         />
       </div>
     </div>

@@ -14,6 +14,8 @@ type Props = {
   containerClassModifier?: string;
   leftClassModifier?: string;
   rightClassModifier?: string;
+  leftGaEvent?: string;
+  rightGaEvent?: string;
 };
 
 export default function ConnectedButton({
@@ -30,26 +32,30 @@ export default function ConnectedButton({
   containerClassModifier,
   leftClassModifier,
   rightClassModifier,
+  leftGaEvent,
+  rightGaEvent,
 }: Props) {
   return (
     <div
       className={`flex ${containerClassModifier ? containerClassModifier : ""}`}
     >
       <Button
-        onClick={onClickLeft}
+        onClickAction={onClickLeft}
         title={leftTitle}
         style={leftStyle}
         active={leftActive}
         disabled={leftDisabled}
         classModifier={`${leftClassModifier} rounded-tr-none rounded-br-none`}
+        gaEvent={leftGaEvent}
       />
       <Button
-        onClick={onClickRight}
+        onClickAction={onClickRight}
         title={rightTitle}
         style={rightStyle}
         active={rightActive}
         disabled={rightDisabled}
         classModifier={`${rightClassModifier} rounded-tl-none rounded-bl-none`}
+        gaEvent={rightGaEvent}
       />
     </div>
   );

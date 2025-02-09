@@ -105,7 +105,8 @@ export default function Archive() {
             <Button
               title="Play"
               style="normal"
-              onClick={() => loadArchivedCrossword(crossword)}
+              onClickAction={() => loadArchivedCrossword(crossword)}
+              gaEvent={`opened-archived-${crosswordSize.size}-crossword`}
             />
             {isMaksim || isAdmin ? (
               <div

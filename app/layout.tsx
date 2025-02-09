@@ -1,5 +1,6 @@
-import { AuthContextProvider } from "@/lib/contexts/authContext";
 import { GamesContextProvider } from "@/lib/contexts/gamesContext";
+import { AuthContextProvider } from "@/lib/contexts/authContext";
+import { GoogleAnalytics } from "@next/third-parties/google";
 import NavBar from "@/components/general/navBar";
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
@@ -108,6 +109,7 @@ export default function RootLayout({
           </a>
         </footer>
       </body>
+      <GoogleAnalytics gaId="G-417W6PRD43" />
     </html>
   );
 }

@@ -227,7 +227,7 @@ export default function Account() {
                           {user.isHelper ? "Helper" : "Not Helper"}
                         </p>
                         <Button
-                          onClick={() => updateUsersHelperStatus(user)}
+                          onClickAction={() => updateUsersHelperStatus(user)}
                           title={user.isHelper ? "Remove" : "Add"}
                           style={user.isHelper ? "red" : "green"}
                           classModifier="rounded-t-none rounded-b !p-1"
@@ -240,7 +240,7 @@ export default function Account() {
                           {user.isAdmin ? "Admin" : "Not Admin"}
                         </p>
                         <Button
-                          onClick={() => updateUsersAdminStatus(user)}
+                          onClickAction={() => updateUsersAdminStatus(user)}
                           title={user.isAdmin ? "Remove" : "Add"}
                           style={user.isAdmin ? "red" : "green"}
                           classModifier="rounded-t-none rounded-b !p-1"
@@ -255,7 +255,7 @@ export default function Account() {
         </>
       ) : null}
       <Button
-        onClick={startDeleteWorkflow}
+        onClickAction={startDeleteWorkflow}
         title="Delete Account"
         style="red"
         classModifier="p-5 text-lg"
