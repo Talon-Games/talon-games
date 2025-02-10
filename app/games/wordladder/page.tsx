@@ -6,6 +6,13 @@ import { useAuthContext } from "@/lib/contexts/authContext";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
+export type WordLadderWord = {
+  word: string;
+  meaning: string;
+  shown: boolean;
+  solved: boolean;
+};
+
 export default function WordLadder() {
   const router = useRouter();
   const { user, isMaksim, isAdmin, isHelper } = useAuthContext() as {
@@ -15,6 +22,43 @@ export default function WordLadder() {
     isHelper: boolean;
   };
 
+  useEffect(() => {
+    const list: WordLadderWord[] = [
+      {
+        word: "stars",
+        meaning: "to shine as an actor or singer",
+        shown: true,
+        solved: false,
+      },
+      {
+        word: "soars",
+        meaning: "to fly at a great height",
+        shown: false,
+        solved: false,
+      },
+      {
+        word: "soaks",
+        meaning: "to saturate in liquid",
+        shown: false,
+        solved: false,
+      },
+      {
+        word: "socks",
+        meaning: "to strike forcefully",
+        shown: false,
+        solved: false,
+      },
+      {
+        word: "locks",
+        meaning: "to secure with a fastening device",
+        shown: true,
+        solved: false,
+      },
+    ];
+
+    setWords(list);
+  }, []);
+
   const [mode, setMode] = useState<"play" | "build">("play");
 
   const [notification, setNotification] = useState(false);
@@ -23,6 +67,8 @@ export default function WordLadder() {
     "success" | "error" | "warning"
   >("success");
   const [notificationMessage, setNotificationMessage] = useState("");
+
+  const [words, setWords] = useState<WordLadderWord[]>([]);
 
   const toggleMode = () => {
     if (!user) {
@@ -62,37 +108,25 @@ export default function WordLadder() {
   };
 
   return (
-    <>
-      <section className="flex flex-col align-center w-1/2 p-5 mx-auto gap-1">
-        <div className="flex justify-between align-center gap-5 p-3">
-          <p className="flex-1 text-center">stars</p>
-          <p className="flex-1">to shine as an actor or singer</p>
-        </div>
-        <div className="flex justify-between align-center gap-1">
-          <input
-            type="text"
-            className="border-b border-b-black focus:outline-none flex-1 bg-secondary-300 pl-1 rounded text-center"
-          />{" "}
-          <p className="flex-1 p-3">to fly at a great height</p>
-        </div>
-        <div className="flex justify-between align-center gap-1">
-          <input
-            type="text"
-            className="border-b border-b-black focus:outline-none flex-1 bg-secondary-300 pl-1 rounded text-center"
-          />{" "}
-          <p className="flex-1 p-3">to fly at a great height</p>
-        </div>
-        <div className="flex justify-between align-center gap-1">
-          <input
-            type="text"
-            className="border-b border-b-black focus:outline-none flex-1 bg-secondary-300 pl-1 pt-5 rounded text-center"
-          />{" "}
-          <p className="flex-1 p-3">to fly at a great height</p>
-        </div>
-        <div className="flex justify-between align-center gap-5 p-3">
-          <p className="flex-1 text-center">locks</p>
-          <p className="flex-1">to secure with a fastening device</p>
-        </div>
+    <div className="flex flex-col gap-2">
+      <section className="flex flex-col w-3/4 p-3 mx-auto gap-1 text-lg justify-center rounded-lg">
+        {words.map((word: WordLadderWord, i) => (
+          <div key={i} className="flex justify-between items-center gap-2 p-3">
+            {word.shown ? (
+              <p className="flex-1 text-center">{word.word}</p>
+            ) : (
+              <input
+                type="text"
+                className="border-b border-b-black focus:outline-none flex-1 bg-secondary-200 pl-1 rounded text-center p-3"
+              />
+            )}
+            <p
+              className={`flex-1 p-3 text-center ${word.solved ? "line-through" : ""}`}
+            >
+              {word.meaning}
+            </p>
+          </div>
+        ))}
       </section>
       <ConnectedButton
         onClickLeft={toggleMode}
@@ -111,6 +145,7 @@ export default function WordLadder() {
             ? "bg-secondary-500 border-l-2 border-secondary-400"
             : "bg-secondary-400 hover:bg-secondary-500"
         }
+        containerClassModifier="w-3/4 mx-auto"
       />
       {notification ? (
         <Notification
@@ -121,6 +156,6 @@ export default function WordLadder() {
           updateNotification={(value) => setNotification(value)}
         />
       ) : null}
-    </>
+    </div>
   );
 }
