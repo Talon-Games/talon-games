@@ -60,6 +60,7 @@ export default function WordLadder() {
   }, []);
 
   const [mode, setMode] = useState<"play" | "build">("play");
+  const [buildMode, setBuildMode] = useState<"manual" | "auto">("auto");
 
   const [notification, setNotification] = useState(false);
   const [notificationTitle, setNotificationTitle] = useState("");
@@ -90,7 +91,31 @@ export default function WordLadder() {
     if (mode == "build") {
       setMode("play");
     } else {
-      //startBuildWorkflow();
+      setMode("build");
+    }
+  };
+
+  const toggleBuildMode = () => {
+    if (!user) {
+      triggerNotification(
+        "Failed to toggle build mode",
+        "error",
+        "You must have an account",
+      );
+    }
+
+    if (!isHelper && !isAdmin && !isMaksim) {
+      triggerNotification(
+        "Failed to toggle build mode",
+        "error",
+        "You must have a role",
+      );
+    }
+
+    if (buildMode == "auto") {
+      setBuildMode("manual");
+    } else {
+      setBuildMode("auto");
     }
   };
 
@@ -109,25 +134,52 @@ export default function WordLadder() {
 
   return (
     <div className="flex flex-col gap-2">
-      <section className="flex flex-col w-3/4 p-3 mx-auto gap-1 text-lg justify-center rounded-lg">
-        {words.map((word: WordLadderWord, i) => (
-          <div key={i} className="flex justify-between items-center gap-2 p-3">
-            {word.shown ? (
-              <p className="flex-1 text-center">{word.word}</p>
-            ) : (
-              <input
-                type="text"
-                className="border-b border-b-black focus:outline-none flex-1 bg-secondary-200 pl-1 rounded text-center p-3"
-              />
-            )}
-            <p
-              className={`flex-1 p-3 text-center ${word.solved ? "line-through" : ""}`}
+      {mode == "play" ? (
+        <section className="flex flex-col w-3/4 p-3 mx-auto gap-1 text-lg justify-center rounded-lg">
+          {words.map((word: WordLadderWord, i) => (
+            <div
+              key={i}
+              className="flex justify-between items-center gap-2 p-3"
             >
-              {word.meaning}
-            </p>
-          </div>
-        ))}
-      </section>
+              {word.shown ? (
+                <p className="flex-1 text-center">{word.word}</p>
+              ) : (
+                <input
+                  type="text"
+                  className="border-b border-b-black focus:outline-none flex-1 bg-secondary-200 pl-1 rounded text-center p-3"
+                />
+              )}
+              <p
+                className={`flex-1 p-3 text-center ${word.solved ? "line-through" : ""}`}
+              >
+                {word.meaning}
+              </p>
+            </div>
+          ))}
+        </section>
+      ) : (
+        <section>
+          <ConnectedButton
+            onClickLeft={toggleBuildMode}
+            onClickRight={toggleBuildMode}
+            leftStyle="normal"
+            rightStyle="normal"
+            leftTitle="Automatic"
+            rightTitle="Manual"
+            leftClassModifier={
+              buildMode == "auto"
+                ? "bg-secondary-500 border-r-2 border-secondary-400"
+                : "bg-secondary-400 hover:bg-secondary-500"
+            }
+            rightClassModifier={
+              buildMode == "manual"
+                ? "bg-secondary-500 border-l-2 border-secondary-400"
+                : "bg-secondary-400 hover:bg-secondary-500"
+            }
+            containerClassModifier="w-3/4 mx-auto"
+          />
+        </section>
+      )}
       <ConnectedButton
         onClickLeft={toggleMode}
         onClickRight={toggleMode}
