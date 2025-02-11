@@ -1502,7 +1502,7 @@ export default function Crossword() {
 
     loadStringData(jsonCrosswordString);
 
-    triggerNotification("Saved!", "success", "Successfully updated crossword");
+    triggerNotification("Saved!", "success", "Successfully updated Crossword");
   };
 
   const loadStringData = (data: string) => {
