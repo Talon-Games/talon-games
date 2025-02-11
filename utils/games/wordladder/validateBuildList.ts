@@ -4,6 +4,10 @@ export default function builtListIsValid(buildList: WordLadderWord[]) {
   const wordLength = buildList[0].word.length;
 
   for (let i = 0; i < buildList.length; i++) {
+    if (buildList[i].word == "") {
+      return { status: "error", message: "Empty word found" };
+    }
+
     if (buildList[i].word.length != wordLength) {
       return { status: "error", message: "Invalid word length found" };
     }
