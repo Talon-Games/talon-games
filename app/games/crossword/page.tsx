@@ -2108,7 +2108,7 @@ export default function Crossword() {
                 />
                 <Button
                   onClickAction={showPublishPopup}
-                  title="Update"
+                  title="Publish"
                   classModifier="p-5"
                   style="normal"
                 />

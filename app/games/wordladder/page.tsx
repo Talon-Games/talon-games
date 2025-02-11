@@ -272,7 +272,7 @@ export default function WordLadder() {
             </div>
             {buildMode == "manual" ? (
               <Button
-                onClickAction={() => addWord()}
+                onClickAction={addWord}
                 title="Add Word"
                 style="normal"
                 classModifier="p-3"
@@ -301,31 +301,37 @@ export default function WordLadder() {
             {buildMode == "auto" ? (
               <div className="flex gap-2">
                 <Button
-                  onClickAction={() => generateLadders()}
+                  onClickAction={generateLadders}
                   title="Generate"
                   style="normal"
                   classModifier="p-3 flex-1"
                 />
                 <Button
-                  onClickAction={() => resetLadders()}
+                  onClickAction={resetLadders}
                   title="Reset"
                   style="normal"
                   classModifier="p-3 flex-1"
                 />
                 <Button
-                  onClickAction={() => loadPreviousLadder()}
+                  onClickAction={loadPreviousLadder}
                   title="Previous"
                   style="normal"
                   classModifier="p-3 flex-1"
                 />
                 <Button
-                  onClickAction={() => loadNextLadder()}
+                  onClickAction={loadNextLadder}
                   title="Next"
                   style="normal"
                   classModifier="p-3 flex-1"
                 />
               </div>
             ) : null}
+            <Button
+              onClickAction={publish}
+              title="Publish"
+              style="normal"
+              classModifier="p-3"
+            />
           </section>
         </section>
       )}
