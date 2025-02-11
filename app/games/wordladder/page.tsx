@@ -3,6 +3,7 @@
 import ConnectedButton from "@/components/general/connectedButtons";
 import Notification from "@/components/general/notification";
 import { useAuthContext } from "@/lib/contexts/authContext";
+import Button from "@/components/general/button";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
@@ -132,6 +133,8 @@ export default function WordLadder() {
     setNotificationMessage(message);
   };
 
+  const addWord = () => {};
+
   return (
     <div className="flex flex-col gap-2">
       {mode == "play" ? (
@@ -178,6 +181,68 @@ export default function WordLadder() {
             }
             containerClassModifier="w-3/4 mx-auto"
           />
+          <section className="flex flex-col w-3/4 p-3 mx-auto gap-2 text-lg justify-center rounded-lg">
+            <div className="flex justify-between items-center gap-2">
+              <input
+                type="text"
+                placeholder="Starting Word"
+                className="border-b border-b-black focus:outline-none flex-1 bg-secondary-200 pl-1 rounded text-center p-3 placeholder-accent-700"
+              />
+              <input
+                type="text"
+                placeholder="Meaning"
+                className="border-b border-b-black focus:outline-none flex-1 bg-secondary-200 pl-1 rounded text-center p-3 placeholder-accent-700"
+              />
+            </div>
+            {buildMode == "manual" ? (
+              <Button
+                onClickAction={() => addWord()}
+                title="Add Word"
+                style="normal"
+                classModifier="p-3"
+              />
+            ) : null}
+            <div className="flex justify-between items-center gap-2">
+              <input
+                type="text"
+                placeholder="Ending Word"
+                className="border-b border-b-black focus:outline-none flex-1 bg-secondary-200 pl-1 rounded text-center p-3 placeholder-accent-700"
+              />
+              <input
+                type="text"
+                placeholder="Meaning"
+                className="border-b border-b-black focus:outline-none flex-1 bg-secondary-200 pl-1 rounded text-center p-3 placeholder-accent-700"
+              />
+            </div>
+            {buildMode == "auto" ? (
+              <div className="flex gap-2">
+                <Button
+                  onClickAction={() => addWord()}
+                  title="Generate"
+                  style="normal"
+                  classModifier="p-3 flex-1"
+                />
+                <Button
+                  onClickAction={() => addWord()}
+                  title="Reset"
+                  style="normal"
+                  classModifier="p-3 flex-1"
+                />
+                <Button
+                  onClickAction={() => addWord()}
+                  title="Previous"
+                  style="normal"
+                  classModifier="p-3 flex-1"
+                />
+                <Button
+                  onClickAction={() => addWord()}
+                  title="Next"
+                  style="normal"
+                  classModifier="p-3 flex-1"
+                />
+              </div>
+            ) : null}
+          </section>
         </section>
       )}
       <ConnectedButton
