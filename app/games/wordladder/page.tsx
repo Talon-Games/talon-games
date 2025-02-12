@@ -277,10 +277,6 @@ export default function WordLadder() {
                   {wordLadder.wordLadder[1].meaning}
                 </p>
               </div>
-              <div className="rounded justify-between bg-secondary-300 p-1 w-full flex items-center text-base">
-                <p className="text-center px-2">{`Word Ladder by ${wordLadder.author}`}</p>
-                <p className="text-center px-2">{`Published ${wordLadder.published}`}</p>
-              </div>
             </>
           ) : null}
         </section>
@@ -421,6 +417,12 @@ export default function WordLadder() {
           </section>
         </section>
       )}
+      {wordLadder && mode == "play" ? (
+        <div className="rounded justify-between bg-secondary-300 p-1 w-3/4 mx-auto mb-1 flex items-center text-sm">
+          <p className="text-center px-2">{`Word Ladder by ${wordLadder.author}`}</p>
+          <p className="text-center px-2">{`Published ${wordLadder.published}`}</p>
+        </div>
+      ) : null}
       <ConnectedButton
         onClickLeft={toggleMode}
         onClickRight={toggleMode}
