@@ -1,5 +1,6 @@
 "use client";
 
+import saveWordLadder from "@/firebase/db/games/wordladder/saveWordLadder";
 import WordLadderTextField from "@/components/games/wordladder/textField";
 import builtListIsValid from "@/utils/games/wordladder/validateBuildList";
 import ConnectedButton from "@/components/general/connectedButtons";
@@ -231,6 +232,8 @@ export default function WordLadder() {
     };
 
     const stringifiedGameData = JSON.stringify(wordLadderGameData);
+
+    saveWordLadder(stringifiedGameData, true);
 
     triggerNotification(
       "Saved!",
