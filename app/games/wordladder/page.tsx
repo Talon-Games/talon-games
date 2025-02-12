@@ -4,6 +4,7 @@ import builtListIsValid from "@/utils/games/wordladder/validateBuildList";
 import ConnectedButton from "@/components/general/connectedButtons";
 import Notification from "@/components/general/notification";
 import { useAuthContext } from "@/lib/contexts/authContext";
+import ToolTip from "@/components/general/tooltip";
 import Button from "@/components/general/button";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -34,6 +35,7 @@ export default function WordLadder() {
   >("success");
   const [notificationMessage, setNotificationMessage] = useState("");
 
+  // The first value is always the starting word, and the second value is always the ending word
   const [words, setWords] = useState<WordLadderWord[]>([]);
   const [buildList, setBuildList] = useState<WordLadderWord[]>([]);
 
@@ -157,7 +159,24 @@ export default function WordLadder() {
     setNotificationMessage(message);
   };
 
-  const addWord = () => {};
+  const addWord = () => {
+    setBuildList((prevList) => [
+      ...prevList,
+      {
+        word: "",
+        meaning: "",
+        shown: false,
+        solved: false,
+      },
+    ]);
+  };
+
+  const removeWord = (index: number) => {
+    // Removing the starting or ending words is not allowed
+    if (index === 0 || index === 1) return;
+
+    setBuildList((prevList) => prevList.filter((_, i) => i !== index));
+  };
 
   const generateLadders = () => {};
 
@@ -168,23 +187,15 @@ export default function WordLadder() {
   const loadPreviousLadder = () => {};
 
   const editWordInBuildList = (index: number, word: string) => {
-    let temp: WordLadderWord[] = buildList.map((item: WordLadderWord) => ({
-      ...item,
-    }));
-
-    temp[index].word = word;
-
-    setBuildList(temp);
+    setBuildList((prevList) =>
+      prevList.map((item, i) => (i === index ? { ...item, word } : item)),
+    );
   };
 
   const editMeaningInBuildList = (index: number, meaning: string) => {
-    let temp: WordLadderWord[] = buildList.map((item: WordLadderWord) => ({
-      ...item,
-    }));
-
-    temp[index].meaning = meaning;
-
-    setBuildList(temp);
+    setBuildList((prevList) =>
+      prevList.map((item, i) => (i === index ? { ...item, meaning } : item)),
+    );
   };
 
   const publish = () => {
@@ -206,6 +217,8 @@ export default function WordLadder() {
       "Successfully updated Word Ladder",
     );
   };
+
+  //TODO: move the inputs to a text component for this game only
 
   return (
     <div className="flex flex-col gap-2">
@@ -270,6 +283,48 @@ export default function WordLadder() {
                 className="border-b border-b-black focus:outline-none flex-1 bg-secondary-200 pl-1 rounded text-center p-3 placeholder-accent-700"
               />
             </div>
+            {buildList.length > 2
+              ? buildList.slice(2).map((word: WordLadderWord, i) => (
+                  <div
+                    key={i}
+                    className="flex justify-between items-center gap-2"
+                  >
+                    <input
+                      type="text"
+                      placeholder="Word"
+                      value={word.word}
+                      onChange={(e) =>
+                        editWordInBuildList(i + 2, e.target.value)
+                      }
+                      className="border-b border-b-black focus:outline-none flex-1 bg-secondary-200 pl-1 rounded text-center p-3 placeholder-accent-700"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Meaning"
+                      value={word.meaning}
+                      onChange={(e) =>
+                        editMeaningInBuildList(i + 2, e.target.value)
+                      }
+                      className="border-b border-b-black focus:outline-none flex-1 bg-secondary-200 pl-1 rounded text-center p-3 placeholder-accent-700"
+                    />
+                    <ToolTip content="Remove Word" delay={20}>
+                      <div
+                        className="flex items-center justify-center cursor-pointer bg-red-500 hover:bg-red-600 transition-all duration-200 ease-in-out p-3 rounded"
+                        onClick={() => removeWord(i + 2)}
+                      >
+                        <svg
+                          width="30"
+                          height="30"
+                          viewBox="0 0 1920 1920"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path d="M954.64 826.418 426.667 298.445 298.445 426.667 826.418 954.64l-527.973 527.973 128.222 128.222 527.973-527.973 527.973 527.973 128.222-128.222-527.973-527.973 527.973-527.973-128.222-128.222z" />
+                        </svg>{" "}
+                      </div>
+                    </ToolTip>
+                  </div>
+                ))
+              : null}
             {buildMode == "manual" ? (
               <Button
                 onClickAction={addWord}
@@ -282,19 +337,15 @@ export default function WordLadder() {
               <input
                 type="text"
                 placeholder="Ending Word"
-                value={buildList[buildList.length - 1].word}
-                onChange={(e) =>
-                  editWordInBuildList(buildList.length - 1, e.target.value)
-                }
+                value={buildList[1].word}
+                onChange={(e) => editWordInBuildList(1, e.target.value)}
                 className="border-b border-b-black focus:outline-none flex-1 bg-secondary-200 pl-1 rounded text-center p-3 placeholder-accent-700"
               />
               <input
                 type="text"
                 placeholder="Meaning"
-                value={buildList[buildList.length - 1].meaning}
-                onChange={(e) =>
-                  editMeaningInBuildList(buildList.length - 1, e.target.value)
-                }
+                value={buildList[1].meaning}
+                onChange={(e) => editMeaningInBuildList(1, e.target.value)}
                 className="border-b border-b-black focus:outline-none flex-1 bg-secondary-200 pl-1 rounded text-center p-3 placeholder-accent-700"
               />
             </div>
