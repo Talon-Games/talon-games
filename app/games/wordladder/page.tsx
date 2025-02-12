@@ -9,12 +9,20 @@ import ToolTip from "@/components/general/tooltip";
 import Button from "@/components/general/button";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import formatDate from "@/utils/formatDate";
 
 export type WordLadderWord = {
   word: string;
   meaning: string;
   shown: boolean;
   solved: boolean;
+};
+
+export type WordLadderGameData = {
+  author: string;
+  name: string;
+  published: string;
+  wordLadder: WordLadderWord[];
 };
 
 export default function WordLadder() {
@@ -38,7 +46,7 @@ export default function WordLadder() {
 
   // The first value is always the starting word, and the second value is always the ending word
   const [wordLadder, setWordLadder] = useState<WordLadderWord[]>([]);
-  const [buildList, setBuildList] = useState<WordLadderWord[]>([]);
+  const [buildWordLadder, setBuildWordLadder] = useState<WordLadderWord[]>([]);
 
   useEffect(() => {
     const list: WordLadderWord[] = [
@@ -93,7 +101,7 @@ export default function WordLadder() {
       },
     ];
 
-    setBuildList(list);
+    setBuildWordLadder(list);
   };
 
   const toggleMode = () => {
@@ -161,7 +169,7 @@ export default function WordLadder() {
   };
 
   const addWordToBuildList = () => {
-    setBuildList((prevList) => [
+    setBuildWordLadder((prevList) => [
       ...prevList,
       {
         word: "",
@@ -176,7 +184,7 @@ export default function WordLadder() {
     // Removing the starting or ending words is not allowed
     if (index === 0 || index === 1) return;
 
-    setBuildList((prevList) => prevList.filter((_, i) => i !== index));
+    setBuildWordLadder((prevList) => prevList.filter((_, i) => i !== index));
   };
 
   const generateLadders = () => {};
@@ -188,19 +196,19 @@ export default function WordLadder() {
   const loadPreviousLadder = () => {};
 
   const editWordInBuildList = (index: number, word: string) => {
-    setBuildList((prevList) =>
+    setBuildWordLadder((prevList) =>
       prevList.map((item, i) => (i === index ? { ...item, word } : item)),
     );
   };
 
   const editMeaningInBuildList = (index: number, meaning: string) => {
-    setBuildList((prevList) =>
+    setBuildWordLadder((prevList) =>
       prevList.map((item, i) => (i === index ? { ...item, meaning } : item)),
     );
   };
 
   const publish = () => {
-    const result = builtListIsValid(buildList);
+    const result = builtListIsValid(buildWordLadder);
 
     if (result.status == "error") {
       triggerNotification(
@@ -211,6 +219,18 @@ export default function WordLadder() {
 
       return;
     }
+
+    const currentDate = new Date();
+    const formattedDate = formatDate(currentDate);
+
+    const wordLadderGameData: WordLadderGameData = {
+      author: user.displayName,
+      name: buildWordLadder[0].word + " to " + buildWordLadder[1].word,
+      published: formattedDate,
+      wordLadder: buildWordLadder,
+    };
+
+    const stringifiedGameData = JSON.stringify(wordLadderGameData);
 
     triggerNotification(
       "Saved!",
@@ -269,20 +289,20 @@ export default function WordLadder() {
           <section className="flex flex-col w-3/4 p-3 mx-auto gap-2 text-lg justify-center rounded-lg">
             <div className="flex justify-between items-center gap-2">
               <WordLadderTextField
-                value={buildList[0].word}
+                value={buildWordLadder[0].word}
                 placeholder="Starting Word"
                 onChangeAction={(e) => editWordInBuildList(0, e.target.value)}
               />
               <WordLadderTextField
-                value={buildList[0].meaning}
+                value={buildWordLadder[0].meaning}
                 placeholder="Meaning"
                 onChangeAction={(e) =>
                   editMeaningInBuildList(0, e.target.value)
                 }
               />
             </div>
-            {buildList.length > 2
-              ? buildList.slice(2).map((word: WordLadderWord, i) => (
+            {buildWordLadder.length > 2
+              ? buildWordLadder.slice(2).map((word: WordLadderWord, i) => (
                   <div
                     key={i}
                     className="flex justify-between items-center gap-2"
@@ -329,12 +349,12 @@ export default function WordLadder() {
             ) : null}
             <div className="flex justify-between items-center gap-2">
               <WordLadderTextField
-                value={buildList[1].word}
+                value={buildWordLadder[1].word}
                 placeholder="Ending Word"
                 onChangeAction={(e) => editWordInBuildList(1, e.target.value)}
               />
               <WordLadderTextField
-                value={buildList[1].meaning}
+                value={buildWordLadder[1].meaning}
                 placeholder="Meaning"
                 onChangeAction={(e) =>
                   editMeaningInBuildList(1, e.target.value)
