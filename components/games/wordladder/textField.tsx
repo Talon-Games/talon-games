@@ -19,7 +19,7 @@ export default function WordLadderTextField({
       placeholder={placeholder}
       value={value}
       onChange={(e) => onChangeAction(e)}
-      className={`border-b border-b-black focus:outline-none flex-1 bg-secondary-200 pl-1 rounded text-center p-3 placeholder-accent-700 ${
+      className={`border-b border-b-black focus:outline-none flex-1 bg-secondary-200 rounded text-center p-2 placeholder-accent-700 ${
         classModifier ? classModifier : ""
       }`}
     />

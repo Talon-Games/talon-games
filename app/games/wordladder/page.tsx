@@ -257,7 +257,7 @@ export default function WordLadder() {
                   className="flex justify-between items-center gap-2"
                 >
                   <WordLadderTextField
-                    placeholder="Guess"
+                    placeholder="  Guess"
                     onChangeAction={(e) =>
                       editWordInWordLadder(i + 2, e.target.value)
                     }
@@ -277,7 +277,7 @@ export default function WordLadder() {
                   {wordLadder.wordLadder[1].meaning}
                 </p>
               </div>
-              <div className="rounded justify-between bg-secondary-300 p-1 w-full flex items-center text-text">
+              <div className="rounded justify-between bg-secondary-300 p-1 w-full flex items-center text-base">
                 <p className="text-center px-2">{`Word Ladder by ${wordLadder.author}`}</p>
                 <p className="text-center px-2">{`Published ${wordLadder.published}`}</p>
               </div>
@@ -365,7 +365,7 @@ export default function WordLadder() {
                 onClickAction={addWordToBuildList}
                 title="Add Word"
                 style="normal"
-                classModifier="p-3"
+                classModifier="p-2"
               />
             ) : null}
             <div className="flex justify-between items-center gap-2">
@@ -390,25 +390,25 @@ export default function WordLadder() {
                   onClickAction={generateLadders}
                   title="Generate"
                   style="normal"
-                  classModifier="p-3 flex-1"
+                  classModifier="p-2 flex-1"
                 />
                 <Button
                   onClickAction={resetLadders}
                   title="Reset"
                   style="normal"
-                  classModifier="p-3 flex-1"
+                  classModifier="p-2 flex-1"
                 />
                 <Button
                   onClickAction={loadPreviousLadder}
                   title="Previous"
                   style="normal"
-                  classModifier="p-3 flex-1"
+                  classModifier="p-2 flex-1"
                 />
                 <Button
                   onClickAction={loadNextLadder}
                   title="Next"
                   style="normal"
-                  classModifier="p-3 flex-1"
+                  classModifier="p-2 flex-1"
                 />
               </div>
             ) : null}
@@ -416,7 +416,7 @@ export default function WordLadder() {
               onClickAction={publish}
               title="Publish"
               style="normal"
-              classModifier="p-3"
+              classModifier="p-2"
             />
           </section>
         </section>
