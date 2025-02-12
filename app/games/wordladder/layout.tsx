@@ -3,28 +3,50 @@
 import ConnectedButton from "@/components/general/connectedButtons";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import {
+  useWordLadderContext,
+  WordLadderContextProvider,
+} from "@/lib/contexts/wordLadderContext";
 
 export default function WordLadderLayout({ children }: { children: any }) {
+  return (
+    <WordLadderContextProvider>
+      <WordLadderContent>{children}</WordLadderContent>
+    </WordLadderContextProvider>
+  );
+}
+
+function WordLadderContent({ children }: { children: any }) {
   const router = useRouter();
+  const { updateCurrentMode } = useWordLadderContext() as {
+    currentMode: "today" | "archive";
+    updateCurrentMode: (mode: "today" | "archive") => void;
+  };
+
   const [currentView, setCurrentView] = useState<"today" | "archive">("today");
 
   useEffect(() => {
     const url = new URL(window.location.href);
+
     if (url.toString().includes("archive")) {
       setCurrentView("archive");
+      updateCurrentMode("archive");
     } else {
       setCurrentView("today");
+      updateCurrentMode("today");
     }
   }, []);
 
   const gotoToday = () => {
     setCurrentView("today");
     router.push(`/games/wordladder`);
+    updateCurrentMode("today");
   };
 
   const gotoArchive = () => {
     setCurrentView("archive");
     router.push(`/games/wordladder/archive`);
+    updateCurrentMode("archive");
   };
 
   return (
