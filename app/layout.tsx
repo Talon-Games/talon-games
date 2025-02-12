@@ -74,6 +74,7 @@ export const metadata: Metadata = {
     },
   },
 };
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -82,9 +83,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${inter.className} bg-background-white text-accent-900 flex flex-col items-center justify-between min-h-screen`}
+        className={`${inter.className} min-h-screen bg-background-white text-accent-900 flex flex-col`}
       >
-        <div className="w-full">
+        <div className="flex-grow w-full flex flex-col">
           <AuthContextProvider>
             <NavBar />
             {children}
