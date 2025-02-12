@@ -3,6 +3,8 @@
 import saveWordLadder from "@/firebase/db/games/wordladder/saveWordLadder";
 import WordLadderTextField from "@/components/games/wordladder/textField";
 import builtListIsValid from "@/utils/games/wordladder/validateBuildList";
+import getWordLadder from "@/firebase/db/games/wordladder/getWordLadder";
+import { useWordLadderContext } from "@/lib/contexts/wordLadderContext";
 import ConnectedButton from "@/components/general/connectedButtons";
 import Notification from "@/components/general/notification";
 import { useAuthContext } from "@/lib/contexts/authContext";
@@ -35,6 +37,11 @@ export default function WordLadder() {
     isHelper: boolean;
   };
 
+  const { currentWordLadderGameData, currentMode } = useWordLadderContext() as {
+    currentWordLadderGameData: WordLadderGameData;
+    currentMode: "today" | "archive";
+  };
+
   const [mode, setMode] = useState<"play" | "build">("play");
   const [buildMode, setBuildMode] = useState<"manual" | "auto">("auto");
 
@@ -45,11 +52,21 @@ export default function WordLadder() {
   >("success");
   const [notificationMessage, setNotificationMessage] = useState("");
 
-  // The first value is always the starting word, and the second value is always the ending word
-  const [wordLadder, setWordLadder] = useState<WordLadderWord[]>([]);
+  // The first value in a word ladder array is always the starting word, and the second value is always the ending word
+  const [wordLadder, setWordLadder] = useState<WordLadderGameData>();
   const [buildWordLadder, setBuildWordLadder] = useState<WordLadderWord[]>([]);
 
-  useEffect(() => {}, []);
+  useEffect(() => {
+    if (currentWordLadderGameData == undefined || currentMode == "today") {
+      getWordLadder().then((data: string) => {
+        const parssed: WordLadderGameData = JSON.parse(data);
+
+        setWordLadder(parssed);
+      });
+    } else {
+      setWordLadder(currentWordLadderGameData);
+    }
+  }, []);
 
   const createDefaultBuildList = () => {
     const list: WordLadderWord[] = [
@@ -161,16 +178,29 @@ export default function WordLadder() {
 
   const loadPreviousLadder = () => {};
 
-  const editWordInBuildList = (index: number, word: string) => {
+  const editWordInBuildWordLadder = (index: number, word: string) => {
     setBuildWordLadder((prevList) =>
       prevList.map((item, i) => (i === index ? { ...item, word } : item)),
     );
   };
 
-  const editMeaningInBuildList = (index: number, meaning: string) => {
+  const editMeaningInBuildWordLadder = (index: number, meaning: string) => {
     setBuildWordLadder((prevList) =>
       prevList.map((item, i) => (i === index ? { ...item, meaning } : item)),
     );
+  };
+
+  const editWordInWordLadder = (index: number, word: string) => {
+    setWordLadder((prevData) => {
+      if (!prevData) return prevData;
+
+      return {
+        ...prevData,
+        wordLadder: prevData.wordLadder.map((item, i) =>
+          i === index ? { ...item, solved: item.word === word } : item,
+        ),
+      };
+    });
   };
 
   const publish = () => {
@@ -208,30 +238,51 @@ export default function WordLadder() {
   };
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col">
       {mode == "play" ? (
-        <section className="flex flex-col w-3/4 p-3 mx-auto gap-1 text-lg justify-center rounded-lg">
-          {wordLadder.map((word: WordLadderWord, i) => (
-            <div
-              key={i}
-              className="flex justify-between items-center gap-2 p-3"
-            >
-              {word.shown ? (
-                <p className="flex-1 text-center">{word.word}</p>
-              ) : (
-                /*TODO: make this also use the component*/
-                <input
-                  type="text"
-                  className="border-b border-b-black focus:outline-none flex-1 bg-secondary-200 pl-1 rounded text-center p-3"
-                />
-              )}
-              <p
-                className={`flex-1 p-3 text-center ${word.solved ? "line-through" : ""}`}
-              >
-                {word.meaning}
-              </p>
-            </div>
-          ))}
+        <section className="flex flex-col w-3/4 py-3 mx-auto gap-2 text-lg justify-center rounded-lg">
+          {wordLadder ? (
+            <>
+              <div className="flex justify-between items-center gap-2 p-3">
+                <p className="flex-1 text-center">
+                  {wordLadder.wordLadder[0].word}
+                </p>
+                <p className="flex-1 text-center">
+                  {wordLadder.wordLadder[0].meaning}
+                </p>
+              </div>
+              {wordLadder.wordLadder.slice(2).map((word: WordLadderWord, i) => (
+                <div
+                  key={i}
+                  className="flex justify-between items-center gap-2"
+                >
+                  <WordLadderTextField
+                    placeholder="Guess"
+                    onChangeAction={(e) =>
+                      editWordInWordLadder(i + 2, e.target.value)
+                    }
+                  />
+                  <p
+                    className={`flex-1 p-3 text-center ${word.solved ? "line-through" : ""}`}
+                  >
+                    {word.meaning}
+                  </p>
+                </div>
+              ))}
+              <div className="flex justify-between items-center gap-2 p-3">
+                <p className="flex-1 text-center">
+                  {wordLadder.wordLadder[1].word}
+                </p>
+                <p className="flex-1 text-center">
+                  {wordLadder.wordLadder[1].meaning}
+                </p>
+              </div>
+              <div className="rounded justify-between bg-secondary-300 p-1 w-full flex items-center text-text">
+                <p className="text-center px-2">{`Word Ladder by ${wordLadder.author}`}</p>
+                <p className="text-center px-2">{`Published ${wordLadder.published}`}</p>
+              </div>
+            </>
+          ) : null}
         </section>
       ) : (
         <section>
@@ -254,18 +305,20 @@ export default function WordLadder() {
             }
             containerClassModifier="w-3/4 mx-auto"
           />
-          <section className="flex flex-col w-3/4 p-3 mx-auto gap-2 text-lg justify-center rounded-lg">
+          <section className="flex flex-col w-3/4 py-3 mx-auto gap-2 text-lg justify-center rounded-lg">
             <div className="flex justify-between items-center gap-2">
               <WordLadderTextField
                 value={buildWordLadder[0].word}
                 placeholder="Starting Word"
-                onChangeAction={(e) => editWordInBuildList(0, e.target.value)}
+                onChangeAction={(e) =>
+                  editWordInBuildWordLadder(0, e.target.value)
+                }
               />
               <WordLadderTextField
                 value={buildWordLadder[0].meaning}
                 placeholder="Meaning"
                 onChangeAction={(e) =>
-                  editMeaningInBuildList(0, e.target.value)
+                  editMeaningInBuildWordLadder(0, e.target.value)
                 }
               />
             </div>
@@ -279,14 +332,14 @@ export default function WordLadder() {
                       value={word.word}
                       placeholder="Word"
                       onChangeAction={(e) =>
-                        editWordInBuildList(i + 2, e.target.value)
+                        editWordInBuildWordLadder(i + 2, e.target.value)
                       }
                     />
                     <WordLadderTextField
                       value={word.meaning}
                       placeholder="Meaning"
                       onChangeAction={(e) =>
-                        editMeaningInBuildList(i + 2, e.target.value)
+                        editMeaningInBuildWordLadder(i + 2, e.target.value)
                       }
                     />
                     <ToolTip content="Remove Word" delay={20}>
@@ -319,13 +372,15 @@ export default function WordLadder() {
               <WordLadderTextField
                 value={buildWordLadder[1].word}
                 placeholder="Ending Word"
-                onChangeAction={(e) => editWordInBuildList(1, e.target.value)}
+                onChangeAction={(e) =>
+                  editWordInBuildWordLadder(1, e.target.value)
+                }
               />
               <WordLadderTextField
                 value={buildWordLadder[1].meaning}
                 placeholder="Meaning"
                 onChangeAction={(e) =>
-                  editMeaningInBuildList(1, e.target.value)
+                  editMeaningInBuildWordLadder(1, e.target.value)
                 }
               />{" "}
             </div>

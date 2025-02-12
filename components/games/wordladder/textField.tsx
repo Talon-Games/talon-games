@@ -1,7 +1,7 @@
 "use client";
 
 type Props = {
-  value: string;
+  value?: string;
   placeholder: string;
   onChangeAction: (event: any) => void;
   classModifier?: string;
