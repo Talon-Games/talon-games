@@ -1,17 +1,27 @@
 "use client";
 
 import ConnectedButton from "@/components/general/connectedButtons";
-import { useGamesContext } from "@/lib/contexts/gamesContext";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import {
+  useCrosswordContext,
+  CrosswordContextProvider,
+} from "@/lib/contexts/crosswordContext";
+import { useRouter } from "next/navigation";
 
 export default function CrosswordLayout({ children }: { children: any }) {
+  return (
+    <CrosswordContextProvider>
+      <CrosswordContent>{children}</CrosswordContent>
+    </CrosswordContextProvider>
+  );
+}
+
+function CrosswordContent({ children }: { children: any }) {
   const router = useRouter();
   const { crosswordSize, updateSize, updateCurrentMode } =
-    useGamesContext() as {
+    useCrosswordContext() as {
       crosswordSize: { width: number; height: number; size: "mini" | "full" };
       updateSize: (size: "mini" | "full") => void;
-
       updateCurrentMode: (mode: "today" | "archive") => void;
     };
   const [currentView, setCurrentView] = useState<"today" | "archive">("today");
@@ -19,10 +29,7 @@ export default function CrosswordLayout({ children }: { children: any }) {
   useEffect(() => {
     const url = new URL(window.location.href);
     let type = url.searchParams.get("type");
-    let size: "full" | "mini" = "full";
-    if (type == "mini") {
-      size = "mini";
-    }
+    let size: "full" | "mini" = type === "mini" ? "mini" : "full";
 
     if (url.toString().includes("archive")) {
       setCurrentView("archive");
@@ -32,11 +39,7 @@ export default function CrosswordLayout({ children }: { children: any }) {
       updateCurrentMode("today");
     }
 
-    if (size == "mini") {
-      updateSize("mini");
-    } else {
-      updateSize("full");
-    }
+    updateSize(size);
   }, []);
 
   const gotoToday = () => {

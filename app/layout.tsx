@@ -1,4 +1,4 @@
-import { GamesContextProvider } from "@/lib/contexts/gamesContext";
+import { CrosswordContextProvider } from "@/lib/contexts/crosswordContext";
 import { AuthContextProvider } from "@/lib/contexts/authContext";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import NavBar from "@/components/general/navBar";
@@ -85,12 +85,10 @@ export default function RootLayout({
         className={`${inter.className} bg-background-white text-accent-900 flex flex-col items-center justify-between min-h-screen`}
       >
         <div className="w-full">
-          <GamesContextProvider>
-            <AuthContextProvider>
-              <NavBar />
-              {children}
-            </AuthContextProvider>
-          </GamesContextProvider>
+          <AuthContextProvider>
+            <NavBar />
+            {children}
+          </AuthContextProvider>
         </div>
         <footer className="text-sm p-4 w-full flex justify-between">
           <a

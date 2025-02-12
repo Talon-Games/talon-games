@@ -4,13 +4,13 @@ import { createContext, useContext, useState, ReactNode } from "react";
 import { Crossword } from "@/app/games/crossword/page";
 export const GamesContext = createContext({});
 
-export const useGamesContext = () => useContext(GamesContext);
+export const useCrosswordContext = () => useContext(GamesContext);
 
 interface GamesContextProviderProps {
   children: ReactNode;
 }
 
-export function GamesContextProvider({
+export function CrosswordContextProvider({
   children,
 }: GamesContextProviderProps): JSX.Element {
   const [currentMode, setCurrentMode] = useState<"today" | "archive">("today");

@@ -14,7 +14,7 @@ import ConnectedButton from "@/components/general/connectedButtons";
 import decodeJsonData from "@/utils/games/crossword/decodeJsonData";
 import selectCurrent from "@/utils/games/crossword/selectCurrent";
 import initNewHints from "@/utils/games/crossword/initNewHints";
-import { useGamesContext } from "@/lib/contexts/gamesContext";
+import { useCrosswordContext } from "@/lib/contexts/crosswordContext";
 import MiniGrid from "@/components/games/crossword/miniGrid";
 import Notification from "@/components/general/notification";
 import FullGrid from "@/components/games/crossword/fullGrid";
@@ -64,7 +64,7 @@ export type CrossWordHint = {
 
 export default function Crossword() {
   const { crosswordSize, currentCrossword, currentMode } =
-    useGamesContext() as {
+    useCrosswordContext() as {
       crosswordSize: { width: number; height: number; size: "mini" | "full" };
       currentCrossword: Crossword;
       currentMode: "today" | "archive";

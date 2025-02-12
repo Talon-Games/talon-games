@@ -49,42 +49,7 @@ export default function WordLadder() {
   const [wordLadder, setWordLadder] = useState<WordLadderWord[]>([]);
   const [buildWordLadder, setBuildWordLadder] = useState<WordLadderWord[]>([]);
 
-  useEffect(() => {
-    const list: WordLadderWord[] = [
-      {
-        word: "stars",
-        meaning: "to shine as an actor or singer",
-        shown: true,
-        solved: false,
-      },
-      {
-        word: "soars",
-        meaning: "to fly at a great height",
-        shown: false,
-        solved: false,
-      },
-      {
-        word: "soaks",
-        meaning: "to saturate in liquid",
-        shown: false,
-        solved: false,
-      },
-      {
-        word: "socks",
-        meaning: "to strike forcefully",
-        shown: false,
-        solved: false,
-      },
-      {
-        word: "locks",
-        meaning: "to secure with a fastening device",
-        shown: true,
-        solved: false,
-      },
-    ];
-
-    setWordLadder(list);
-  }, []);
+  useEffect(() => {}, []);
 
   const createDefaultBuildList = () => {
     const list: WordLadderWord[] = [
