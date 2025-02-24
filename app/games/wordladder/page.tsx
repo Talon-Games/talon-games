@@ -204,15 +204,30 @@ export default function WordLadder() {
   };
 
   const editWordInWordLadder = (index: number, word: string) => {
-    setWordLadder((prevData) => {
-      if (!prevData) return prevData;
+    setWordLadder((prevList) => {
+      if (!prevList) return prevList;
 
       //TODO: remove auto check and make it only update after check is pressed
       return {
-        ...prevData,
-        wordLadder: prevData.wordLadder.map((item, i) =>
+        ...prevList,
+        wordLadder: prevList.wordLadder.map((item, i) =>
           i === index ? { ...item, solved: item.word === word } : item,
         ),
+      };
+    });
+  };
+
+  // TODO: make this actually work by clearing the values of the text fields
+  const clear = () => {
+    setWordLadder((prevList) => {
+      if (!prevList) return prevList;
+
+      return {
+        ...prevList,
+        wordLadder: prevList.wordLadder.map((item) => ({
+          ...item,
+          solved: item.word === "",
+        })),
       };
     });
   };
@@ -258,7 +273,7 @@ export default function WordLadder() {
           <div className="flex gap-2">
             <section className="flex gap-2 w-full">
               <Button onClickAction={() => {}} title="Check" style="normal" />
-              <Button onClickAction={() => {}} title="Clear" style="normal" />
+              <Button onClickAction={clear} title="Clear" style="normal" />
             </section>
             <div className="rounded bg-secondary-300 p-2 max-xs:p-2 w-1/6 flex items-center justify-center">
               <Stopwatch
