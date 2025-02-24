@@ -8,6 +8,7 @@ import { useWordLadderContext } from "@/lib/contexts/wordLadderContext";
 import ConnectedButton from "@/components/general/connectedButtons";
 import Notification from "@/components/general/notification";
 import { useAuthContext } from "@/lib/contexts/authContext";
+import Stopwatch from "@/components/games/stopwatch";
 import ToolTip from "@/components/general/tooltip";
 import Button from "@/components/general/button";
 import { useState, useEffect } from "react";
@@ -55,6 +56,18 @@ export default function WordLadder() {
   // The first value in a word ladder array is always the starting word, and the second value is always the ending word
   const [wordLadder, setWordLadder] = useState<WordLadderGameData>();
   const [buildWordLadder, setBuildWordLadder] = useState<WordLadderWord[]>([]);
+
+  const [isRunning, setIsRunning] = useState(false);
+  const [isReset, setIsReset] = useState(false);
+  const [stoppedTime, setStoppedTime] = useState<number | null>(null);
+
+  const handleResetComplete = () => {
+    setIsReset(false);
+  };
+
+  const handleStopTime = (time: number) => {
+    setStoppedTime(time);
+  };
 
   useEffect(() => {
     if (currentWordLadderGameData == undefined || currentMode == "today") {
@@ -194,6 +207,7 @@ export default function WordLadder() {
     setWordLadder((prevData) => {
       if (!prevData) return prevData;
 
+      //TODO: remove auto check and make it only update after check is pressed
       return {
         ...prevData,
         wordLadder: prevData.wordLadder.map((item, i) =>
@@ -241,8 +255,22 @@ export default function WordLadder() {
     <div className="flex flex-col">
       {mode == "play" ? (
         <section className="flex flex-col w-3/4 py-3 mx-auto gap-2 text-lg justify-center rounded-lg">
+          <div className="flex gap-2">
+            <section className="flex gap-2 w-full">
+              <Button onClickAction={() => {}} title="Check" style="normal" />
+              <Button onClickAction={() => {}} title="Clear" style="normal" />
+            </section>
+            <div className="rounded bg-secondary-300 p-2 max-xs:p-2 w-1/6 flex items-center justify-center">
+              <Stopwatch
+                start={isRunning}
+                reset={isReset}
+                onResetComplete={handleResetComplete}
+                onStop={handleStopTime}
+              />
+            </div>
+          </div>
           {wordLadder ? (
-            <>
+            <div className="rounded-lg flex flex-col gap-2">
               <div className="flex justify-between items-center gap-2 p-3">
                 <p className="flex-1 text-center">
                   {wordLadder.wordLadder[0].word}
@@ -254,7 +282,7 @@ export default function WordLadder() {
               {wordLadder.wordLadder.slice(2).map((word: WordLadderWord, i) => (
                 <div
                   key={i}
-                  className="flex justify-between items-center gap-2"
+                  className="flex justify-between items-center gap-2 pl-2"
                 >
                   <WordLadderTextField
                     placeholder="  Guess"
@@ -269,15 +297,15 @@ export default function WordLadder() {
                   </p>
                 </div>
               ))}
-              <div className="flex justify-between items-center gap-2 p-3">
-                <p className="flex-1 text-center">
+              <div className="flex justify-between items-center gap-2">
+                <p className="flex-1 text-center rounded">
                   {wordLadder.wordLadder[1].word}
                 </p>
                 <p className="flex-1 text-center">
                   {wordLadder.wordLadder[1].meaning}
                 </p>
               </div>
-            </>
+            </div>
           ) : null}
         </section>
       ) : (
