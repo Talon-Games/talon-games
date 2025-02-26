@@ -2,17 +2,17 @@
 
 import { createContext, useContext, useState, ReactNode } from "react";
 import { WordLadderGameData } from "@/app/games/wordladder/page";
-export const GamesContext = createContext({});
+export const WordLadderContext = createContext({});
 
-export const useWordLadderContext = () => useContext(GamesContext);
+export const useWordLadderContext = () => useContext(WordLadderContext);
 
-interface GamesContextProviderProps {
+interface WordLadderContextProvider {
   children: ReactNode;
 }
 
 export function WordLadderContextProvider({
   children,
-}: GamesContextProviderProps): JSX.Element {
+}: WordLadderContextProvider): JSX.Element {
   const [currentMode, setCurrentMode] = useState<"today" | "archive">("today");
   const [currentWordLadderGameData, setCurrentWordLadderGameData] = useState<
     WordLadderGameData | undefined
@@ -27,7 +27,7 @@ export function WordLadderContextProvider({
   };
 
   return (
-    <GamesContext.Provider
+    <WordLadderContext.Provider
       value={{
         currentWordLadder: currentWordLadderGameData,
         updateCurrentWordLadder,
@@ -36,6 +36,6 @@ export function WordLadderContextProvider({
       }}
     >
       {children}
-    </GamesContext.Provider>
+    </WordLadderContext.Provider>
   );
 }

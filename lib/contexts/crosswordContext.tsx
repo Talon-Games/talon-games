@@ -2,9 +2,9 @@
 
 import { createContext, useContext, useState, ReactNode } from "react";
 import { Crossword } from "@/app/games/crossword/page";
-export const GamesContext = createContext({});
+export const CrosswordContext = createContext({});
 
-export const useCrosswordContext = () => useContext(GamesContext);
+export const useCrosswordContext = () => useContext(CrosswordContext);
 
 interface GamesContextProviderProps {
   children: ReactNode;
@@ -41,7 +41,7 @@ export function CrosswordContextProvider({
   };
 
   return (
-    <GamesContext.Provider
+    <CrosswordContext.Provider
       value={{
         crosswordSize,
         updateSize,
@@ -52,6 +52,6 @@ export function CrosswordContextProvider({
       }}
     >
       {children}
-    </GamesContext.Provider>
+    </CrosswordContext.Provider>
   );
 }
