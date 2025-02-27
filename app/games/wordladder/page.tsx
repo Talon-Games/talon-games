@@ -126,30 +126,6 @@ export default function WordLadder() {
     }
   };
 
-  const toggleBuildMode = () => {
-    if (!user) {
-      triggerNotification(
-        "Failed to toggle build mode",
-        "error",
-        "You must have an account",
-        true,
-      );
-      return;
-    }
-
-    if (!isHelper && !isAdmin && !isMaksim) {
-      triggerNotification(
-        "Failed to toggle build mode",
-        "error",
-        "You must have a role",
-        true,
-      );
-      return;
-    }
-
-    createDefaultBuildList();
-  };
-
   const triggerNotification = (
     title: string,
     type: "success" | "error" | "warning",
