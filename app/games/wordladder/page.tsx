@@ -12,8 +12,10 @@ import Stopwatch from "@/components/games/stopwatch";
 import ToolTip from "@/components/general/tooltip";
 import Button from "@/components/general/button";
 import { useState, useEffect } from "react";
+import formatTime from "@/utils/games/formatTime";
 import formatDate from "@/utils/formatDate";
 import isMobile from "@/utils/isMobile";
+import { useRouter } from "next/navigation";
 
 export type WordLadderWord = {
   word: string;
@@ -31,6 +33,7 @@ export type WordLadderGameData = {
 };
 
 export default function WordLadder() {
+  const router = useRouter();
   const { user, isMaksim, isAdmin, isHelper } = useAuthContext() as {
     user: any;
     isMaksim: boolean;
@@ -55,6 +58,7 @@ export default function WordLadder() {
   const [wordLadder, setWordLadder] = useState<WordLadderGameData>();
   const [buildWordLadder, setBuildWordLadder] = useState<WordLadderWord[]>([]);
   const [revealed, setRevealed] = useState(false);
+  const [won, setWon] = useState(false);
 
   const [isRunning, setIsRunning] = useState(false);
   const [isReset, setIsReset] = useState(false);
@@ -198,7 +202,7 @@ export default function WordLadder() {
       const correctWord = prevList.wordLadder[index].word.toLowerCase();
       const isCorrect = word.toLowerCase() === correctWord;
 
-      return {
+      let newList = {
         ...prevList,
         wordLadder: prevList.wordLadder.map((item, i) =>
           i === index
@@ -210,6 +214,21 @@ export default function WordLadder() {
             : item,
         ),
       };
+
+      let solved = true;
+      for (let i = 2; i < newList.wordLadder.length; i++) {
+        if (newList.wordLadder[i].solved == false) {
+          solved = false;
+          break;
+        }
+      }
+
+      if (solved) {
+        setWon(true);
+        setIsRunning(false);
+      }
+
+      return newList;
     });
   };
 
@@ -267,6 +286,30 @@ export default function WordLadder() {
           "Failed to save word ladder: " + error.message,
         );
       });
+  };
+
+  const playAgain = () => {
+    setIsRunning(false);
+    setIsReset(true);
+    setStoppedTime(null);
+    setWon(false);
+
+    setWordLadder((prevList) => {
+      if (!prevList) return prevList;
+
+      return {
+        ...prevList,
+        wordLadder: prevList.wordLadder.map((item) =>
+          item
+            ? {
+                ...item,
+                value: "",
+                solved: false,
+              }
+            : item,
+        ),
+      };
+    });
   };
 
   return (
@@ -419,6 +462,41 @@ export default function WordLadder() {
           <p className="text-center px-2">{`Word Ladder by ${wordLadder.author}`}</p>
           <p className="text-center px-2">{`Published ${wordLadder.published}`}</p>
         </div>
+      ) : null}
+      {won ? (
+        <section className="fixed flex flex-col items-center justify-center left-0 top-0 w-full h-full bg-accent-900 bg-opacity-50">
+          <div className="p-10 bg-background-50 rounded-xl w-7/12 flex flex-col max-lg:w-5/6 max-sm:w-11/12">
+            <h2 className="font-heading text-7xl mb-1 text-center max-md:text-6xl max-sm:text-4xl max-xs:text-3xl">
+              Congratulations
+            </h2>
+            <h2 className="font-heading text-7xl mb-10 text-center max-md:text-6xl max-sm:text-4xl max-xs:text-3xl">
+              You Won!
+            </h2>
+            <div className="flex gap-2 justify-center items-center max-sm:flex-col">
+              <p className="text-2xl text-center">
+                Completion time:{" "}
+                {stoppedTime !== null
+                  ? formatTime(stoppedTime)
+                  : "Failed to calculate time"}
+              </p>
+            </div>
+          </div>
+          <div className="flex gap-2 mt-2 w-7/12 max-lg:w-5/6 max-sm:w-11/12">
+            <Button
+              onClickAction={playAgain}
+              title="Play Again"
+              style="normal"
+              classModifier="p-5"
+              gaEvent={`word-ladder-play-again`}
+            />
+            <Button
+              onClickAction={() => router.push("/")}
+              title="Browse Games"
+              style="normal"
+              classModifier="p-5"
+            />
+          </div>
+        </section>
       ) : null}
       {!mobileDevice ? (
         <ConnectedButton
