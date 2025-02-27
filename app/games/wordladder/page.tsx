@@ -420,25 +420,27 @@ export default function WordLadder() {
           <p className="text-center px-2">{`Published ${wordLadder.published}`}</p>
         </div>
       ) : null}
-      <ConnectedButton
-        onClickLeft={toggleMode}
-        onClickRight={toggleMode}
-        leftStyle="normal"
-        rightStyle="normal"
-        leftTitle="Play"
-        rightTitle="Build"
-        leftClassModifier={
-          mode == "play"
-            ? "bg-secondary-500 border-r-2 border-secondary-400"
-            : "bg-secondary-400 hover:bg-secondary-500"
-        }
-        rightClassModifier={
-          mode == "build"
-            ? "bg-secondary-500 border-l-2 border-secondary-400"
-            : "bg-secondary-400 hover:bg-secondary-500"
-        }
-        containerClassModifier="w-3/4 mx-auto"
-      />
+      {!mobileDevice ? (
+        <ConnectedButton
+          onClickLeft={toggleMode}
+          onClickRight={toggleMode}
+          leftStyle="normal"
+          rightStyle="normal"
+          leftTitle="Play"
+          rightTitle="Build"
+          leftClassModifier={
+            mode == "play"
+              ? "bg-secondary-500 border-r-2 border-secondary-400"
+              : "bg-secondary-400 hover:bg-secondary-500"
+          }
+          rightClassModifier={
+            mode == "build"
+              ? "bg-secondary-500 border-l-2 border-secondary-400"
+              : "bg-secondary-400 hover:bg-secondary-500"
+          }
+          containerClassModifier="w-3/4 mx-auto"
+        />
+      ) : null}
       {notification ? (
         <Notification
           title={notificationTitle}
