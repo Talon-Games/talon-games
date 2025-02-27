@@ -13,6 +13,7 @@ import ToolTip from "@/components/general/tooltip";
 import Button from "@/components/general/button";
 import { useState, useEffect } from "react";
 import formatDate from "@/utils/formatDate";
+import isMobile from "@/utils/isMobile";
 
 export type WordLadderWord = {
   word: string;
@@ -37,8 +38,8 @@ export default function WordLadder() {
     isHelper: boolean;
   };
 
-  const { currentWordLadderGameData, currentMode } = useWordLadderContext() as {
-    currentWordLadderGameData: WordLadderGameData;
+  const { currentWordLadder, currentMode } = useWordLadderContext() as {
+    currentWordLadder: WordLadderGameData;
     currentMode: "today" | "archive";
   };
 
@@ -59,6 +60,8 @@ export default function WordLadder() {
   const [isReset, setIsReset] = useState(false);
   const [stoppedTime, setStoppedTime] = useState<number | null>(null);
 
+  const [mobileDevice, setMobileDevice] = useState(false);
+
   const handleResetComplete = () => {
     setIsReset(false);
   };
@@ -68,15 +71,21 @@ export default function WordLadder() {
   };
 
   useEffect(() => {
-    if (currentWordLadderGameData == undefined || currentMode == "today") {
+    const mobile = isMobile();
+
+    setMobileDevice(mobile);
+  }, []);
+
+  useEffect(() => {
+    if (currentWordLadder == undefined || currentMode == "today") {
       getWordLadder().then((data: string) => {
         const parsed: WordLadderGameData = JSON.parse(data);
         setWordLadder(parsed);
       });
     } else {
-      setWordLadder(currentWordLadderGameData);
+      setWordLadder(currentWordLadder);
     }
-  }, [currentWordLadderGameData, currentMode]);
+  }, [currentWordLadder, currentMode]);
 
   const createDefaultBuildList = () => {
     const list: WordLadderWord[] = [

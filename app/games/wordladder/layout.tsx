@@ -19,7 +19,6 @@ export default function WordLadderLayout({ children }: { children: any }) {
 function WordLadderContent({ children }: { children: any }) {
   const router = useRouter();
   const { updateCurrentMode } = useWordLadderContext() as {
-    currentMode: "today" | "archive";
     updateCurrentMode: (mode: "today" | "archive") => void;
   };
 
@@ -46,7 +45,6 @@ function WordLadderContent({ children }: { children: any }) {
   const gotoArchive = () => {
     setCurrentView("archive");
     router.push(`/games/wordladder/archive`);
-    updateCurrentMode("archive");
   };
 
   return (

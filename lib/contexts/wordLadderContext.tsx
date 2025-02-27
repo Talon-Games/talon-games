@@ -14,12 +14,12 @@ export function WordLadderContextProvider({
   children,
 }: WordLadderContextProvider): JSX.Element {
   const [currentMode, setCurrentMode] = useState<"today" | "archive">("today");
-  const [currentWordLadderGameData, setCurrentWordLadderGameData] = useState<
+  const [currentWordLadder, setCurrentWordLadder] = useState<
     WordLadderGameData | undefined
   >();
 
   const updateCurrentWordLadder = (wordLadder: WordLadderGameData) => {
-    setCurrentWordLadderGameData(wordLadder);
+    setCurrentWordLadder(wordLadder);
   };
 
   const updateCurrentMode = (mode: "today" | "archive") => {
@@ -29,7 +29,7 @@ export function WordLadderContextProvider({
   return (
     <WordLadderContext.Provider
       value={{
-        currentWordLadder: currentWordLadderGameData,
+        currentWordLadder: currentWordLadder,
         updateCurrentWordLadder,
         currentMode,
         updateCurrentMode,
