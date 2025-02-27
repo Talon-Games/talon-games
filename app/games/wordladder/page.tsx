@@ -315,7 +315,7 @@ export default function WordLadder() {
   return (
     <div className="flex flex-col">
       {mode == "play" ? (
-        <section className="flex flex-col w-3/4 py-3 mx-auto gap-2 text-lg justify-center rounded-lg">
+        <section className="flex flex-col w-3/4 py-3 mx-auto gap-2 text-lg justify-center rounded-lg max-lg:w-full max-sm:text-base">
           <div className="flex gap-2">
             <section className="flex gap-2 w-full">
               <Button onClickAction={reveal} title="Reveal" style="normal" />
@@ -331,7 +331,7 @@ export default function WordLadder() {
           </div>
           {wordLadder ? (
             <div className="rounded-lg flex flex-col gap-2">
-              <div className="flex justify-between items-center gap-2 p-3">
+              <div className="flex justify-between items-center gap-2 p-3 max-sm:p-2">
                 <p className="flex-1 text-center">
                   {wordLadder.wordLadder[0].word}
                 </p>
@@ -352,13 +352,13 @@ export default function WordLadder() {
                     value={`${revealed ? word.word : word.value ? word.value : ""}`}
                   />
                   <p
-                    className={`flex-1 p-3 text-center ${word.solved ? "line-through" : ""}`}
+                    className={`flex-1 p-3 max-sm:p-2 text-center ${word.solved ? "line-through" : ""}`}
                   >
                     {word.meaning}
                   </p>
                 </div>
               ))}
-              <div className="flex justify-between items-center gap-2 p-3">
+              <div className="flex justify-between items-center gap-2 p-3 max-sm:p-2">
                 <p className="flex-1 text-center rounded">
                   {wordLadder.wordLadder[1].word}
                 </p>
@@ -458,7 +458,7 @@ export default function WordLadder() {
         </section>
       )}
       {wordLadder && mode == "play" ? (
-        <div className="rounded justify-between bg-secondary-300 p-1 w-3/4 mx-auto mb-1 flex items-center text-sm">
+        <div className="rounded justify-between bg-secondary-300 p-1 w-3/4 mx-auto mb-1 flex items-center text-sm max-lg:w-full">
           <p className="text-center px-2">{`Word Ladder by ${wordLadder.author}`}</p>
           <p className="text-center px-2">{`Published ${wordLadder.published}`}</p>
         </div>
@@ -516,7 +516,7 @@ export default function WordLadder() {
               ? "bg-secondary-500 border-l-2 border-secondary-400"
               : "bg-secondary-400 hover:bg-secondary-500"
           }
-          containerClassModifier="w-3/4 mx-auto"
+          containerClassModifier="w-3/4 mx-auto max-lg:w-full"
         />
       ) : null}
       {notification ? (

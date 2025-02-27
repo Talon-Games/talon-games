@@ -48,7 +48,7 @@ function WordLadderContent({ children }: { children: any }) {
   };
 
   return (
-    <main className="w-9/12 ml-auto mr-auto max-sm:w-11/12">
+    <main className="w-9/12 ml-auto mr-auto max-lg:w-10/12 max-sm:w-11/12">
       <h1 className="font-heading text-center mb-4 text-8xl max-sm:text-7xl max-xs:text-6xl">
         Word Ladder
       </h1>
