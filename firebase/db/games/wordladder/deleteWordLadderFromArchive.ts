@@ -6,7 +6,7 @@ export default async function deleteWordLadderFromArchive(data: string) {
   const docSnap = await getDoc(wordLadderRef);
 
   if (docSnap.exists()) {
-    const field = "wordLadderData";
+    const field = "wordLadderArchive";
     const currentArray = docSnap.data()[field] || [];
 
     if (currentArray.includes(data)) {

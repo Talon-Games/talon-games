@@ -12,7 +12,6 @@ import Stopwatch from "@/components/games/stopwatch";
 import ToolTip from "@/components/general/tooltip";
 import Button from "@/components/general/button";
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import formatDate from "@/utils/formatDate";
 
 export type WordLadderWord = {
@@ -30,7 +29,6 @@ export type WordLadderGameData = {
 };
 
 export default function WordLadder() {
-  const router = useRouter();
   const { user, isMaksim, isAdmin, isHelper } = useAuthContext() as {
     user: any;
     isMaksim: boolean;
@@ -259,6 +257,9 @@ export default function WordLadder() {
 
     saveWordLadder(stringifiedGameData, true);
 
+    setWordLadder(wordLadderGameData);
+    setMode("play");
+
     triggerNotification(
       "Saved!",
       "success",
@@ -312,7 +313,7 @@ export default function WordLadder() {
                   </p>
                 </div>
               ))}
-              <div className="flex justify-between items-center gap-2">
+              <div className="flex justify-between items-center gap-2 p-3">
                 <p className="flex-1 text-center rounded">
                   {wordLadder.wordLadder[1].word}
                 </p>

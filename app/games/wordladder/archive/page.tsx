@@ -34,7 +34,6 @@ export default function WordLadderArchive() {
 
   useEffect(() => {
     getArchivedWordLadders().then((wordLadderStrings: string[] | undefined) => {
-      console.log(wordLadderStrings);
       if (wordLadderStrings == undefined) {
         return;
       }
@@ -137,7 +136,7 @@ export default function WordLadderArchive() {
       {confirmDeletePopup ? (
         <section className="fixed flex items-center justify-center left-0 top-0 w-full h-full bg-accent-900 bg-opacity-50">
           <div className="p-10 bg-background-50 rounded-xl">
-            <p>Are you sure you want to delete this crossword?</p>
+            <p>Are you sure you want to delete this word ladder?</p>
             <ConnectedButton
               leftStyle="red"
               rightStyle="normal"
