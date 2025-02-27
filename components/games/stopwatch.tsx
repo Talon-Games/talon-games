@@ -49,5 +49,5 @@ export default function Stopwatch({
     )}`;
   };
 
-  return <h1>{formatTime(time)}</h1>;
+  return <p>{formatTime(time)}</p>;
 }

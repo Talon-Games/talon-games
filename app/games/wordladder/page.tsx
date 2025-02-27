@@ -17,6 +17,7 @@ import formatDate from "@/utils/formatDate";
 export type WordLadderWord = {
   word: string;
   meaning: string;
+  value?: string;
   shown: boolean;
   solved: boolean;
 };
@@ -42,8 +43,6 @@ export default function WordLadder() {
   };
 
   const [mode, setMode] = useState<"play" | "build">("play");
-  const [buildMode, setBuildMode] = useState<"manual" | "auto">("auto");
-
   const [notification, setNotification] = useState(false);
   const [notificationTitle, setNotificationTitle] = useState("");
   const [notificationType, setNotificationType] = useState<
@@ -54,6 +53,7 @@ export default function WordLadder() {
   // The first value in a word ladder array is always the starting word, and the second value is always the ending word
   const [wordLadder, setWordLadder] = useState<WordLadderGameData>();
   const [buildWordLadder, setBuildWordLadder] = useState<WordLadderWord[]>([]);
+  const [revealed, setRevealed] = useState(false);
 
   const [isRunning, setIsRunning] = useState(false);
   const [isReset, setIsReset] = useState(false);
@@ -70,14 +70,13 @@ export default function WordLadder() {
   useEffect(() => {
     if (currentWordLadderGameData == undefined || currentMode == "today") {
       getWordLadder().then((data: string) => {
-        const parssed: WordLadderGameData = JSON.parse(data);
-
-        setWordLadder(parssed);
+        const parsed: WordLadderGameData = JSON.parse(data);
+        setWordLadder(parsed);
       });
     } else {
       setWordLadder(currentWordLadderGameData);
     }
-  }, []);
+  }, [currentWordLadderGameData, currentMode]);
 
   const createDefaultBuildList = () => {
     const list: WordLadderWord[] = [
@@ -104,7 +103,9 @@ export default function WordLadder() {
         "Failed to toggle mode",
         "error",
         "You must have an account",
+        true,
       );
+      return;
     }
 
     if (!isHelper && !isAdmin && !isMaksim) {
@@ -112,7 +113,9 @@ export default function WordLadder() {
         "Failed to toggle mode",
         "error",
         "You must have a role",
+        true,
       );
+      return;
     }
 
     if (mode == "build") {
@@ -129,7 +132,9 @@ export default function WordLadder() {
         "Failed to toggle build mode",
         "error",
         "You must have an account",
+        true,
       );
+      return;
     }
 
     if (!isHelper && !isAdmin && !isMaksim) {
@@ -137,23 +142,19 @@ export default function WordLadder() {
         "Failed to toggle build mode",
         "error",
         "You must have a role",
+        true,
       );
+      return;
     }
 
     createDefaultBuildList();
-
-    if (buildMode == "auto") {
-      setBuildMode("manual");
-    } else {
-      setBuildMode("auto");
-    }
   };
 
   const triggerNotification = (
     title: string,
     type: "success" | "error" | "warning",
     message: string,
-    showInPlay?: boolean,
+    showInPlay: boolean = false,
   ) => {
     if (mode == "play" && !showInPlay) return;
     setNotification(true);
@@ -181,14 +182,6 @@ export default function WordLadder() {
     setBuildWordLadder((prevList) => prevList.filter((_, i) => i !== index));
   };
 
-  const generateLadders = () => {};
-
-  const resetLadders = () => {};
-
-  const loadNextLadder = () => {};
-
-  const loadPreviousLadder = () => {};
-
   const editWordInBuildWordLadder = (index: number, word: string) => {
     setBuildWordLadder((prevList) =>
       prevList.map((item, i) => (i === index ? { ...item, word } : item)),
@@ -202,32 +195,49 @@ export default function WordLadder() {
   };
 
   const editWordInWordLadder = (index: number, word: string) => {
+    if (revealed) {
+      return;
+    }
+
+    if (!isRunning) {
+      setIsRunning(true);
+    }
+
     setWordLadder((prevList) => {
       if (!prevList) return prevList;
 
-      //TODO: remove auto check and make it only update after check is pressed
+      if (prevList.wordLadder[index].solved) {
+        return prevList;
+      }
+
+      const correctWord = prevList.wordLadder[index].word.toLowerCase();
+      const isCorrect = word.toLowerCase() === correctWord;
+
       return {
         ...prevList,
         wordLadder: prevList.wordLadder.map((item, i) =>
-          i === index ? { ...item, solved: item.word === word } : item,
+          i === index
+            ? {
+                ...item,
+                value: word,
+                solved: isCorrect,
+              }
+            : item,
         ),
       };
     });
   };
 
-  // TODO: make this actually work by clearing the values of the text fields
-  const clear = () => {
-    setWordLadder((prevList) => {
-      if (!prevList) return prevList;
+  const reveal = () => {
+    setRevealed(true);
+    setIsRunning(false);
 
-      return {
-        ...prevList,
-        wordLadder: prevList.wordLadder.map((item) => ({
-          ...item,
-          solved: item.word === "",
-        })),
-      };
-    });
+    triggerNotification(
+      "Solution Revealed",
+      "warning",
+      "The complete solution has been revealed",
+      true,
+    );
   };
 
   const publish = () => {
@@ -239,7 +249,6 @@ export default function WordLadder() {
         "error",
         result.message,
       );
-
       return;
     }
 
@@ -255,16 +264,24 @@ export default function WordLadder() {
 
     const stringifiedGameData = JSON.stringify(wordLadderGameData);
 
-    saveWordLadder(stringifiedGameData, true);
-
-    setWordLadder(wordLadderGameData);
-    setMode("play");
-
-    triggerNotification(
-      "Saved!",
-      "success",
-      "Successfully updated Word Ladder",
-    );
+    saveWordLadder(stringifiedGameData, true)
+      .then(() => {
+        setWordLadder(wordLadderGameData);
+        setMode("play");
+        triggerNotification(
+          "Saved!",
+          "success",
+          "Successfully updated Word Ladder",
+          true,
+        );
+      })
+      .catch((error) => {
+        triggerNotification(
+          "Save Failed",
+          "error",
+          "Failed to save word ladder: " + error.message,
+        );
+      });
   };
 
   return (
@@ -273,8 +290,7 @@ export default function WordLadder() {
         <section className="flex flex-col w-3/4 py-3 mx-auto gap-2 text-lg justify-center rounded-lg">
           <div className="flex gap-2">
             <section className="flex gap-2 w-full">
-              <Button onClickAction={() => {}} title="Check" style="normal" />
-              <Button onClickAction={clear} title="Clear" style="normal" />
+              <Button onClickAction={reveal} title="Reveal" style="normal" />
             </section>
             <div className="rounded bg-secondary-300 p-2 max-xs:p-2 w-1/6 flex items-center justify-center">
               <Stopwatch
@@ -305,6 +321,7 @@ export default function WordLadder() {
                     onChangeAction={(e) =>
                       editWordInWordLadder(i + 2, e.target.value)
                     }
+                    value={`${revealed ? word.word : word.value ? word.value : ""}`}
                   />
                   <p
                     className={`flex-1 p-3 text-center ${word.solved ? "line-through" : ""}`}
@@ -326,36 +343,17 @@ export default function WordLadder() {
         </section>
       ) : (
         <section>
-          <ConnectedButton
-            onClickLeft={toggleBuildMode}
-            onClickRight={toggleBuildMode}
-            leftStyle="normal"
-            rightStyle="normal"
-            leftTitle="Automatic"
-            rightTitle="Manual"
-            leftClassModifier={
-              buildMode == "auto"
-                ? "bg-secondary-500 border-r-2 border-secondary-400"
-                : "bg-secondary-400 hover:bg-secondary-500"
-            }
-            rightClassModifier={
-              buildMode == "manual"
-                ? "bg-secondary-500 border-l-2 border-secondary-400"
-                : "bg-secondary-400 hover:bg-secondary-500"
-            }
-            containerClassModifier="w-3/4 mx-auto"
-          />
           <section className="flex flex-col w-3/4 py-3 mx-auto gap-2 text-lg justify-center rounded-lg">
             <div className="flex justify-between items-center gap-2">
               <WordLadderTextField
-                value={buildWordLadder[0].word}
+                value={buildWordLadder[0]?.word || ""}
                 placeholder="Starting Word"
                 onChangeAction={(e) =>
                   editWordInBuildWordLadder(0, e.target.value)
                 }
               />
               <WordLadderTextField
-                value={buildWordLadder[0].meaning}
+                value={buildWordLadder[0]?.meaning || ""}
                 placeholder="Meaning"
                 onChangeAction={(e) =>
                   editMeaningInBuildWordLadder(0, e.target.value)
@@ -400,58 +398,28 @@ export default function WordLadder() {
                   </div>
                 ))
               : null}
-            {buildMode == "manual" ? (
-              <Button
-                onClickAction={addWordToBuildList}
-                title="Add Word"
-                style="normal"
-                classModifier="p-2"
-              />
-            ) : null}
+            <Button
+              onClickAction={addWordToBuildList}
+              title="Add Word"
+              style="normal"
+              classModifier="p-2"
+            />
             <div className="flex justify-between items-center gap-2">
               <WordLadderTextField
-                value={buildWordLadder[1].word}
+                value={buildWordLadder[1]?.word || ""}
                 placeholder="Ending Word"
                 onChangeAction={(e) =>
                   editWordInBuildWordLadder(1, e.target.value)
                 }
               />
               <WordLadderTextField
-                value={buildWordLadder[1].meaning}
+                value={buildWordLadder[1]?.meaning || ""}
                 placeholder="Meaning"
                 onChangeAction={(e) =>
                   editMeaningInBuildWordLadder(1, e.target.value)
                 }
               />{" "}
             </div>
-            {buildMode == "auto" ? (
-              <div className="flex gap-2">
-                <Button
-                  onClickAction={generateLadders}
-                  title="Generate"
-                  style="normal"
-                  classModifier="p-2 flex-1"
-                />
-                <Button
-                  onClickAction={resetLadders}
-                  title="Reset"
-                  style="normal"
-                  classModifier="p-2 flex-1"
-                />
-                <Button
-                  onClickAction={loadPreviousLadder}
-                  title="Previous"
-                  style="normal"
-                  classModifier="p-2 flex-1"
-                />
-                <Button
-                  onClickAction={loadNextLadder}
-                  title="Next"
-                  style="normal"
-                  classModifier="p-2 flex-1"
-                />
-              </div>
-            ) : null}
             <Button
               onClickAction={publish}
               title="Publish"
