@@ -8,6 +8,6 @@ export default async function getArchivedWordLadders() {
   if (docSnap.exists()) {
     const wordLadderData = docSnap.data();
 
-    return wordLadderData.wordLadderArhive;
+    return wordLadderData.wordLadderArchive;
   }
 }
