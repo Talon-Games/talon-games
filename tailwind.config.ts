@@ -12,6 +12,7 @@ const config: Config = {
         xs: "450px",
       },
       fontSize: {
+        xs: "0.5rem",
         sm: "0.750rem",
         base: "1rem",
         xl: "1.333rem",
