@@ -30,7 +30,7 @@ const games: Game[] = [
     description: "",
     color: "wordladder",
     route: "/wordladder",
-    icon: "mini-crossword-icon.svg",
+    icon: "word-ladder-icon.svg",
     commingSoon: false,
   },
 ];
