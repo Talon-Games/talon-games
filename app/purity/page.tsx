@@ -78,7 +78,7 @@ export default function Purity() {
     "Had a crush on a teacher",
     "Faked an injury to get out of gym class",
     "Used your best friend as an excuse for something",
-    "Left your backpack or other item in a random place and forgot where they were",
+    "Left your backpack or other item (ex: Stanley) in a random place and forgot where they were",
     "Got someone else in trouble to avoid punishment",
     "Lied about your grade on a test to avoid embarrassment",
     "Dressed up for Spirit Week just for the fun of it",
