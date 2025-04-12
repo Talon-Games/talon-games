@@ -2040,14 +2040,14 @@ export default function Crossword() {
           ) : null}
           <section className="flex border-black border-t-2 gap-2 h-[30rem] justify-between">
             <div className="w-full">
-              <p className="font-bold text-xl text-center">Down</p>
+              <p className="font-bold text-xl text-center">Across</p>
               {buildHints ? (
-                <div className="flex flex-col gap-[0.15rem] overflow-scroll h-full">
-                  {buildHints.down.map((hint: CrossWordHint, key) => (
+                <div className="flex flex-col gap-[0.15rem] h-full overflow-scroll">
+                  {buildHints.across.map((hint: CrossWordHint, key) => (
                     <p
                       key={key}
                       onClick={() =>
-                        handleClickOnHint("down", hint.number, hint.hint)
+                        handleClickOnHint("across", hint.number, hint.hint)
                       }
                       className="hover:bg-secondary-400 rounded p-1 transition-all duration-200 ease-out cursor-pointer"
                     >{`${hint.number}. ${
@@ -2059,14 +2059,14 @@ export default function Crossword() {
             </div>
             <div className="max-sm:hidden h-full mt-1 border border-black block"></div>
             <div className="w-full">
-              <p className="font-bold text-xl text-center">Across</p>
+              <p className="font-bold text-xl text-center">Down</p>
               {buildHints ? (
-                <div className="flex flex-col gap-[0.15rem] h-full overflow-scroll">
-                  {buildHints.across.map((hint: CrossWordHint, key) => (
+                <div className="flex flex-col gap-[0.15rem] overflow-scroll h-full">
+                  {buildHints.down.map((hint: CrossWordHint, key) => (
                     <p
                       key={key}
                       onClick={() =>
-                        handleClickOnHint("across", hint.number, hint.hint)
+                        handleClickOnHint("down", hint.number, hint.hint)
                       }
                       className="hover:bg-secondary-400 rounded p-1 transition-all duration-200 ease-out cursor-pointer"
                     >{`${hint.number}. ${
