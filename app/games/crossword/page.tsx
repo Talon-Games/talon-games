@@ -97,6 +97,7 @@ export default function Crossword() {
   const [author, setAuthor] = useState("");
   const [published, setPublished] = useState("");
 
+  const [overrideLetters, setOverrideLetters] = useState(false);
   const [mode, setMode] = useState<"play" | "build">("play");
   const [highlightMode, setHighlightMode] = useState<
     "down" | "across" | "both"
@@ -930,7 +931,6 @@ export default function Crossword() {
     } else {
       tempData[location[1]][location[0]].answer = key;
     }
-
     if (currentTrend) {
       if (
         currentTrend == "across" &&
@@ -938,30 +938,40 @@ export default function Crossword() {
         tempData[location[1]][location[0] + 1].state != "black"
       ) {
         tempData[location[1]][location[0]].state = "highlighted";
-        let next = findNextSelectionSpot(
-          tempData,
-          "across",
-          mode,
-          location[0],
-          location[1],
-        );
-        tempData[next.y][next.x].state = "selected";
-        setCurrentSelectionNumberXY([next.x, next.y]);
+        if (overrideLetters) {
+          tempData[location[1]][location[0] + 1].state = "selected";
+          setCurrentSelectionNumberXY([location[0] + 1, location[1]]);
+        } else {
+          let next = findNextSelectionSpot(
+            tempData,
+            "across",
+            mode,
+            location[0],
+            location[1],
+          );
+          tempData[next.y][next.x].state = "selected";
+          setCurrentSelectionNumberXY([next.x, next.y]);
+        }
       } else if (
         currentTrend == "down" &&
         location[1] + 1 != crosswordSize.height &&
         tempData[location[1] + 1][location[0]].state != "black"
       ) {
         tempData[location[1]][location[0]].state = "highlighted";
-        let next = findNextSelectionSpot(
-          tempData,
-          "down",
-          mode,
-          location[0],
-          location[1],
-        );
-        tempData[next.y][next.x].state = "selected";
-        setCurrentSelectionNumberXY([next.x, next.y]);
+        if (overrideLetters) {
+          tempData[location[1] + 1][location[0]].state = "selected";
+          setCurrentSelectionNumberXY([location[0], location[1] + 1]);
+        } else {
+          let next = findNextSelectionSpot(
+            tempData,
+            "down",
+            mode,
+            location[0],
+            location[1],
+          );
+          tempData[next.y][next.x].state = "selected";
+          setCurrentSelectionNumberXY([next.x, next.y]);
+        }
       }
     }
 
@@ -1799,6 +1809,12 @@ export default function Crossword() {
               <Button
                 onClickAction={clearBoard}
                 title="Clear Board"
+                style="normal"
+              />
+              <Button
+                onClickAction={() => setOverrideLetters(!overrideLetters)}
+                title="Override"
+                classModifier={`${!overrideLetters ? "" : "bg-opacity-0 !outline !outline-secondary-400"}`}
                 style="normal"
               />
             </section>

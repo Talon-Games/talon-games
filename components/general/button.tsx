@@ -35,11 +35,11 @@ export default function Button({
   const getActiveStyle = (style: "normal" | "green" | "red") => {
     switch (style) {
       case "normal":
-        return "!bg-secondary-500";
+        return "bg-secondary-500";
       case "green":
-        return "!bg-green-600";
+        return "bg-green-600";
       case "red":
-        return "!bg-red-600";
+        return "bg-red-600";
     }
   };
 
