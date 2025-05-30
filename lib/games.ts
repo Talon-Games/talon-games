@@ -33,6 +33,14 @@ const games: Game[] = [
     icon: "word-ladder-icon.svg",
     commingSoon: false,
   },
+  {
+    name: "Spelling Bee",
+    description: "",
+    color: "wordladder",
+    route: "/spelling-bee",
+    icon: "word-ladder-icon.svg",
+    commingSoon: false,
+  },
 ];
 
 export default games;

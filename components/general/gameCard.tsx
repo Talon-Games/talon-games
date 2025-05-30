@@ -37,7 +37,7 @@ export default function GameCard({ game }: { game: Game }) {
       </div>
       <div className="p-4 flex flex-col items-center justify-between">
         <div>
-          <h2 className="font-bold text-4xl text-center font-heading leading-none">
+          <h2 className="font-bold text-4xl pb-4 text-center font-heading leading-none">
             {game.name}
           </h2>
           <p className="w-5-6">{game.description}</p>
