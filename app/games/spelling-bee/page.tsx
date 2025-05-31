@@ -2,13 +2,24 @@
 
 //TODO: only save progress for current bee, if user plays from archive dont update, check against date
 
+/*
+Beginner: 0%
+Good Start: 2%
+Moving Up: 5%
+Good: 8%
+Solid: 15%
+Nice: 25%
+Great: 40%
+Amazing: 50%
+Genius: 70%
+*/
+
 import calculatePointsForGuess from "@/utils/games/spelling-bee/calculatePointsForGuess";
-import Button from "@/components/general/button";
 import FoundWordsContainer from "@/components/games/spelling-bee/foundWordsContainer";
 import isValidGuess from "@/utils/games/spelling-bee/isValidGuess";
 import isPangram from "@/utils/games/spelling-bee/isPangram";
-import ToolTip from "@/components/general/tooltip";
 import Hive from "@/components/games/spelling-bee/hive";
+import Button from "@/components/general/button";
 import { useState, useEffect } from "react";
 
 export type SpellingBee = {
@@ -17,6 +28,7 @@ export type SpellingBee = {
   answers: string[];
   maxPoints: number;
   realAuthor: string; // google user whos account was used author: string; // the person given credit
+  author: string;
   published: string;
 };
 
@@ -115,10 +127,11 @@ export default function SpellingBee() {
       return;
     }
 
-    const pointsEarned = calculatePointsForGuess(currentGuess);
+    let pointsEarned = calculatePointsForGuess(currentGuess);
     const pangram = isPangram(currentSpellingBee, currentGuess);
     if (pangram) {
       setPangramsThisGame(pangramsThisGame + 1);
+      pointsEarned += 7;
     }
     setPoints(points + pointsEarned);
     setFoundWords([...foundWords, currentGuess]);
