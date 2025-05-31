@@ -34,7 +34,7 @@ export default function ToolTip({
       {children}
       {active && (
         <div
-          className={`mt-1 absolute text-xs border-solid border-transparent rounded left-1/2 -translate-x-1/2 p-1 text-gray-200 bg-black font-sans leading-tight z-50 whitespace-nowrap`}
+          className={`mt-1 absolute text-sm border-solid border-transparent rounded left-1/2 -translate-x-1/2 p-1 text-gray-200 bg-black font-sans leading-tight z-50 whitespace-nowrap`}
           style={{
             top: "100%",
             transformOrigin: "top",

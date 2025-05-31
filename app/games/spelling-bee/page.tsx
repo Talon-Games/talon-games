@@ -2,8 +2,13 @@
 
 //TODO: only save progress for current bee, if user plays from archive dont update, check against date
 
+import calculatePointsForGuess from "@/utils/games/spelling-bee/calculatePointsForGuess";
+import Button from "@/components/general/button";
+import FoundWordsContainer from "@/components/games/spelling-bee/foundWordsContainer";
+import isValidGuess from "@/utils/games/spelling-bee/isValidGuess";
+import isPangram from "@/utils/games/spelling-bee/isPangram";
+import ToolTip from "@/components/general/tooltip";
 import Hive from "@/components/games/spelling-bee/hive";
-import { ok, err, Result } from "@/utils/errors";
 import { useState, useEffect } from "react";
 
 export type SpellingBee = {
@@ -11,8 +16,7 @@ export type SpellingBee = {
   outer: string[];
   answers: string[];
   maxPoints: number;
-  realAuthor: string; // google user whos account was used
-  author: string; // the person given credit
+  realAuthor: string; // google user whos account was used author: string; // the person given credit
   published: string;
 };
 
@@ -21,12 +25,13 @@ export default function SpellingBee() {
   const [currentGuess, setCurrentGuess] = useState<string>("-");
   const [foundWords, setFoundWords] = useState<string[]>([]);
   const [points, setPoints] = useState<number>(0);
+  const [pangramsThisGame, setPangramsThisGame] = useState<number>(0);
 
   useEffect(() => {
     const thing: SpellingBee = {
       center: "i",
       outer: ["b", "e", "g", "n", "s", "l"],
-      answers: ["beginnings", "signless"],
+      answers: ["beginnings", "signless", "illegiblenesses"],
       maxPoints: 0,
       realAuthor: "",
       author: "",
@@ -42,7 +47,7 @@ export default function SpellingBee() {
   function updateDB() {
     console.log("TODO");
     //TODO: update with guessed words only, compute points and what not later,
-    //Keep track of high score, and longest word, and most words
+    //Keep track of high score, and longest word, and most words, and pangrams found, and solves
   }
 
   useEffect(() => {
@@ -102,7 +107,7 @@ export default function SpellingBee() {
   }
 
   function handleGuess() {
-    const result = isValidGuess();
+    const result = isValidGuess(currentSpellingBee, currentGuess);
 
     if (!result.ok) {
       console.log(result.error);
@@ -110,40 +115,31 @@ export default function SpellingBee() {
       return;
     }
 
-    const pointsEarned = calculatePointsFromGuess(currentGuess);
+    const pointsEarned = calculatePointsForGuess(currentGuess);
+    const pangram = isPangram(currentSpellingBee, currentGuess);
+    if (pangram) {
+      setPangramsThisGame(pangramsThisGame + 1);
+    }
     setPoints(points + pointsEarned);
     setFoundWords([...foundWords, currentGuess]);
     updateDB();
     setCurrentGuess("-");
   }
 
-  function isValidGuess(): Result<void, string> {
-    if (!currentSpellingBee) {
-      return err("No spelling bee loaded");
+  function shuffleOuter() {
+    if (!currentSpellingBee) return;
+
+    let newArr = [...currentSpellingBee.outer];
+
+    for (let i = newArr.length - 1; i > 0; i--) {
+      let j = Math.floor(Math.random() * (i + 1));
+      [newArr[i], newArr[j]] = [newArr[j], newArr[i]];
     }
 
-    if (currentGuess.length <= 3) {
-      return err("Too short!");
-    }
-
-    if (!currentGuess.includes(currentSpellingBee.center)) {
-      return err("Missing center letter");
-    }
-
-    if (currentSpellingBee.answers.includes(currentGuess)) {
-      console.log("YES");
-      return ok(undefined);
-    } else {
-      return err("Not in word list");
-    }
-  }
-
-  function calculatePointsFromGuess(guess: string): number {
-    if (guess.length <= 4) {
-      return 1;
-    } else {
-      return guess.length;
-    }
+    setCurrentSpellingBee({
+      ...currentSpellingBee,
+      outer: newArr,
+    });
   }
 
   return (
@@ -152,7 +148,7 @@ export default function SpellingBee() {
         Spelling Bee
       </h1>
       <div className="flex gap-2 items-center justify-center mt-10">
-        <section className="flex flex-col justify-center items-center mb-24 w-1/2">
+        <section className="flex flex-col justify-center items-center  w-1/2">
           {currentSpellingBee && (
             <div
               className={`uppercase flex p-5 -mb-20 text-2xl font-semibold ${currentGuess == "-" ? "text-white/0" : ""}`}
@@ -178,8 +174,31 @@ export default function SpellingBee() {
               hexPressed={hexPressed}
             />
           )}
+          <div className="flex gap-2 pt-20 w-1/2">
+            <Button
+              title="Delete"
+              style="red"
+              onClickAction={deleteFromGuess}
+              classModifier="z-10"
+            />
+            <Button
+              title="Shuffle"
+              style="normal"
+              onClickAction={shuffleOuter}
+              classModifier="z-10"
+            />
+            <Button
+              title="Enter"
+              style="green"
+              onClickAction={handleGuess}
+              classModifier="z-10"
+            />
+          </div>
         </section>
-        <section className="border-black border-2 rounded w-5/12 h-[40rem]"></section>
+        <FoundWordsContainer
+          spellingBee={currentSpellingBee}
+          foundWords={foundWords}
+        />
       </div>
     </main>
   );
