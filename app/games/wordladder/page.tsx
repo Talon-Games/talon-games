@@ -10,11 +10,10 @@ import Notification from "@/components/general/notification";
 import { useAuthContext } from "@/lib/contexts/authContext";
 import Stopwatch from "@/components/games/stopwatch";
 import ToolTip from "@/components/general/tooltip";
+import formatTime from "@/utils/games/formatTime";
 import Button from "@/components/general/button";
 import { useState, useEffect } from "react";
-import formatTime from "@/utils/games/formatTime";
 import formatDate from "@/utils/formatDate";
-import isMobile from "@/utils/isMobile";
 import { useRouter } from "next/navigation";
 
 export type WordLadderWord = {
@@ -64,8 +63,6 @@ export default function WordLadder() {
   const [isReset, setIsReset] = useState(false);
   const [stoppedTime, setStoppedTime] = useState<number | null>(null);
 
-  const [mobileDevice, setMobileDevice] = useState(false);
-
   const handleResetComplete = () => {
     setIsReset(false);
   };
@@ -73,12 +70,6 @@ export default function WordLadder() {
   const handleStopTime = (time: number) => {
     setStoppedTime(time);
   };
-
-  useEffect(() => {
-    const mobile = isMobile();
-
-    setMobileDevice(mobile);
-  }, []);
 
   useEffect(() => {
     if (currentWordLadder == undefined || currentMode == "today") {
@@ -504,7 +495,7 @@ export default function WordLadder() {
           </div>
         </section>
       ) : null}
-      {!mobileDevice ? (
+      {user && (isMaksim || isAdmin || isHelper) ? (
         <ConnectedButton
           onClickLeft={toggleMode}
           onClickRight={toggleMode}

@@ -3,7 +3,10 @@
 //TODO: only save progress for current bee, if user plays from archive dont update, check against date
 
 import calculatePointsForGuess from "@/utils/games/spelling-bee/calculatePointsForGuess";
+import TextInput from "@/components/general/TextInput";
 import FoundWordsContainer from "@/components/games/spelling-bee/foundWordsContainer";
+import Notification from "@/components/general/notification";
+import ConnectedButton from "@/components/general/connectedButtons";
 import calculateMaxPoints from "@/utils/games/spelling-bee/calculateMaxPoints";
 import calculateCutOffs from "@/utils/games/spelling-bee/calculateCutOffs";
 import RankingModal from "@/components/games/spelling-bee/rankingModal";
@@ -46,6 +49,17 @@ export default function SpellingBee() {
     isAdmin: boolean;
     isHelper: boolean;
   };
+
+  const [mode, setMode] = useState<"play" | "build">("build");
+  const [notification, setNotification] = useState(false);
+  const [notificationTitle, setNotificationTitle] = useState("");
+  const [notificationType, setNotificationType] = useState<
+    "success" | "error" | "warning"
+  >("success");
+  const [notificationMessage, setNotificationMessage] = useState("");
+
+  const [buildCenterLetter, setBuildCenterLetter] = useState("");
+  const [buildOuterLetters, setBuildOuterLetters] = useState<string[]>([]);
 
   const [currentSpellingBee, setCurrentSpellingBee] = useState<SpellingBee>();
   const [cutOffs, setCutOffs] = useState<CutOffs>();
@@ -119,6 +133,7 @@ export default function SpellingBee() {
         "ally",
         "ably",
         "able",
+        "ball",
       ],
       maxPoints: 0,
       realAuthor: "",
@@ -134,6 +149,43 @@ export default function SpellingBee() {
     window.addEventListener("beforeunload", () => updateDB());
     return () => window.removeEventListener("beforeunload", () => updateDB());
   }, []);
+
+  function toggleMode() {
+    if (!user) {
+      triggerNotification(
+        "Failed to toggle mode",
+        "error",
+        "You must have an account",
+      );
+      return;
+    }
+
+    if (!isHelper && !isAdmin && !isMaksim) {
+      triggerNotification(
+        "Failed to toggle mode",
+        "error",
+        "You must have a role",
+      );
+      return;
+    }
+
+    if (mode == "build") {
+      setMode("play");
+    } else {
+      setMode("build");
+    }
+  }
+
+  function triggerNotification(
+    title: string,
+    type: "success" | "error" | "warning",
+    message: string,
+  ) {
+    setNotification(true);
+    setNotificationTitle(title);
+    setNotificationType(type);
+    setNotificationMessage(message);
+  }
 
   function updateDB() {
     console.log("TODO");
@@ -160,6 +212,8 @@ export default function SpellingBee() {
         setWinModal(false);
         return;
       }
+
+      if (mode == "build") return;
 
       if (key === "backspace" || key === "delete") {
         e.preventDefault();
@@ -248,74 +302,165 @@ export default function SpellingBee() {
     });
   }
 
+  function updateCenterLetter(event: any) {
+    const value = event.target.value;
+
+    const letter = value.charAt(value.length - 1);
+
+    if (buildOuterLetters.includes(letter)) {
+      triggerNotification("Error", "error", "Center letter in outer letters!");
+      return;
+    }
+
+    if (value.length > 1) {
+      setBuildCenterLetter(letter);
+    } else {
+      setBuildCenterLetter(letter);
+    }
+  }
+
+  function updateOuterLetters(event: any) {
+    const value: string = event.target.value;
+
+    const letters = value.replaceAll(", ", "");
+    const newLetter = letters.charAt(letters.length - 1);
+    if (buildOuterLetters.includes(newLetter)) {
+      triggerNotification("Error", "error", "Outer letter in outer letters!");
+      return;
+    }
+
+    if (newLetter == buildCenterLetter) {
+      triggerNotification("Error", "error", "Outer letter is center letter!");
+      return;
+    }
+    if (letters.length > 6) return;
+
+    setBuildOuterLetters(letters.split(""));
+  }
+
+  function findWords() {}
+
   return (
     <main className="w-9/12 ml-auto mr-auto max-sm:w-11/12">
       <>
         <h1 className="font-heading text-center mb-4 text-8xl max-sm:text-7xl max-xs:text-6xl">
           Spelling Bee
         </h1>
-        <div className="flex gap-2 items-center justify-center mt-10">
-          <section className="flex flex-col justify-center items-center  w-1/2">
-            {currentSpellingBee && (
-              <div
-                className={`uppercase flex p-5 -mb-20 text-2xl font-semibold ${currentGuess == "-" ? "text-white/0" : ""}`}
-              >
-                {currentGuess.split("").map((letter: string, key: number) => (
-                  <p
-                    key={key}
-                    className={
-                      letter == currentSpellingBee.center
-                        ? "text-secondary-400"
-                        : ""
-                    }
-                  >
-                    {letter}
-                  </p>
-                ))}
+        {mode == "play" ? (
+          <div className="flex gap-2 items-center justify-center mt-10">
+            <section className="flex flex-col justify-center items-center  w-1/2">
+              {currentSpellingBee && (
+                <div
+                  className={`uppercase flex p-5 -mb-20 text-2xl font-semibold ${currentGuess == "-" ? "text-white/0" : ""}`}
+                >
+                  {currentGuess.split("").map((letter: string, key: number) => (
+                    <p
+                      key={key}
+                      className={
+                        letter == currentSpellingBee.center
+                          ? "text-secondary-400"
+                          : ""
+                      }
+                    >
+                      {letter}
+                    </p>
+                  ))}
+                </div>
+              )}
+              {currentSpellingBee && (
+                <Hive
+                  center={currentSpellingBee.center}
+                  outer={currentSpellingBee.outer}
+                  hexPressed={hexPressed}
+                />
+              )}
+              <div className="flex gap-2 pt-20 w-1/2">
+                <Button
+                  title="Delete"
+                  style="red"
+                  onClickAction={deleteFromGuess}
+                  classModifier="z-10"
+                />
+                <Button
+                  title="Shuffle"
+                  style="normal"
+                  onClickAction={shuffleOuter}
+                  classModifier="z-10"
+                />
+                <Button
+                  title="Enter"
+                  style="green"
+                  onClickAction={handleGuess}
+                  classModifier="z-10"
+                />
               </div>
-            )}
-            {currentSpellingBee && (
-              <Hive
-                center={currentSpellingBee.center}
-                outer={currentSpellingBee.outer}
-                hexPressed={hexPressed}
+            </section>
+            <section className="w-5/12 flex flex-col gap-2">
+              {cutOffs && (
+                <RankingBar
+                  cutOffs={cutOffs}
+                  points={points}
+                  toggleModal={() => setCutOffModal(!cutOffModal)}
+                />
+              )}
+              <FoundWordsContainer
+                spellingBee={currentSpellingBee}
+                foundWords={foundWords}
               />
-            )}
-            <div className="flex gap-2 pt-20 w-1/2">
-              <Button
-                title="Delete"
-                style="red"
-                onClickAction={deleteFromGuess}
-                classModifier="z-10"
-              />
-              <Button
-                title="Shuffle"
-                style="normal"
-                onClickAction={shuffleOuter}
-                classModifier="z-10"
-              />
-              <Button
-                title="Enter"
-                style="green"
-                onClickAction={handleGuess}
-                classModifier="z-10"
-              />
+            </section>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-2">
+            <div className="flex gap-2">
+              <div>
+                <p>Center Letter</p>
+                <TextInput
+                  value={buildCenterLetter}
+                  placeholder="Center Letter"
+                  onChangeAction={updateCenterLetter}
+                />
+              </div>
+              <div className="w-full">
+                <p>Outer Letters</p>
+                <TextInput
+                  value={buildOuterLetters.join(", ")}
+                  placeholder="Outer Letters"
+                  onChangeAction={updateOuterLetters}
+                  classModifier="w-full"
+                />
+              </div>
             </div>
-          </section>
-          <section className="w-5/12 flex flex-col gap-2">
-            {cutOffs && (
-              <RankingBar
-                cutOffs={cutOffs}
-                points={points}
-                toggleModal={() => setCutOffModal(!cutOffModal)}
-              />
-            )}
-            <FoundWordsContainer
-              spellingBee={currentSpellingBee}
-              foundWords={foundWords}
+            <Button
+              title="Find Words"
+              disabled={
+                buildOuterLetters.length != 6 || buildCenterLetter.length != 1
+              }
+              onClickAction={findWords}
+              style="normal"
             />
-          </section>
-        </div>
+          </div>
+        )}
+        {user && (isMaksim || isAdmin || isHelper) ? (
+          <ConnectedButton
+            onClickLeft={toggleMode}
+            onClickRight={toggleMode}
+            leftStyle="normal"
+            rightStyle="normal"
+            leftTitle="Play"
+            rightTitle="Build"
+            leftClassModifier={
+              mode == "play"
+                ? "bg-secondary-500 border-r-2 border-secondary-400"
+                : "bg-secondary-400 hover:bg-secondary-500"
+            }
+            rightClassModifier={
+              mode == "build"
+                ? "bg-secondary-500 border-l-2 border-secondary-400"
+                : "bg-secondary-400 hover:bg-secondary-500"
+            }
+            containerClassModifier="w-11/12 mx-auto max-lg:w-full mt-2"
+          />
+        ) : null}
         {cutOffModal && cutOffs && (
           <RankingModal
             cutOffs={cutOffs}
@@ -355,6 +500,15 @@ export default function SpellingBee() {
             </div>
           </section>
         )}
+        {notification ? (
+          <Notification
+            title={notificationTitle}
+            type={notificationType}
+            message={notificationMessage}
+            timeout={5000}
+            updateNotification={(value) => setNotification(value)}
+          />
+        ) : null}
       </>
     </main>
   );
