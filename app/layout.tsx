@@ -1,4 +1,3 @@
-import { CrosswordContextProvider } from "@/lib/contexts/crosswordContext";
 import { AuthContextProvider } from "@/lib/contexts/authContext";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import NavBar from "@/components/general/navBar";

@@ -36,9 +36,9 @@ const games: Game[] = [
   {
     name: "Spelling Bee",
     description: "",
-    color: "wordladder",
+    color: "spelling-bee",
     route: "/spelling-bee",
-    icon: "word-ladder-icon.svg",
+    icon: "spelling-bee.svg",
     commingSoon: false,
   },
 ];

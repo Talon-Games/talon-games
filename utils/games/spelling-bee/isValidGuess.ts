@@ -4,13 +4,16 @@ import { ok, err, Result } from "@/utils/errors";
 export default function isValidGuess(
   spellingBee: SpellingBee | undefined,
   guess: string,
+  foundWords: string[],
 ): Result<void, string> {
   if (!spellingBee) {
     return err("No spelling bee loaded");
   }
 
+  if (foundWords.includes(guess)) return err("Already found");
+
   if (guess.length <= 3) {
-    return err("Too short!");
+    return err("Too short");
   }
 
   if (!guess.includes(spellingBee.center)) {

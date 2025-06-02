@@ -2251,7 +2251,10 @@ export default function Crossword() {
           className="fixed flex flex-col items-center justify-center left-0 top-0 w-full h-full bg-accent-900 bg-opacity-50"
           onClick={() => setWon(!won)}
         >
-          <div className="p-10 bg-background-50 rounded-xl w-7/12 flex flex-col max-lg:w-5/6 max-sm:w-11/12 z-50">
+          <div
+            className="p-10 bg-background-50 rounded-xl w-7/12 flex flex-col max-lg:w-5/6 max-sm:w-11/12 z-50"
+            onClick={(event) => event.stopPropagation()}
+          >
             <h2 className="font-heading text-7xl mb-1 text-center max-md:text-6xl max-sm:text-4xl max-xs:text-3xl">
               Congratulations
             </h2>

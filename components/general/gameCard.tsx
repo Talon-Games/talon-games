@@ -17,6 +17,8 @@ export default function GameCard({ game }: { game: Game }) {
         return "bg-green-300";
       case "wordladder":
         return "bg-orange-300";
+      case "spelling-bee":
+        return "bg-yellow-300";
     }
   };
 
