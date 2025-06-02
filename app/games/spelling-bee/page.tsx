@@ -3,18 +3,20 @@
 //TODO: only save progress for current bee, if user plays from archive dont update, check against date
 
 import calculatePointsForGuess from "@/utils/games/spelling-bee/calculatePointsForGuess";
-import TextInput from "@/components/general/TextInput";
 import FoundWordsContainer from "@/components/games/spelling-bee/foundWordsContainer";
-import Notification from "@/components/general/notification";
-import ConnectedButton from "@/components/general/connectedButtons";
 import calculateMaxPoints from "@/utils/games/spelling-bee/calculateMaxPoints";
 import calculateCutOffs from "@/utils/games/spelling-bee/calculateCutOffs";
 import RankingModal from "@/components/games/spelling-bee/rankingModal";
 import RankingBar from "@/components/games/spelling-bee/rankingBar";
+import ConnectedButton from "@/components/general/connectedButtons";
 import isValidGuess from "@/utils/games/spelling-bee/isValidGuess";
+import loadWords from "@/utils/games/spelling-bee/loadWords";
 import isPangram from "@/utils/games/spelling-bee/isPangram";
+import Notification from "@/components/general/notification";
 import { useAuthContext } from "@/lib/contexts/authContext";
+import { Word } from "@/utils/games/spelling-bee/loadWords";
 import Hive from "@/components/games/spelling-bee/hive";
+import TextInput from "@/components/general/TextInput";
 import Button from "@/components/general/button";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -58,8 +60,11 @@ export default function SpellingBee() {
   >("success");
   const [notificationMessage, setNotificationMessage] = useState("");
 
+  const [buildWordOptions, setBuildWordOptions] = useState<Word[]>([]);
   const [buildCenterLetter, setBuildCenterLetter] = useState("");
   const [buildOuterLetters, setBuildOuterLetters] = useState<string[]>([]);
+  const [buildValidWords, setBuildValidWords] = useState<Word[]>([]);
+  const [buildSelectedWords, setBuildSelectedWords] = useState<Word[]>([]);
 
   const [currentSpellingBee, setCurrentSpellingBee] = useState<SpellingBee>();
   const [cutOffs, setCutOffs] = useState<CutOffs>();
@@ -200,12 +205,6 @@ export default function SpellingBee() {
       const { center, outer } = currentSpellingBee;
       const key = e.key.toLowerCase();
 
-      if (key === "enter") {
-        e.preventDefault();
-        handleGuess();
-        return;
-      }
-
       if (key === "escape") {
         e.preventDefault();
         setCutOffModal(false);
@@ -213,7 +212,13 @@ export default function SpellingBee() {
         return;
       }
 
-      if (mode == "build") return;
+      if (mode == "build" || winModal || cutOffModal) return;
+
+      if (key === "enter") {
+        e.preventDefault();
+        handleGuess();
+        return;
+      }
 
       if (key === "backspace" || key === "delete") {
         e.preventDefault();
@@ -233,7 +238,7 @@ export default function SpellingBee() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [currentSpellingBee, currentGuess]);
+  }, [currentSpellingBee, currentGuess, mode, winModal, cutOffModal]);
 
   function deleteFromGuess() {
     if (currentGuess.length > 1) {
@@ -306,6 +311,7 @@ export default function SpellingBee() {
     const value = event.target.value;
 
     const letter = value.charAt(value.length - 1);
+    if (letter == "") return;
 
     if (buildOuterLetters.includes(letter)) {
       triggerNotification("Error", "error", "Center letter in outer letters!");
@@ -324,6 +330,7 @@ export default function SpellingBee() {
 
     const letters = value.replaceAll(", ", "");
     const newLetter = letters.charAt(letters.length - 1);
+    if (newLetter == "") return;
     if (buildOuterLetters.includes(newLetter)) {
       triggerNotification("Error", "error", "Outer letter in outer letters!");
       return;
@@ -338,7 +345,37 @@ export default function SpellingBee() {
     setBuildOuterLetters(letters.split(""));
   }
 
-  function findWords() {}
+  async function findWords() {
+    if (buildCenterLetter == "" || buildOuterLetters.length != 6) return;
+
+    let words: Word[] = [];
+    if (buildWordOptions.length == 0) {
+      words = await loadWords();
+      setBuildWordOptions(words);
+    } else {
+      words = buildWordOptions;
+    }
+
+    let validWords: Word[] = [];
+
+    words.forEach((word: Word) => {
+      if (!word.word.includes(buildCenterLetter)) return;
+      let valid = true;
+      word.word.split("").forEach((letter: string) => {
+        if (letter == buildCenterLetter || !valid) return;
+        if (!buildOuterLetters.includes(letter)) {
+          valid = false;
+          return;
+        }
+      });
+
+      if (valid) {
+        validWords.push(word);
+      }
+    });
+
+    setBuildValidWords(validWords);
+  }
 
   return (
     <main className="w-9/12 ml-auto mr-auto max-sm:w-11/12">
@@ -438,6 +475,17 @@ export default function SpellingBee() {
               onClickAction={findWords}
               style="normal"
             />
+            <div className="flex flex-col">
+              {buildValidWords.map((word: Word, key: number) => (
+                <div
+                  key={key}
+                  className={`flex justify-between px-2 ${key % 2 == 0 ? "bg-gray-100" : "bg-secondary-50"}`}
+                >
+                  <p>{word.word}</p>
+                  <p>{word.meaning}</p>
+                </div>
+              ))}
+            </div>
           </div>
         )}
         {user && (isMaksim || isAdmin || isHelper) ? (
