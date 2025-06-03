@@ -1,18 +1,17 @@
 import { SpellingBee } from "@/app/games/spelling-bee/page";
 
 export default function isPangram(
-  currentSpellingBee: SpellingBee | undefined,
+  center: string,
+  outer: string[],
   guess: string,
 ): boolean {
-  if (!currentSpellingBee) return false;
-
-  if (!guess.includes(currentSpellingBee.center)) {
+  if (!guess.includes(center)) {
     return false;
   }
 
   let is = true;
 
-  currentSpellingBee.outer.forEach((letter: string) => {
+  outer.forEach((letter: string) => {
     if (!guess.includes(letter)) {
       is = false;
       return;

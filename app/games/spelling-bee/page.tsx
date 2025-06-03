@@ -3,6 +3,8 @@
 //TODO: only save progress for current bee, if user plays from archive dont update, check against date
 
 import calculatePointsForGuess from "@/utils/games/spelling-bee/calculatePointsForGuess";
+import saveSpellingBee from "@/firebase/db/games/spelling-bee/saveSpellingBee";
+import formatDate from "@/utils/formatDate";
 import FoundWordsContainer from "@/components/games/spelling-bee/foundWordsContainer";
 import calculateMaxPoints from "@/utils/games/spelling-bee/calculateMaxPoints";
 import calculateCutOffs from "@/utils/games/spelling-bee/calculateCutOffs";
@@ -25,8 +27,6 @@ export type SpellingBee = {
   center: string;
   outer: string[];
   answers: string[];
-  maxPoints: number;
-  realAuthor: string; // google user whos account was used author: string; // the person given credit
   author: string;
   published: string;
 };
@@ -64,7 +64,7 @@ export default function SpellingBee() {
   const [buildCenterLetter, setBuildCenterLetter] = useState("");
   const [buildOuterLetters, setBuildOuterLetters] = useState<string[]>([]);
   const [buildValidWords, setBuildValidWords] = useState<Word[]>([]);
-  const [buildSelectedWords, setBuildSelectedWords] = useState<Word[]>([]);
+  const [buildSelectedWords, setBuildSelectedWords] = useState<string[]>([]);
 
   const [currentSpellingBee, setCurrentSpellingBee] = useState<SpellingBee>();
   const [cutOffs, setCutOffs] = useState<CutOffs>();
@@ -140,8 +140,6 @@ export default function SpellingBee() {
         "able",
         "ball",
       ],
-      maxPoints: 0,
-      realAuthor: "",
       author: "",
       published: "",
     };
@@ -267,6 +265,7 @@ export default function SpellingBee() {
 
   function handleGuess() {
     if (!cutOffs || won) return;
+    if (!currentSpellingBee) return;
     const result = isValidGuess(currentSpellingBee, currentGuess, foundWords);
 
     if (!result.ok) {
@@ -276,7 +275,11 @@ export default function SpellingBee() {
     }
 
     let pointsEarned = calculatePointsForGuess(currentGuess);
-    const pangram = isPangram(currentSpellingBee, currentGuess);
+    const pangram = isPangram(
+      currentSpellingBee.center,
+      currentSpellingBee.outer,
+      currentGuess,
+    );
     if (pangram) {
       setPangramsThisGame(pangramsThisGame + 1);
       pointsEarned += 7;
@@ -311,7 +314,6 @@ export default function SpellingBee() {
     const value = event.target.value;
 
     const letter = value.charAt(value.length - 1);
-    if (letter == "") return;
 
     if (buildOuterLetters.includes(letter)) {
       triggerNotification("Error", "error", "Center letter in outer letters!");
@@ -330,7 +332,12 @@ export default function SpellingBee() {
 
     const letters = value.replaceAll(", ", "");
     const newLetter = letters.charAt(letters.length - 1);
-    if (newLetter == "") return;
+
+    if (letters.length < buildOuterLetters.length) {
+      setBuildOuterLetters(letters.split(""));
+      return;
+    }
+
     if (buildOuterLetters.includes(newLetter)) {
       triggerNotification("Error", "error", "Outer letter in outer letters!");
       return;
@@ -346,6 +353,7 @@ export default function SpellingBee() {
   }
 
   async function findWords() {
+    //TODO: add a check to determine if the spelling bee with these letters has already been made
     if (buildCenterLetter == "" || buildOuterLetters.length != 6) return;
 
     let words: Word[] = [];
@@ -375,6 +383,85 @@ export default function SpellingBee() {
     });
 
     setBuildValidWords(validWords);
+  }
+
+  function toggleSelectedWord(word: string) {
+    if (buildSelectedWords.includes(word)) {
+      const words = buildSelectedWords.filter((a: string) => a !== word);
+      setBuildSelectedWords(words);
+    } else {
+      setBuildSelectedWords([...buildSelectedWords, word]);
+    }
+  }
+
+  function publish() {
+    if (!(isMaksim || isAdmin || isHelper)) {
+      triggerNotification(
+        "Not enough permission",
+        "error",
+        "You cant publish a Spelling Bee",
+      );
+      return;
+    }
+
+    if (buildCenterLetter.length != 1) {
+      triggerNotification(
+        "No center letter",
+        "error",
+        "Please enter a center letter",
+      );
+      return;
+    }
+
+    if (buildOuterLetters.length != 6) {
+      triggerNotification(
+        "Not enough outer letter",
+        "error",
+        "Please enter 6 outer letters",
+      );
+      return;
+    }
+
+    if (buildSelectedWords.length == 0) {
+      triggerNotification(
+        "No selected words",
+        "error",
+        "Please selected words to include",
+      );
+      return;
+    }
+
+    const currentDate = new Date();
+    const formattedDate = formatDate(currentDate);
+
+    const bee = {
+      center: buildCenterLetter,
+      outer: buildOuterLetters,
+      answers: buildSelectedWords,
+      author: user.displayName,
+      published: formattedDate,
+    };
+
+    const stringifiedGameData = JSON.stringify(bee);
+    const id = buildCenterLetter + buildOuterLetters.join("");
+
+    saveSpellingBee(id, stringifiedGameData)
+      .then(() => {
+        setCurrentSpellingBee(bee);
+        setMode("play");
+        triggerNotification(
+          "Saved!",
+          "success",
+          "Successfully published Spelling Bee",
+        );
+      })
+      .catch((error) => {
+        triggerNotification(
+          "Save Failed",
+          "error",
+          "Failed to publish spelling bee: " + error.message,
+        );
+      });
   }
 
   return (
@@ -455,6 +542,7 @@ export default function SpellingBee() {
                   value={buildCenterLetter}
                   placeholder="Center Letter"
                   onChangeAction={updateCenterLetter}
+                  classModifier="w-full"
                 />
               </div>
               <div className="w-full">
@@ -475,17 +563,30 @@ export default function SpellingBee() {
               onClickAction={findWords}
               style="normal"
             />
+            <div className="flex justify-between">
+              <p>{`${buildSelectedWords.length} Selected`}</p>
+              <div className="flex gap-2">
+                <p>{`Total Points: ${calculateMaxPoints(buildSelectedWords) || 0}`}</p>
+                <p>{`Genius Points: ${Math.ceil(calculateMaxPoints(buildSelectedWords) * 0.7) || 0}`}</p>
+              </div>
+            </div>
             <div className="flex flex-col">
               {buildValidWords.map((word: Word, key: number) => (
                 <div
                   key={key}
-                  className={`flex justify-between px-2 ${key % 2 == 0 ? "bg-gray-100" : "bg-secondary-50"}`}
+                  className={`flex items-center justify-between gap-2 px-2 ${key % 2 == 0 ? "bg-gray-100 hover:bg-gray-200" : "bg-secondary-50 hover:bg-secondary-100"} cursor-pointer duration-200 transition-all ease-in-out`}
+                  onClick={() => toggleSelectedWord(word.word)}
                 >
-                  <p>{word.word}</p>
-                  <p>{word.meaning}</p>
+                  <p
+                    className={`${buildSelectedWords.includes(word.word) ? "font-semibold" : null} ${isPangram(buildCenterLetter, buildOuterLetters, word.word) ? "underline" : null}`}
+                  >
+                    {word.word}
+                  </p>
+                  <p className="text-right">{word.meaning}</p>
                 </div>
               ))}
             </div>
+            <Button title="Publish" onClickAction={publish} style="normal" />
           </div>
         )}
         {user && (isMaksim || isAdmin || isHelper) ? (

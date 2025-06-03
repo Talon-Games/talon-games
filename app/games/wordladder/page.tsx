@@ -259,14 +259,14 @@ export default function WordLadder() {
 
     const stringifiedGameData = JSON.stringify(wordLadderGameData);
 
-    saveWordLadder(stringifiedGameData, true)
+    saveWordLadder(stringifiedGameData)
       .then(() => {
         setWordLadder(wordLadderGameData);
         setMode("play");
         triggerNotification(
           "Saved!",
           "success",
-          "Successfully updated Word Ladder",
+          "Successfully published Word Ladder",
           true,
         );
       })
@@ -274,7 +274,7 @@ export default function WordLadder() {
         triggerNotification(
           "Save Failed",
           "error",
-          "Failed to save word ladder: " + error.message,
+          "Failed to publish word ladder: " + error.message,
         );
       });
   };
