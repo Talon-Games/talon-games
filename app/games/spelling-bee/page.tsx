@@ -4,6 +4,7 @@
 
 import calculatePointsForGuess from "@/utils/games/spelling-bee/calculatePointsForGuess";
 import saveSpellingBee from "@/firebase/db/games/spelling-bee/saveSpellingBee";
+import outerToBitmask from "@/utils/games/spelling-bee/outerToBitmask";
 import formatDate from "@/utils/formatDate";
 import getCreatedSpellingBees from "@/firebase/db/games/spelling-bee/getCreatedSpellingBees";
 import FoundWordsContainer from "@/components/games/spelling-bee/foundWordsContainer";
@@ -354,14 +355,6 @@ export default function SpellingBee() {
     setBuildOuterLetters(letters.split(""));
   }
 
-  function stringToBitmask(s: string): number {
-    let bitmask = 0;
-    for (let i = 0; i < s.length; i++) {
-      bitmask |= 1 << (s.charCodeAt(i) - 97);
-    }
-    return bitmask;
-  }
-
   async function findWords() {
     if (buildCenterLetter == "" || buildOuterLetters.length != 6) return;
 
@@ -383,7 +376,7 @@ export default function SpellingBee() {
     }
 
     const str = buildCenterLetter + buildOuterLetters.join("");
-    const idBitmask = stringToBitmask(str);
+    const idBitmask = outerToBitmask(str);
     const idFirstChar = str[0];
     const id = idFirstChar + ":" + idBitmask;
 
@@ -510,200 +503,195 @@ export default function SpellingBee() {
   }
 
   return (
-    <main className="w-9/12 ml-auto mr-auto max-sm:w-11/12">
-      <>
-        <h1 className="font-heading text-center mb-4 text-8xl max-sm:text-7xl max-xs:text-6xl">
-          Spelling Bee
-        </h1>
-        {mode == "play" ? (
-          <div className="flex gap-2 items-center justify-center mt-10">
-            <section className="flex flex-col justify-center items-center  w-1/2">
-              {currentSpellingBee && (
-                <div
-                  className={`uppercase flex p-5 -mb-20 text-2xl font-semibold ${currentGuess == "-" ? "text-white/0" : ""}`}
-                >
-                  {currentGuess.split("").map((letter: string, key: number) => (
-                    <p
-                      key={key}
-                      className={
-                        letter == currentSpellingBee.center
-                          ? "text-secondary-400"
-                          : ""
-                      }
-                    >
-                      {letter}
-                    </p>
-                  ))}
-                </div>
-              )}
-              {currentSpellingBee && (
-                <Hive
-                  center={currentSpellingBee.center}
-                  outer={currentSpellingBee.outer}
-                  hexPressed={hexPressed}
-                />
-              )}
-              <div className="flex gap-2 pt-20 w-1/2">
-                <Button
-                  title="Delete"
-                  style="red"
-                  onClickAction={deleteFromGuess}
-                  classModifier="z-10"
-                />
-                <Button
-                  title="Shuffle"
-                  style="normal"
-                  onClickAction={shuffleOuter}
-                  classModifier="z-10"
-                />
-                <Button
-                  title="Enter"
-                  style="green"
-                  onClickAction={handleGuess}
-                  classModifier="z-10"
-                />
-              </div>
-            </section>
-            <section className="w-5/12 flex flex-col gap-2">
-              {cutOffs && (
-                <RankingBar
-                  cutOffs={cutOffs}
-                  points={points}
-                  toggleModal={() => setCutOffModal(!cutOffModal)}
-                />
-              )}
-              <FoundWordsContainer
-                spellingBee={currentSpellingBee}
-                foundWords={foundWords}
-              />
-            </section>
-          </div>
-        ) : (
-          <div className="flex flex-col gap-2">
-            <div className="flex gap-2">
-              <div>
-                <p>Center Letter</p>
-                <TextInput
-                  value={buildCenterLetter}
-                  placeholder="Center Letter"
-                  onChangeAction={updateCenterLetter}
-                  classModifier="w-full"
-                />
-              </div>
-              <div className="w-full">
-                <p>Outer Letters</p>
-                <TextInput
-                  value={buildOuterLetters.join(", ")}
-                  placeholder="Outer Letters"
-                  onChangeAction={updateOuterLetters}
-                  classModifier="w-full"
-                />
-              </div>
-            </div>
-            <Button
-              title="Find Words"
-              disabled={
-                buildOuterLetters.length != 6 || buildCenterLetter.length != 1
-              }
-              onClickAction={findWords}
-              style="normal"
-            />
-            <div className="flex justify-between">
-              <p>{`${buildSelectedWords.length} Selected`}</p>
-              <div className="flex gap-2">
-                <p>{`Total Points: ${calculateMaxPoints(buildSelectedWords) || 0}`}</p>
-                <p>{`Genius Points: ${Math.ceil(calculateMaxPoints(buildSelectedWords) * 0.7) || 0}`}</p>
-              </div>
-            </div>
-            <div className="flex flex-col">
-              {buildValidWords.map((word: Word, key: number) => (
-                <div
-                  key={key}
-                  className={`flex items-center justify-between gap-2 px-2 ${key % 2 == 0 ? "bg-gray-100 hover:bg-gray-200" : "bg-secondary-50 hover:bg-secondary-100"} cursor-pointer duration-200 transition-all ease-in-out`}
-                  onClick={() => toggleSelectedWord(word.word)}
-                >
+    <>
+      {mode == "play" ? (
+        <div className="flex gap-2 items-center justify-center mt-10">
+          <section className="flex flex-col justify-center items-center  w-1/2">
+            {currentSpellingBee && (
+              <div
+                className={`uppercase flex p-5 -mb-20 text-2xl font-semibold ${currentGuess == "-" ? "text-white/0" : ""}`}
+              >
+                {currentGuess.split("").map((letter: string, key: number) => (
                   <p
-                    className={`${buildSelectedWords.includes(word.word) ? "font-semibold" : null} ${isPangram(buildCenterLetter, buildOuterLetters, word.word) ? "underline" : null}`}
+                    key={key}
+                    className={
+                      letter == currentSpellingBee.center
+                        ? "text-secondary-400"
+                        : ""
+                    }
                   >
-                    {word.word}
+                    {letter}
                   </p>
-                  <p className="text-right">{word.meaning}</p>
-                </div>
-              ))}
-            </div>
-            <Button title="Publish" onClickAction={publish} style="normal" />
-          </div>
-        )}
-        {user && (isMaksim || isAdmin || isHelper) ? (
-          <ConnectedButton
-            onClickLeft={toggleMode}
-            onClickRight={toggleMode}
-            leftStyle="normal"
-            rightStyle="normal"
-            leftTitle="Play"
-            rightTitle="Build"
-            leftClassModifier={
-              mode == "play"
-                ? "bg-secondary-500 border-r-2 border-secondary-400"
-                : "bg-secondary-400 hover:bg-secondary-500"
-            }
-            rightClassModifier={
-              mode == "build"
-                ? "bg-secondary-500 border-l-2 border-secondary-400"
-                : "bg-secondary-400 hover:bg-secondary-500"
-            }
-            containerClassModifier="w-11/12 mx-auto max-lg:w-full mt-2"
-          />
-        ) : null}
-        {cutOffModal && cutOffs && (
-          <RankingModal
-            cutOffs={cutOffs}
-            points={points}
-            toggleModal={() => setCutOffModal(!cutOffModal)}
-          />
-        )}
-        {winModal && (
-          <section
-            className="fixed flex flex-col items-center justify-center left-0 top-0 w-full h-full bg-accent-900 bg-opacity-50 z-20"
-            onClick={() => setWinModal(!winModal)}
-          >
-            <div
-              className="p-10 bg-background-50 rounded-xl w-7/12 flex flex-col max-lg:w-5/6 max-sm:w-11/12"
-              onClick={(event) => event.stopPropagation()}
-            >
-              <h2 className="font-heading text-7xl mb-1 text-center max-md:text-6xl max-sm:text-4xl max-xs:text-3xl">
-                Congratulations
-              </h2>
-              <h2 className="font-heading text-7xl mb-10 text-center max-md:text-6xl max-sm:text-4xl max-xs:text-3xl">
-                You Won!
-              </h2>
-            </div>
-            <div className="flex gap-2 mt-2 w-7/12 max-lg:w-5/6 max-sm:w-11/12">
+                ))}
+              </div>
+            )}
+            {currentSpellingBee && (
+              <Hive
+                center={currentSpellingBee.center}
+                outer={currentSpellingBee.outer}
+                hexPressed={hexPressed}
+              />
+            )}
+            <div className="flex gap-2 pt-20 w-1/2">
               <Button
-                onClickAction={() => setWinModal(!winModal)}
-                title="View Puzzle"
-                style="normal"
-                classModifier="p-5"
+                title="Delete"
+                style="red"
+                onClickAction={deleteFromGuess}
+                classModifier="z-10"
               />
               <Button
-                onClickAction={() => router.push("/")}
-                title="Browse Games"
+                title="Shuffle"
                 style="normal"
-                classModifier="p-5"
+                onClickAction={shuffleOuter}
+                classModifier="z-10"
+              />
+              <Button
+                title="Enter"
+                style="green"
+                onClickAction={handleGuess}
+                classModifier="z-10"
               />
             </div>
           </section>
-        )}
-        {notification ? (
-          <Notification
-            title={notificationTitle}
-            type={notificationType}
-            message={notificationMessage}
-            timeout={5000}
-            updateNotification={(value) => setNotification(value)}
+          <section className="w-5/12 flex flex-col gap-2">
+            {cutOffs && (
+              <RankingBar
+                cutOffs={cutOffs}
+                points={points}
+                toggleModal={() => setCutOffModal(!cutOffModal)}
+              />
+            )}
+            <FoundWordsContainer
+              spellingBee={currentSpellingBee}
+              foundWords={foundWords}
+            />
+          </section>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-2">
+          <div className="flex gap-2">
+            <div>
+              <p>Center Letter</p>
+              <TextInput
+                value={buildCenterLetter}
+                placeholder="Center Letter"
+                onChangeAction={updateCenterLetter}
+                classModifier="w-full"
+              />
+            </div>
+            <div className="w-full">
+              <p>Outer Letters</p>
+              <TextInput
+                value={buildOuterLetters.join(", ")}
+                placeholder="Outer Letters"
+                onChangeAction={updateOuterLetters}
+                classModifier="w-full"
+              />
+            </div>
+          </div>
+          <Button
+            title="Find Words"
+            disabled={
+              buildOuterLetters.length != 6 || buildCenterLetter.length != 1
+            }
+            onClickAction={findWords}
+            style="normal"
           />
-        ) : null}
-      </>
-    </main>
+          <div className="flex justify-between">
+            <p>{`${buildSelectedWords.length} Selected`}</p>
+            <div className="flex gap-2">
+              <p>{`Total Points: ${calculateMaxPoints(buildSelectedWords) || 0}`}</p>
+              <p>{`Genius Points: ${Math.ceil(calculateMaxPoints(buildSelectedWords) * 0.7) || 0}`}</p>
+            </div>
+          </div>
+          <div className="flex flex-col">
+            {buildValidWords.map((word: Word, key: number) => (
+              <div
+                key={key}
+                className={`flex items-center justify-between gap-2 px-2 ${key % 2 == 0 ? "bg-gray-100 hover:bg-gray-200" : "bg-secondary-50 hover:bg-secondary-100"} cursor-pointer duration-200 transition-all ease-in-out`}
+                onClick={() => toggleSelectedWord(word.word)}
+              >
+                <p
+                  className={`${buildSelectedWords.includes(word.word) ? "font-semibold" : null} ${isPangram(buildCenterLetter, buildOuterLetters, word.word) ? "underline" : null}`}
+                >
+                  {word.word}
+                </p>
+                <p className="text-right">{word.meaning}</p>
+              </div>
+            ))}
+          </div>
+          <Button title="Publish" onClickAction={publish} style="normal" />
+        </div>
+      )}
+      {user && (isMaksim || isAdmin || isHelper) ? (
+        <ConnectedButton
+          onClickLeft={toggleMode}
+          onClickRight={toggleMode}
+          leftStyle="normal"
+          rightStyle="normal"
+          leftTitle="Play"
+          rightTitle="Build"
+          leftClassModifier={
+            mode == "play"
+              ? "bg-secondary-500 border-r-2 border-secondary-400"
+              : "bg-secondary-400 hover:bg-secondary-500"
+          }
+          rightClassModifier={
+            mode == "build"
+              ? "bg-secondary-500 border-l-2 border-secondary-400"
+              : "bg-secondary-400 hover:bg-secondary-500"
+          }
+          containerClassModifier="w-11/12 mx-auto max-lg:w-full mt-2"
+        />
+      ) : null}
+      {cutOffModal && cutOffs && (
+        <RankingModal
+          cutOffs={cutOffs}
+          points={points}
+          toggleModal={() => setCutOffModal(!cutOffModal)}
+        />
+      )}
+      {winModal && (
+        <section
+          className="fixed flex flex-col items-center justify-center left-0 top-0 w-full h-full bg-accent-900 bg-opacity-50 z-20"
+          onClick={() => setWinModal(!winModal)}
+        >
+          <div
+            className="p-10 bg-background-50 rounded-xl w-7/12 flex flex-col max-lg:w-5/6 max-sm:w-11/12"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <h2 className="font-heading text-7xl mb-1 text-center max-md:text-6xl max-sm:text-4xl max-xs:text-3xl">
+              Congratulations
+            </h2>
+            <h2 className="font-heading text-7xl mb-10 text-center max-md:text-6xl max-sm:text-4xl max-xs:text-3xl">
+              You Won!
+            </h2>
+          </div>
+          <div className="flex gap-2 mt-2 w-7/12 max-lg:w-5/6 max-sm:w-11/12">
+            <Button
+              onClickAction={() => setWinModal(!winModal)}
+              title="View Puzzle"
+              style="normal"
+              classModifier="p-5"
+            />
+            <Button
+              onClickAction={() => router.push("/")}
+              title="Browse Games"
+              style="normal"
+              classModifier="p-5"
+            />
+          </div>
+        </section>
+      )}
+      {notification ? (
+        <Notification
+          title={notificationTitle}
+          type={notificationType}
+          message={notificationMessage}
+          timeout={5000}
+          updateNotification={(value) => setNotification(value)}
+        />
+      ) : null}
+    </>
   );
 }

@@ -2,7 +2,7 @@ import { doc, getDoc, updateDoc, arrayRemove } from "firebase/firestore";
 import { db } from "@/firebase/config";
 
 export default async function deleteSpellingBeeFromArchive(
-  id: string, // center and outer letters ex: abcdefg
+  id: string,
   data: string,
 ) {
   const spellingBeeRef = doc(db, "games", "spellingbee");

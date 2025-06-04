@@ -1,10 +1,7 @@
 import { doc, getDoc, updateDoc, arrayUnion } from "firebase/firestore";
 import { db } from "@/firebase/config";
 
-export default async function saveSpellingBee(
-  id: string, // center and outer letters ex: abcdefg
-  data: string,
-) {
+export default async function saveSpellingBee(id: string, data: string) {
   const spellingBeeRef = doc(db, "games", "spellingbee");
   const docSnap = await getDoc(spellingBeeRef);
   if (docSnap.exists()) {
