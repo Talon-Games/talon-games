@@ -5,6 +5,7 @@
 import calculatePointsForGuess from "@/utils/games/spelling-bee/calculatePointsForGuess";
 import saveSpellingBee from "@/firebase/db/games/spelling-bee/saveSpellingBee";
 import formatDate from "@/utils/formatDate";
+import getCreatedSpellingBees from "@/firebase/db/games/spelling-bee/getCreatedSpellingBees";
 import FoundWordsContainer from "@/components/games/spelling-bee/foundWordsContainer";
 import calculateMaxPoints from "@/utils/games/spelling-bee/calculateMaxPoints";
 import calculateCutOffs from "@/utils/games/spelling-bee/calculateCutOffs";
@@ -52,7 +53,7 @@ export default function SpellingBee() {
     isHelper: boolean;
   };
 
-  const [mode, setMode] = useState<"play" | "build">("build");
+  const [mode, setMode] = useState<"play" | "build">("play");
   const [notification, setNotification] = useState(false);
   const [notificationTitle, setNotificationTitle] = useState("");
   const [notificationType, setNotificationType] = useState<
@@ -60,6 +61,7 @@ export default function SpellingBee() {
   >("success");
   const [notificationMessage, setNotificationMessage] = useState("");
 
+  const [alreadyUsedBees, setAlreadUsedBees] = useState<string[]>([]);
   const [buildWordOptions, setBuildWordOptions] = useState<Word[]>([]);
   const [buildCenterLetter, setBuildCenterLetter] = useState("");
   const [buildOuterLetters, setBuildOuterLetters] = useState<string[]>([]);
@@ -352,9 +354,47 @@ export default function SpellingBee() {
     setBuildOuterLetters(letters.split(""));
   }
 
+  function stringToBitmask(s: string): number {
+    let bitmask = 0;
+    for (let i = 0; i < s.length; i++) {
+      bitmask |= 1 << (s.charCodeAt(i) - 97);
+    }
+    return bitmask;
+  }
+
   async function findWords() {
-    //TODO: add a check to determine if the spelling bee with these letters has already been made
     if (buildCenterLetter == "" || buildOuterLetters.length != 6) return;
+
+    let created: string[];
+    if (alreadyUsedBees.length == 0) {
+      let temp = await getCreatedSpellingBees();
+      if (temp == undefined) {
+        triggerNotification(
+          "Failed to find words",
+          "error",
+          "Failed to load already created bees",
+        );
+        return;
+      }
+
+      created = temp;
+    } else {
+      created = alreadyUsedBees;
+    }
+
+    const str = buildCenterLetter + buildOuterLetters.join("");
+    const idBitmask = stringToBitmask(str);
+    const idFirstChar = str[0];
+    const id = idFirstChar + ":" + idBitmask;
+
+    if (created.includes(id)) {
+      triggerNotification(
+        "Canceled word find",
+        "warning",
+        "A spelling bee with these letters already exists",
+      );
+      return;
+    }
 
     let words: Word[] = [];
     if (buildWordOptions.length == 0) {
@@ -443,7 +483,12 @@ export default function SpellingBee() {
     };
 
     const stringifiedGameData = JSON.stringify(bee);
-    const id = buildCenterLetter + buildOuterLetters.join("");
+
+    const str = buildCenterLetter + buildOuterLetters.join("");
+    const idBitmask = stringToBitmask(str);
+    const idFirstChar = str[0];
+
+    const id = idFirstChar + ":" + idBitmask;
 
     saveSpellingBee(id, stringifiedGameData)
       .then(() => {

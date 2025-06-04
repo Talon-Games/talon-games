@@ -1,7 +1,9 @@
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/firebase/config";
 
-export default async function getCreatedSpellingBees() {
+export default async function getCreatedSpellingBees(): Promise<
+  string[] | undefined
+> {
   const spellingBeeRef = doc(db, "games", "spellingbee");
   const docSnap = await getDoc(spellingBeeRef);
 
@@ -10,4 +12,6 @@ export default async function getCreatedSpellingBees() {
 
     return spellingBeeData.createdSpellingBees;
   }
+
+  return undefined;
 }
