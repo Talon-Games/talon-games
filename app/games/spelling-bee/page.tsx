@@ -1,28 +1,33 @@
 "use client";
 
-//TODO: only save progress for current bee, if user plays from archive dont update, check against date
+//TODO: only save progress for current bee, if user plays from archive dont update, (only play if mode is today)
+//TODO: update stats for round
+//TODO: reset logic
+//TODO: call reset on publish and fully updaate to new puzzle
 
-import calculatePointsForGuess from "@/utils/games/spelling-bee/calculatePointsForGuess";
-import saveSpellingBee from "@/firebase/db/games/spelling-bee/saveSpellingBee";
-import outerToBitmask from "@/utils/games/spelling-bee/outerToBitmask";
-import formatDate from "@/utils/formatDate";
 import getCreatedSpellingBees from "@/firebase/db/games/spelling-bee/getCreatedSpellingBees";
+import calculatePointsForGuess from "@/utils/games/spelling-bee/calculatePointsForGuess";
+import { useSpellingBeeContext } from "@/lib/contexts/spellingBeeContext";
 import FoundWordsContainer from "@/components/games/spelling-bee/foundWordsContainer";
+import getSpellingBee from "@/firebase/db/games/spelling-bee/getSpellingBee";
 import calculateMaxPoints from "@/utils/games/spelling-bee/calculateMaxPoints";
+import saveSpellingBee from "@/firebase/db/games/spelling-bee/saveSpellingBee";
 import calculateCutOffs from "@/utils/games/spelling-bee/calculateCutOffs";
 import RankingModal from "@/components/games/spelling-bee/rankingModal";
+import outerToBitmask from "@/utils/games/spelling-bee/outerToBitmask";
 import RankingBar from "@/components/games/spelling-bee/rankingBar";
 import ConnectedButton from "@/components/general/connectedButtons";
 import isValidGuess from "@/utils/games/spelling-bee/isValidGuess";
-import loadWords from "@/utils/games/spelling-bee/loadWords";
-import isPangram from "@/utils/games/spelling-bee/isPangram";
 import Notification from "@/components/general/notification";
-import { useAuthContext } from "@/lib/contexts/authContext";
+import isPangram from "@/utils/games/spelling-bee/isPangram";
+import loadWords from "@/utils/games/spelling-bee/loadWords";
 import { Word } from "@/utils/games/spelling-bee/loadWords";
+import { useAuthContext } from "@/lib/contexts/authContext";
 import Hive from "@/components/games/spelling-bee/hive";
 import TextInput from "@/components/general/TextInput";
 import Button from "@/components/general/button";
 import { useState, useEffect } from "react";
+import formatDate from "@/utils/formatDate";
 import { useRouter } from "next/navigation";
 
 export type SpellingBee = {
@@ -54,6 +59,11 @@ export default function SpellingBee() {
     isHelper: boolean;
   };
 
+  const { currentSpellingBee, currentMode } = useSpellingBeeContext() as {
+    currentSpellingBee: SpellingBee;
+    currentMode: "today" | "archive";
+  };
+
   const [mode, setMode] = useState<"play" | "build">("play");
   const [notification, setNotification] = useState(false);
   const [notificationTitle, setNotificationTitle] = useState("");
@@ -69,7 +79,7 @@ export default function SpellingBee() {
   const [buildValidWords, setBuildValidWords] = useState<Word[]>([]);
   const [buildSelectedWords, setBuildSelectedWords] = useState<string[]>([]);
 
-  const [currentSpellingBee, setCurrentSpellingBee] = useState<SpellingBee>();
+  const [loadedSpellingBee, setLoadedSpellingBee] = useState<SpellingBee>();
   const [cutOffs, setCutOffs] = useState<CutOffs>();
   const [currentGuess, setCurrentGuess] = useState<string>("-");
   const [foundWords, setFoundWords] = useState<string[]>([]);
@@ -82,79 +92,25 @@ export default function SpellingBee() {
   const [winModal, setWinModal] = useState<boolean>(false);
 
   useEffect(() => {
-    const thing: SpellingBee = {
-      center: "l",
-      outer: ["b", "e", "v", "a", "o", "y"],
-      answers: [
-        "volleyball",
-        "labellable",
-        "labelable",
-        "evolvable",
-        "obeyable",
-        "loveably",
-        "loveable",
-        "eyelevel",
-        "loyally",
-        "lovably",
-        "lovable",
-        "levelly",
-        "eyeball",
-        "bellboy",
-        "ballboy",
-        "volley",
-        "valley",
-        "lovely",
-        "evolve",
-        "bobbly",
-        "bobble",
-        "blobby",
-        "blabby",
-        "babble",
-        "allele",
-        "valve",
-        "loyal",
-        "lovey",
-        "lobby",
-        "loave",
-        "level",
-        "leave",
-        "label",
-        "bevel",
-        "belly",
-        "belle",
-        "belay",
-        "alloy",
-        "alley",
-        "yell",
-        "veal",
-        "vale",
-        "oval",
-        "olla",
-        "love",
-        "lobe",
-        "leve",
-        "lava",
-        "eely",
-        "blob",
-        "blab",
-        "bell",
-        "ally",
-        "ably",
-        "able",
-        "ball",
-      ],
-      author: "",
-      published: "",
-    };
-
-    const cuts = calculateCutOffs(calculateMaxPoints(thing.answers));
-    setCutOffs(cuts);
-
-    setCurrentSpellingBee(thing);
-
+    if (!user) return;
     window.addEventListener("beforeunload", () => updateDB());
     return () => window.removeEventListener("beforeunload", () => updateDB());
-  }, []);
+  });
+
+  useEffect(() => {
+    if (currentSpellingBee == undefined || currentMode == "today") {
+      getSpellingBee().then((data: string) => {
+        const parsed: SpellingBee = JSON.parse(data);
+        const maxPoints = calculateMaxPoints(parsed.answers);
+        setCutOffs(calculateCutOffs(maxPoints));
+        setLoadedSpellingBee(parsed);
+      });
+    } else {
+      const maxPoints = calculateMaxPoints(currentSpellingBee.answers);
+      setCutOffs(calculateCutOffs(maxPoints));
+      setLoadedSpellingBee(currentSpellingBee);
+    }
+  }, [currentSpellingBee, currentMode]);
 
   function toggleMode() {
     if (!user) {
@@ -201,9 +157,9 @@ export default function SpellingBee() {
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      if (!currentSpellingBee || won) return;
+      if (!loadedSpellingBee || won) return;
 
-      const { center, outer } = currentSpellingBee;
+      const { center, outer } = loadedSpellingBee;
       const key = e.key.toLowerCase();
 
       if (key === "escape") {
@@ -239,7 +195,7 @@ export default function SpellingBee() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [currentSpellingBee, currentGuess, mode, winModal, cutOffModal]);
+  }, [loadedSpellingBee, currentGuess, mode, winModal, cutOffModal]);
 
   function deleteFromGuess() {
     if (currentGuess.length > 1) {
@@ -268,8 +224,8 @@ export default function SpellingBee() {
 
   function handleGuess() {
     if (!cutOffs || won) return;
-    if (!currentSpellingBee) return;
-    const result = isValidGuess(currentSpellingBee, currentGuess, foundWords);
+    if (!loadedSpellingBee) return;
+    const result = isValidGuess(loadedSpellingBee, currentGuess, foundWords);
 
     if (!result.ok) {
       console.log(result.error);
@@ -279,8 +235,8 @@ export default function SpellingBee() {
 
     let pointsEarned = calculatePointsForGuess(currentGuess);
     const pangram = isPangram(
-      currentSpellingBee.center,
-      currentSpellingBee.outer,
+      loadedSpellingBee.center,
+      loadedSpellingBee.outer,
       currentGuess,
     );
     if (pangram) {
@@ -298,17 +254,17 @@ export default function SpellingBee() {
   }
 
   function shuffleOuter() {
-    if (!currentSpellingBee) return;
+    if (!loadedSpellingBee) return;
 
-    let newArr = [...currentSpellingBee.outer];
+    let newArr = [...loadedSpellingBee.outer];
 
     for (let i = newArr.length - 1; i > 0; i--) {
       let j = Math.floor(Math.random() * (i + 1));
       [newArr[i], newArr[j]] = [newArr[j], newArr[i]];
     }
 
-    setCurrentSpellingBee({
-      ...currentSpellingBee,
+    setLoadedSpellingBee({
+      ...loadedSpellingBee,
       outer: newArr,
     });
   }
@@ -369,7 +325,7 @@ export default function SpellingBee() {
         );
         return;
       }
-
+      setAlreadUsedBees(temp);
       created = temp;
     } else {
       created = alreadyUsedBees;
@@ -414,6 +370,15 @@ export default function SpellingBee() {
         validWords.push(word);
       }
     });
+
+    validWords = validWords
+      .sort((a: Word, b: Word) => {
+        if (a.word.length === b.word.length) {
+          return a.word.localeCompare(b.word);
+        }
+        return a.word.length - b.word.length;
+      })
+      .reverse();
 
     setBuildValidWords(validWords);
   }
@@ -478,14 +443,16 @@ export default function SpellingBee() {
     const stringifiedGameData = JSON.stringify(bee);
 
     const str = buildCenterLetter + buildOuterLetters.join("");
-    const idBitmask = stringToBitmask(str);
+    const idBitmask = outerToBitmask(str);
     const idFirstChar = str[0];
 
     const id = idFirstChar + ":" + idBitmask;
 
     saveSpellingBee(id, stringifiedGameData)
       .then(() => {
-        setCurrentSpellingBee(bee);
+        const maxPoints = calculateMaxPoints(bee.answers);
+        setCutOffs(calculateCutOffs(maxPoints));
+        setLoadedSpellingBee(bee);
         setMode("play");
         triggerNotification(
           "Saved!",
@@ -507,7 +474,7 @@ export default function SpellingBee() {
       {mode == "play" ? (
         <div className="flex gap-2 items-center justify-center mt-10">
           <section className="flex flex-col justify-center items-center  w-1/2">
-            {currentSpellingBee && (
+            {loadedSpellingBee && (
               <div
                 className={`uppercase flex p-5 -mb-20 text-2xl font-semibold ${currentGuess == "-" ? "text-white/0" : ""}`}
               >
@@ -515,7 +482,7 @@ export default function SpellingBee() {
                   <p
                     key={key}
                     className={
-                      letter == currentSpellingBee.center
+                      letter == loadedSpellingBee.center
                         ? "text-secondary-400"
                         : ""
                     }
@@ -525,10 +492,10 @@ export default function SpellingBee() {
                 ))}
               </div>
             )}
-            {currentSpellingBee && (
+            {loadedSpellingBee && (
               <Hive
-                center={currentSpellingBee.center}
-                outer={currentSpellingBee.outer}
+                center={loadedSpellingBee.center}
+                outer={loadedSpellingBee.outer}
                 hexPressed={hexPressed}
               />
             )}
@@ -562,7 +529,7 @@ export default function SpellingBee() {
               />
             )}
             <FoundWordsContainer
-              spellingBee={currentSpellingBee}
+              spellingBee={loadedSpellingBee}
               foundWords={foundWords}
             />
           </section>
@@ -598,7 +565,7 @@ export default function SpellingBee() {
             style="normal"
           />
           <div className="flex justify-between">
-            <p>{`${buildSelectedWords.length} Selected`}</p>
+            <p>{`${buildSelectedWords.length}/${buildValidWords.length} Selected`}</p>
             <div className="flex gap-2">
               <p>{`Total Points: ${calculateMaxPoints(buildSelectedWords) || 0}`}</p>
               <p>{`Genius Points: ${Math.ceil(calculateMaxPoints(buildSelectedWords) * 0.7) || 0}`}</p>
@@ -612,9 +579,12 @@ export default function SpellingBee() {
                 onClick={() => toggleSelectedWord(word.word)}
               >
                 <p
-                  className={`${buildSelectedWords.includes(word.word) ? "font-semibold" : null} ${isPangram(buildCenterLetter, buildOuterLetters, word.word) ? "underline" : null}`}
+                  className={`${buildSelectedWords.includes(word.word) ? "font-semibold" : null} font-mono`}
                 >
                   {word.word}
+                  {isPangram(buildCenterLetter, buildOuterLetters, word.word)
+                    ? "*"
+                    : null}
                 </p>
                 <p className="text-right">{word.meaning}</p>
               </div>
