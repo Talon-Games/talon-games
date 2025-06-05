@@ -2,8 +2,6 @@
 
 //TODO: only save progress for current bee, if user plays from archive dont update, (only play if mode is today)
 //TODO: update stats for round
-//TODO: reset logic
-//TODO: call reset on publish and fully updaate to new puzzle
 
 import getCreatedSpellingBees from "@/firebase/db/games/spelling-bee/getCreatedSpellingBees";
 import calculatePointsForGuess from "@/utils/games/spelling-bee/calculatePointsForGuess";
@@ -150,6 +148,7 @@ export default function SpellingBee() {
   }
 
   function updateDB() {
+    if (!user) return;
     console.log("TODO");
     //TODO: update with guessed words only
     //Keep track of high score, and longest word, and most words, and pangrams found, and solves
@@ -197,6 +196,12 @@ export default function SpellingBee() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [loadedSpellingBee, currentGuess, mode, winModal, cutOffModal]);
 
+  function reset() {
+    setLoadedSpellingBee(undefined);
+    setCutOffs(undefined);
+    setPoints(0);
+  }
+
   function deleteFromGuess() {
     if (currentGuess.length > 1) {
       setCurrentGuess(currentGuess.slice(0, -1));
@@ -241,10 +246,13 @@ export default function SpellingBee() {
     );
     if (pangram) {
       setPangramsThisGame(pangramsThisGame + 1);
+      setPangramsThisGame(pangramsThisGame + 1);
       pointsEarned += 7;
     }
     setFoundWords([...foundWords, currentGuess]);
-    updateDB();
+    if (user) {
+      updateDB();
+    }
     setCurrentGuess("-");
     if (points + pointsEarned >= cutOffs.genius) {
       setWon(true);
@@ -451,6 +459,7 @@ export default function SpellingBee() {
     saveSpellingBee(id, stringifiedGameData)
       .then(() => {
         const maxPoints = calculateMaxPoints(bee.answers);
+        reset();
         setCutOffs(calculateCutOffs(maxPoints));
         setLoadedSpellingBee(bee);
         setMode("play");

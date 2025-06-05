@@ -14,16 +14,16 @@ export default function ToolTip({
   let timeout: any;
   const [active, setActive] = useState(false);
 
-  const showTip = () => {
+  function showTip() {
     timeout = setTimeout(() => {
       setActive(true);
     }, delay || 400);
-  };
+  }
 
-  const hideTip = () => {
+  function hideTip() {
     clearInterval(timeout);
     setActive(false);
-  };
+  }
 
   return (
     <div

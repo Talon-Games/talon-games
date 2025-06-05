@@ -9,7 +9,7 @@ export default function GameCard({ game }: { game: Game }) {
   const router = useRouter();
 
   // fuck tailwind
-  const getColor = (color: string) => {
+  function getColor(color: string) {
     switch (color) {
       case "crossword":
         return "bg-blue-300";
@@ -20,7 +20,7 @@ export default function GameCard({ game }: { game: Game }) {
       case "spelling-bee":
         return "bg-yellow-300";
     }
-  };
+  }
 
   return (
     <div className="flex flex-col justify-between w-full min-h-96 h-full rounded-xl hover:drop-shadow-lg bg-accent-100 transition-all duration-300 ease-in-out">

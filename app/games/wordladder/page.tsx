@@ -63,13 +63,13 @@ export default function WordLadder() {
   const [isReset, setIsReset] = useState(false);
   const [stoppedTime, setStoppedTime] = useState<number | null>(null);
 
-  const handleResetComplete = () => {
+  function handleResetComplete() {
     setIsReset(false);
-  };
+  }
 
-  const handleStopTime = (time: number) => {
+  function handleStopTime(time: number) {
     setStoppedTime(time);
-  };
+  }
 
   useEffect(() => {
     if (currentWordLadder == undefined || currentMode == "today") {
@@ -82,7 +82,7 @@ export default function WordLadder() {
     }
   }, [currentWordLadder, currentMode]);
 
-  const createDefaultBuildList = () => {
+  function createDefaultBuildList() {
     const list: WordLadderWord[] = [
       {
         word: "",
@@ -99,9 +99,9 @@ export default function WordLadder() {
     ];
 
     setBuildWordLadder(list);
-  };
+  }
 
-  const toggleMode = () => {
+  function toggleMode() {
     if (!user) {
       triggerNotification(
         "Failed to toggle mode",
@@ -128,22 +128,22 @@ export default function WordLadder() {
       createDefaultBuildList();
       setMode("build");
     }
-  };
+  }
 
-  const triggerNotification = (
+  function triggerNotification(
     title: string,
     type: "success" | "error" | "warning",
     message: string,
     showInPlay: boolean = false,
-  ) => {
+  ) {
     if (mode == "play" && !showInPlay) return;
     setNotification(true);
     setNotificationTitle(title);
     setNotificationType(type);
     setNotificationMessage(message);
-  };
+  }
 
-  const addWordToBuildList = () => {
+  function addWordToBuildList() {
     setBuildWordLadder((prevList) => [
       ...prevList,
       {
@@ -153,28 +153,28 @@ export default function WordLadder() {
         solved: false,
       },
     ]);
-  };
+  }
 
-  const removeWordFromBuildList = (index: number) => {
+  function removeWordFromBuildList(index: number) {
     // Removing the starting or ending words is not allowed
     if (index === 0 || index === 1) return;
 
     setBuildWordLadder((prevList) => prevList.filter((_, i) => i !== index));
-  };
+  }
 
-  const editWordInBuildWordLadder = (index: number, word: string) => {
+  function editWordInBuildWordLadder(index: number, word: string) {
     setBuildWordLadder((prevList) =>
       prevList.map((item, i) => (i === index ? { ...item, word } : item)),
     );
-  };
+  }
 
-  const editMeaningInBuildWordLadder = (index: number, meaning: string) => {
+  function editMeaningInBuildWordLadder(index: number, meaning: string) {
     setBuildWordLadder((prevList) =>
       prevList.map((item, i) => (i === index ? { ...item, meaning } : item)),
     );
-  };
+  }
 
-  const editWordInWordLadder = (index: number, word: string) => {
+  function editWordInWordLadder(index: number, word: string) {
     if (revealed) {
       return;
     }
@@ -221,9 +221,9 @@ export default function WordLadder() {
 
       return newList;
     });
-  };
+  }
 
-  const reveal = () => {
+  function reveal() {
     setRevealed(true);
     setIsRunning(false);
 
@@ -233,9 +233,9 @@ export default function WordLadder() {
       "The complete solution has been revealed",
       true,
     );
-  };
+  }
 
-  const publish = () => {
+  function publish() {
     const result = builtListIsValid(buildWordLadder);
 
     if (result.status == "error") {
@@ -277,9 +277,9 @@ export default function WordLadder() {
           "Failed to publish word ladder: " + error.message,
         );
       });
-  };
+  }
 
-  const playAgain = () => {
+  function playAgain() {
     setIsRunning(false);
     setIsReset(true);
     setStoppedTime(null);
@@ -301,7 +301,7 @@ export default function WordLadder() {
         ),
       };
     });
-  };
+  }
 
   return (
     <div className="flex flex-col">

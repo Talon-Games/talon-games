@@ -36,16 +36,16 @@ function WordLadderContent({ children }: { children: any }) {
     }
   }, []);
 
-  const gotoToday = () => {
+  function gotoToday() {
     setCurrentView("today");
     router.push(`/games/wordladder`);
     updateCurrentMode("today");
-  };
+  }
 
-  const gotoArchive = () => {
+  function gotoArchive() {
     setCurrentView("archive");
     router.push(`/games/wordladder/archive`);
-  };
+  }
 
   return (
     <main className="w-9/12 ml-auto mr-auto max-lg:w-10/12 max-sm:w-11/12">

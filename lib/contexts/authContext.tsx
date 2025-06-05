@@ -9,7 +9,7 @@ import {
 } from "react";
 import { getAuth, onAuthStateChanged, User } from "firebase/auth";
 import { firebase_app } from "@/firebase/config";
-import getRoles from "@/firebase/db/getRoles";
+import getRoles from "@/firebase/db/user/getRoles";
 
 const auth = getAuth(firebase_app);
 

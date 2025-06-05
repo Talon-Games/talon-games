@@ -18,13 +18,13 @@ export function SpellingBeeContextProvider({
     SpellingBee | undefined
   >();
 
-  const updateCurrentSpellingBee = (spellingBee: SpellingBee) => {
+  function updateCurrentSpellingBee(spellingBee: SpellingBee) {
     setCurrentSpellingBee(spellingBee);
-  };
+  }
 
-  const updateCurrentMode = (mode: "today" | "archive") => {
+  function updateCurrentMode(mode: "today" | "archive") {
     setCurrentMode(mode);
-  };
+  }
 
   return (
     <SpellingBeeContext.Provider

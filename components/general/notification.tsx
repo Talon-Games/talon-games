@@ -25,7 +25,7 @@ export default function Notification({
     return () => clearTimeout(timer);
   });
 
-  const getBgColor = () => {
+  function getBgColor() {
     switch (type) {
       case "success":
         return "bg-green-500";
@@ -34,7 +34,7 @@ export default function Notification({
       case "warning":
         return "bg-yellow-500";
     }
-  };
+  }
 
   return (
     <section

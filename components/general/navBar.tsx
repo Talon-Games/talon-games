@@ -2,7 +2,7 @@
 
 import { useAuthContext } from "@/lib/contexts/authContext";
 import { useRouter, usePathname } from "next/navigation";
-import createUserDoc from "@/firebase/db/createUserDoc";
+import createUserDoc from "@/firebase/db/user/createUserDoc";
 import googleSignIn from "@/firebase/auth/googleSignIn";
 import signOutUser from "@/firebase/auth/signOut";
 import useScroll from "@/lib/hooks/useScroll";
@@ -13,19 +13,19 @@ export default function NavBar() {
   const pathname = usePathname();
   const { user } = useAuthContext() as { user: any };
 
-  const findVisibility = (signedIn: boolean, signedOut: boolean) => {
+  function findVisibility(signedIn: boolean, signedOut: boolean) {
     if (signedIn && signedOut) return true;
     if (signedIn && !signedOut && user) return true;
     if (!signedIn && signedOut && !user) return true;
     return false;
-  };
+  }
 
-  const handleSignOut = async () => {
+  async function handleSignOut() {
     await signOutUser();
     router.push("/");
-  };
+  }
 
-  const handleSignIn = async () => {
+  async function handleSignIn() {
     const result = await googleSignIn();
 
     if (result.status == "success") {
@@ -39,7 +39,7 @@ export default function NavBar() {
     } else {
       console.log(result.message);
     }
-  };
+  }
 
   return (
     <section

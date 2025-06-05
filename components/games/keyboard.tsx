@@ -21,7 +21,7 @@ const Keyboard = ({
   dontListen,
   locked,
 }: Props) => {
-  const onClick = (value: KeyValue) => {
+  function onClick(value: KeyValue) {
     if (locked) {
       return;
     }
@@ -33,7 +33,7 @@ const Keyboard = ({
     } else {
       onChar(value);
     }
-  };
+  }
 
   useEffect(() => {
     if (locked || dontListen == true) {
@@ -132,7 +132,7 @@ type KeyProps = {
 const Key = ({ value, onClick, status, className }: KeyProps) => {
   const width = value.length === 1 ? "w-12" : "w-32";
 
-  const statusToColor = (status: string) => {
+  function statusToColor(status: string) {
     switch (status) {
       case "correct":
         return "bg-green-300";
@@ -147,7 +147,7 @@ const Key = ({ value, onClick, status, className }: KeyProps) => {
       default:
         return "bg-white";
     }
-  };
+  }
 
   return (
     <div

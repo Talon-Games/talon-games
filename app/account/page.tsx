@@ -4,7 +4,7 @@ import { collection, getDocs, setDoc, doc } from "firebase/firestore";
 import ConnectedButton from "@/components/general/connectedButtons";
 import Notification from "@/components/general/notification";
 import { useAuthContext } from "@/lib/contexts/authContext";
-import deleteAccount from "@/firebase/db/deleteAccount";
+import deleteAccount from "@/firebase/db/user/deleteAccount";
 import Button from "@/components/general/button";
 import { auth, db } from "@/firebase/config";
 import { useState, useEffect } from "react";

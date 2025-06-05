@@ -55,7 +55,7 @@ export default function Archive() {
     );
   }, [crosswordSize.size]);
 
-  const loadArchivedCrossword = (crossword: Crossword) => {
+  function loadArchivedCrossword(crossword: Crossword) {
     updateCurrentCrossword(crossword);
     updateCurrentMode("archive");
     if (crosswordSize.size == "mini") {
@@ -68,14 +68,14 @@ export default function Archive() {
       });
     }
     router.push(`/games/crossword/?type=${crosswordSize.size}`);
-  };
+  }
 
-  const triggerDeleteWorkflow = (crossword: Crossword) => {
+  function triggerDeleteWorkflow(crossword: Crossword) {
     setCrosswordToDelete(crossword);
     setConfirmDeletePopup(true);
-  };
+  }
 
-  const deleteCrossword = () => {
+  function deleteCrossword() {
     if (crosswordToDelete) {
       const crosswordStringToDelete = JSON.stringify(crosswordToDelete);
 
@@ -92,12 +92,12 @@ export default function Archive() {
     }
 
     stopDeleteWorkflow();
-  };
+  }
 
-  const stopDeleteWorkflow = () => {
+  function stopDeleteWorkflow() {
     setCrosswordToDelete(undefined);
     setConfirmDeletePopup(false);
-  };
+  }
 
   return (
     <section className="grid grid-cols-3 gap-2 max-lg:grid-cols-2 max-sm:grid-cols-1 ">

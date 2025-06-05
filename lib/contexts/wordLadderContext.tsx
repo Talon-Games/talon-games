@@ -18,13 +18,13 @@ export function WordLadderContextProvider({
     WordLadderGameData | undefined
   >();
 
-  const updateCurrentWordLadder = (wordLadder: WordLadderGameData) => {
+  function updateCurrentWordLadder(wordLadder: WordLadderGameData) {
     setCurrentWordLadder(wordLadder);
-  };
+  }
 
-  const updateCurrentMode = (mode: "today" | "archive") => {
+  function updateCurrentMode(mode: "today" | "archive") {
     setCurrentMode(mode);
-  };
+  }
 
   return (
     <WordLadderContext.Provider

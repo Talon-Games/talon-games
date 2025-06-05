@@ -1,14 +1,14 @@
 "use client";
 
-import updateCompletedCrosswords from "@/firebase/db/games/crossword/updateCompletedCrosswords";
+import updateCompletedCrosswords from "@/firebase/db/user/crossword/updateCompletedCrosswords";
 import clearHighlightAndSelection from "@/utils/games/crossword/clearHighlightAndSelection";
-import getCompletedCrosswords from "@/firebase/db/games/crossword/getCompletedCrosswords";
+import getCompletedCrosswords from "@/firebase/db/user/crossword/getCompletedCrosswords";
 import findNextSelectionSpot from "@/utils/games/crossword/findNextSelectionSpot";
 import getBoxesInDirection from "@/utils/games/crossword/getBoxesInDirection";
 import saveCrossword from "@/firebase/db/games/crossword/saveCrossword";
 import generateNewTable from "@/utils/games/crossword/generateNewTable";
-import getHighScore from "@/firebase/db/games/crossword/getHighScore";
-import setHighScore from "@/firebase/db/games/crossword/setHighScore";
+import getHighScore from "@/firebase/db/user/crossword/getHighScore";
+import setHighScore from "@/firebase/db/user/crossword/setHighScore";
 import getCrossword from "@/firebase/db/games/crossword/getCrossword";
 import ConnectedButton from "@/components/general/connectedButtons";
 import decodeJsonData from "@/utils/games/crossword/decodeJsonData";
@@ -148,21 +148,21 @@ export default function Crossword() {
 
   const [helpPopup, setHelpPopup] = useState(false);
 
-  const playAgain = () => {
+  function playAgain() {
     setIsRunning(false);
     setIsReset(true);
     setStoppedTime(null);
     setWon(false);
     clearBoard();
-  };
+  }
 
-  const handleResetComplete = () => {
+  function handleResetComplete() {
     setIsReset(false);
-  };
+  }
 
-  const handleStopTime = (time: number) => {
+  function handleStopTime(time: number) {
     setStoppedTime(time);
-  };
+  }
 
   useEffect(() => {
     const mobile = isMobile();
@@ -170,18 +170,18 @@ export default function Crossword() {
     setMobileDevice(mobile);
   }, []);
 
-  const triggerNotification = (
+  function triggerNotification(
     title: string,
     type: "success" | "error" | "warning",
     message: string,
     showInPlay?: boolean,
-  ) => {
+  ) {
     if (mode == "play" && !showInPlay) return;
     setNotification(true);
     setNotificationTitle(title);
     setNotificationType(type);
     setNotificationMessage(message);
-  };
+  }
 
   useEffect(() => {
     if (currentMode == "today") {
@@ -193,7 +193,7 @@ export default function Crossword() {
     }
   }, [crosswordSize, currentMode]);
 
-  const toggleMode = () => {
+  function toggleMode() {
     if (!user) {
       triggerNotification(
         "Failed to toggle mode",
@@ -223,9 +223,9 @@ export default function Crossword() {
     } else {
       startBuildWorkflow();
     }
-  };
+  }
 
-  const startBuildWorkflow = () => {
+  function startBuildWorkflow() {
     setHighlightMode("both");
     setCurrentEditNumber(1);
     let table = generateNewTable(crosswordSize.width, crosswordSize.height);
@@ -234,9 +234,9 @@ export default function Crossword() {
     setBuildHints(newHints);
     setBuildData(table);
     setMode("build");
-  };
+  }
 
-  const cancelBuildWorkflow = () => {
+  function cancelBuildWorkflow() {
     setHighlightMode("both");
     setCurrentEditNumber(1);
     setShowHintCreationPopup(false);
@@ -247,7 +247,7 @@ export default function Crossword() {
 
     setBuildHints(newHints);
     setBuildData(table);
-  };
+  }
 
   function setNumber(
     direction: "down" | "across",
@@ -409,7 +409,7 @@ export default function Crossword() {
     return data;
   }
 
-  const fillNoneLettersBlack = () => {
+  function fillNoneLettersBlack() {
     if (!buildData) {
       triggerNotification(
         "Failed to fill non-letters black",
@@ -426,9 +426,9 @@ export default function Crossword() {
       })),
     );
     setBuildData(tempData);
-  };
+  }
 
-  const clearBoard = () => {
+  function clearBoard() {
     if (!buildData) {
       triggerNotification(
         "Failed to fill non-letters black",
@@ -454,9 +454,9 @@ export default function Crossword() {
     setCurrentSelectionNumberXY(undefined);
 
     setBuildData(tempData);
-  };
+  }
 
-  const fillBlackEmpty = () => {
+  function fillBlackEmpty() {
     if (!buildData) {
       triggerNotification("Failed to clear black", "error", "Data not found");
       return;
@@ -468,9 +468,9 @@ export default function Crossword() {
       })),
     );
     setBuildData(tempData);
-  };
+  }
 
-  const startNumberRemover = () => {
+  function startNumberRemover() {
     if (!buildData) {
       triggerNotification("Failed to toggle black", "error", "Data not found");
       return;
@@ -504,7 +504,7 @@ export default function Crossword() {
     }
 
     setBuildData([...downShifted]);
-  };
+  }
 
   function toggleBlack(
     x: number,
@@ -610,7 +610,7 @@ export default function Crossword() {
     return data;
   }
 
-  const takeAction = (x: number, y: number) => {
+  function takeAction(x: number, y: number) {
     if (!buildData) {
       triggerNotification("Failed take action", "error", "Data not found");
       return;
@@ -637,7 +637,7 @@ export default function Crossword() {
       tempData = toggleBlack(x, y, tempData);
     }
     setBuildData(tempData);
-  };
+  }
 
   function startLetterPlacer(
     x: number,
@@ -837,7 +837,7 @@ export default function Crossword() {
     setShowHintCreationPopup(true);
   };
 
-  const handleBackspaceForLetters = () => {
+  function handleBackspaceForLetters() {
     if (!buildData) {
       triggerNotification("Failed to backspace letter", "error", "Data found");
       return;
@@ -891,9 +891,9 @@ export default function Crossword() {
     }
 
     setBuildData(tempData);
-  };
+  }
 
-  const handleKeyPressForLetters = (key: string) => {
+  function handleKeyPressForLetters(key: string) {
     if (!buildData) {
       triggerNotification("Failed to place letter", "error", "Data not found");
       return;
@@ -983,7 +983,7 @@ export default function Crossword() {
       setIsRunning(false);
       setWon(true);
     }
-  };
+  }
 
   useEffect(() => {
     if (!user || !won) {
@@ -1068,7 +1068,7 @@ export default function Crossword() {
     });
   }, [stoppedTime, user, won]);
 
-  const handleEnterForNumberPlace = () => {
+  function handleEnterForNumberPlace() {
     if (!buildData) {
       triggerNotification(
         "Failed to handle enter for number",
@@ -1105,9 +1105,9 @@ export default function Crossword() {
     );
 
     setBuildData(tempData);
-  };
+  }
 
-  const addNewHintToList = (direction: "across" | "down", number: number) => {
+  function addNewHintToList(direction: "across" | "down", number: number) {
     if (!buildHints) {
       triggerNotification(
         "Failed to add new hint",
@@ -1133,9 +1133,9 @@ export default function Crossword() {
     }
 
     setBuildHints(tempHints);
-  };
+  }
 
-  const handleHorizontalKey = (type: "left" | "right") => {
+  function handleHorizontalKey(type: "left" | "right") {
     const location = currentSelectionNumberXY;
     if (location == null || location?.length != 2) {
       triggerNotification(
@@ -1212,9 +1212,9 @@ export default function Crossword() {
     }
 
     setBuildData(tempData);
-  };
+  }
 
-  const handleVerticalKey = (type: "up" | "down") => {
+  function handleVerticalKey(type: "up" | "down") {
     const location = currentSelectionNumberXY;
 
     if (location == null || location?.length != 2) {
@@ -1293,13 +1293,13 @@ export default function Crossword() {
     }
 
     setBuildData(tempData);
-  };
+  }
 
-  const handleClickOnHint = (
+  function handleClickOnHint(
     direction: "across" | "down",
     number: number,
     hint: string,
-  ) => {
+  ) {
     if (!buildData) {
       triggerNotification("Failed to goto word", "error", "Data not found");
       return;
@@ -1328,31 +1328,31 @@ export default function Crossword() {
     }
 
     setBuildData(tempData);
-  };
+  }
 
-  const activateHintEditPopup = (
+  function activateHintEditPopup(
     direction: "down" | "across",
     number: number,
     hint: string,
-  ) => {
+  ) {
     setHintNumber(number);
     setHintDirection(direction);
     setHint(hint);
     setShowHintCreationPopup(true);
-  };
+  }
 
-  const deactivateHintEditPopup = () => {
+  function deactivateHintEditPopup() {
     setShowHintCreationPopup(false);
     setHintDirection(undefined);
     setHintNumber(undefined);
     setHint("");
-  };
+  }
 
-  const editHint = (event: any) => {
+  function editHint(event: any) {
     setHint(event.target.value);
-  };
+  }
 
-  const saveEditHint = () => {
+  function saveEditHint() {
     if (!buildHints) {
       triggerNotification(
         "Failed to save hint",
@@ -1391,7 +1391,7 @@ export default function Crossword() {
 
     setBuildHints(tempHints);
     deactivateHintEditPopup();
-  };
+  }
 
   function gotoWord(
     number: number,
@@ -1412,7 +1412,7 @@ export default function Crossword() {
     return data;
   }
 
-  const updateCrossword = () => {
+  function updateCrossword() {
     let tempHints = buildHints;
     setPublishPopup(false);
 
@@ -1513,9 +1513,9 @@ export default function Crossword() {
     loadStringData(jsonCrosswordString);
 
     triggerNotification("Saved!", "success", "Successfully updated Crossword");
-  };
+  }
 
-  const loadStringData = (data: string) => {
+  function loadStringData(data: string) {
     let crossword = decodeJsonData(data);
     let crosswordData: CrossWordBoxData[][] = JSON.parse(crossword.data);
     let hintData: CrosswordHints = JSON.parse(crossword.hints);
@@ -1528,7 +1528,7 @@ export default function Crossword() {
     setBuildHints(hintData);
 
     setMode("play");
-  };
+  }
 
   function determineAssociationColor(box: CrossWordBoxData) {
     if (box.state == "black") {
@@ -1554,13 +1554,13 @@ export default function Crossword() {
     }
   }
 
-  const checkWord = () => {
+  function checkWord() {
     let boxes: { x: number; y: number }[] = [...boxesToCheck];
     wordBoxes.boxes.map((box) => boxes.push(box));
     setBoxesToCheck([...boxes]);
-  };
+  }
 
-  const checkBoard = () => {
+  function checkBoard() {
     if (!buildData) {
       triggerNotification("Failed to check board", "error", "Data not found");
       return;
@@ -1578,9 +1578,9 @@ export default function Crossword() {
     }
 
     setBoxesToCheck([...boxes]);
-  };
+  }
 
-  const exportData = () => {
+  function exportData() {
     if (!buildData) {
       triggerNotification("Failed to export data", "error", "Data not found");
       return;
@@ -1626,9 +1626,9 @@ export default function Crossword() {
           "Failed to copy to clipboard",
         );
       });
-  };
+  }
 
-  const importData = () => {
+  function importData() {
     if (importedData === "") {
       triggerNotification(
         "Failed to import data",
@@ -1738,9 +1738,9 @@ export default function Crossword() {
     setImportPopup(false);
     setImporteData("");
     triggerNotification("Imported data!", "success", "Imported crossword data");
-  };
+  }
 
-  const loadCurrent = () => {
+  function loadCurrent() {
     if (!fromDbData) {
       triggerNotification(
         "Failed to load current",
@@ -1770,25 +1770,25 @@ export default function Crossword() {
 
     setCurrentEditNumber(highest + 1);
     setBuildHints(fromDbHints);
-  };
+  }
 
-  const onChar = (key: string) => {
+  function onChar(key: string) {
     handleKeyPressForLetters(key.toUpperCase());
-  };
+  }
 
-  const onDelete = () => {
+  function onDelete() {
     handleBackspaceForLetters();
-  };
+  }
 
-  const onEnter = () => {
+  function onEnter() {
     checkWord();
-  };
+  }
 
-  const showPublishPopup = () => {
+  function showPublishPopup() {
     setCrosswordName("");
     setCrosswordAuthor(user.displayName);
     setPublishPopup(true);
-  };
+  }
 
   return (
     <>

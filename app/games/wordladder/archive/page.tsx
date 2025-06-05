@@ -54,7 +54,7 @@ export default function WordLadderArchive() {
     });
   }, []);
 
-  const loadArchivedWordLadder = (wordLadder: WordLadderGameData) => {
+  function loadArchivedWordLadder(wordLadder: WordLadderGameData) {
     updateCurrentWordLadder(wordLadder);
     updateCurrentMode("archive");
     sendGAEvent("event", "started_archived_word_ladder", {
@@ -62,14 +62,14 @@ export default function WordLadderArchive() {
     });
 
     router.push("/games/wordladder");
-  };
+  }
 
-  const triggerDeleteWorkflow = (wordLadder: WordLadderGameData) => {
+  function triggerDeleteWorkflow(wordLadder: WordLadderGameData) {
     setWordLadderToDelete(wordLadder);
     setConfirmDeletePopup(true);
-  };
+  }
 
-  const deleteWordLadder = () => {
+  function deleteWordLadder() {
     if (wordLadderToDelete) {
       const wordLadderStringToDelete = JSON.stringify(wordLadderToDelete);
 
@@ -83,12 +83,12 @@ export default function WordLadderArchive() {
     }
 
     stopDeleteWorkflow();
-  };
+  }
 
-  const stopDeleteWorkflow = () => {
+  function stopDeleteWorkflow() {
     setWordLadderToDelete(undefined);
     setConfirmDeletePopup(false);
-  };
+  }
 
   return (
     <section className="grid grid-cols-3 gap-2 max-lg:grid-cols-2 max-sm:grid-cols-1 ">

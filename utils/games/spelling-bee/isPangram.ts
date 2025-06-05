@@ -1,5 +1,3 @@
-import { SpellingBee } from "@/app/games/spelling-bee/page";
-
 export default function isPangram(
   center: string,
   outer: string[],

@@ -8,6 +8,7 @@ export default function FoundWordsContainer({
   spellingBee: SpellingBee | undefined;
   foundWords: string[];
 }) {
+  if (!spellingBee) return null;
   return (
     <section className="border-black border-2 rounded w-full h-[40rem] flex flex-col p-2">
       <div className="flex gap-1">
@@ -19,7 +20,7 @@ export default function FoundWordsContainer({
         {[...foundWords].sort().map((word: string, key: number) => (
           <p
             key={key}
-            className={`first-letter:uppercase break-inside-avoid ${isPangram(spellingBee, word) ? "font-semibold text-secondary-400" : null}`}
+            className={`first-letter:uppercase break-inside-avoid ${isPangram(spellingBee.center, spellingBee.outer, word) ? "font-semibold text-secondary-400" : null}`}
           >
             {word}
           </p>

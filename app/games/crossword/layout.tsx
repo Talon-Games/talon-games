@@ -42,16 +42,16 @@ function CrosswordContent({ children }: { children: any }) {
     updateSize(size);
   }, []);
 
-  const gotoToday = () => {
+  function gotoToday() {
     setCurrentView("today");
     router.push(`/games/crossword?type=${crosswordSize.size}`);
     updateCurrentMode("today");
-  };
+  }
 
-  const gotoArchive = () => {
+  function gotoArchive() {
     setCurrentView("archive");
     router.push(`/games/crossword/archive?type=${crosswordSize.size}`);
-  };
+  }
 
   return (
     <main className="w-9/12 ml-auto mr-auto max-sm:w-11/12">

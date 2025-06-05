@@ -21,7 +21,7 @@ export default function Button({
   classModifier,
   gaEvent,
 }: Props) {
-  const getStyle = (style: "normal" | "green" | "red") => {
+  function getStyle(style: "normal" | "green" | "red") {
     switch (style) {
       case "normal":
         return "bg-secondary-400 hover:bg-secondary-500";
@@ -30,9 +30,9 @@ export default function Button({
       case "red":
         return "bg-red-500 hover:bg-red-600";
     }
-  };
+  }
 
-  const getActiveStyle = (style: "normal" | "green" | "red") => {
+  function getActiveStyle(style: "normal" | "green" | "red") {
     switch (style) {
       case "normal":
         return "bg-secondary-500";
@@ -41,7 +41,7 @@ export default function Button({
       case "red":
         return "bg-red-600";
     }
-  };
+  }
 
   return (
     <button

@@ -110,19 +110,19 @@ export default function Purity() {
     "Got blocked by a teacher or school administrator on social media",
   ];
 
-  const toggleState = (index: number) => {
+  function toggleState(index: number) {
     const updatedStates = [...states];
     updatedStates[index] = !updatedStates[index];
     setStates(updatedStates);
-  };
+  }
 
-  const calculateScore = () => {
+  function calculateScore() {
     const checkedCount = states.filter((checked) => checked).length;
     const finalScore = 100 - checkedCount;
     setScore(finalScore);
-  };
+  }
 
-  const getScoreLabel = () => {
+  function getScoreLabel() {
     if (score === null) return "";
     if (score >= 90) return "Model student 🍎 (You’re what teachers dream of)";
     if (score >= 70)
@@ -132,12 +132,12 @@ export default function Purity() {
     if (score >= 30)
       return "Risk-taker, but still surviving 🚨 (Teachers definitely know your name)";
     return "Absolute menace 🚔 (You probably have your own chair in detention)";
-  };
+  }
 
-  const clear = () => {
+  function clear() {
     setStates(new Array(100).fill(false));
     setScore(null);
-  };
+  }
 
   return (
     <main className="w-9/12 ml-auto mr-auto max-lg:w-10/12 max-sm:w-11/12 flex flex-col items-center">

@@ -24,21 +24,21 @@ export function CrosswordContextProvider({
     Crossword | undefined
   >();
 
-  const updateSize = (size: "full" | "mini") => {
+  function updateSize(size: "full" | "mini") {
     if (size == "full") {
       setCrosswordSize({ width: 12, height: 12, size: "full" });
     } else {
       setCrosswordSize({ width: 5, height: 5, size: "mini" });
     }
-  };
+  }
 
-  const updateCurrentCrossword = (crossword: Crossword) => {
+  function updateCurrentCrossword(crossword: Crossword) {
     setCurrentCrossword(crossword);
-  };
+  }
 
-  const updateCurrentMode = (mode: "today" | "archive") => {
+  function updateCurrentMode(mode: "today" | "archive") {
     setCurrentMode(mode);
-  };
+  }
 
   return (
     <CrosswordContext.Provider
