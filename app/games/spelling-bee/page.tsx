@@ -1,32 +1,29 @@
 "use client";
 
-//TODO: only save progress for current bee, if user plays from archive dont update, (only play if mode is today)
-//TODO: update stats for round
-
 import getCreatedSpellingBees from "@/firebase/db/games/spelling-bee/getCreatedSpellingBees";
 import calculatePointsForGuess from "@/utils/games/spelling-bee/calculatePointsForGuess";
-import { useSpellingBeeContext } from "@/lib/contexts/spellingBeeContext";
 import FoundWordsContainer from "@/components/games/spelling-bee/foundWordsContainer";
-import getSpellingBee from "@/firebase/db/games/spelling-bee/getSpellingBee";
 import calculateMaxPoints from "@/utils/games/spelling-bee/calculateMaxPoints";
 import saveSpellingBee from "@/firebase/db/games/spelling-bee/saveSpellingBee";
+import getSpellingBee from "@/firebase/db/games/spelling-bee/getSpellingBee";
 import calculateCutOffs from "@/utils/games/spelling-bee/calculateCutOffs";
+import { useSpellingBeeContext } from "@/lib/contexts/spellingBeeContext";
 import RankingModal from "@/components/games/spelling-bee/rankingModal";
 import outerToBitmask from "@/utils/games/spelling-bee/outerToBitmask";
-import RankingBar from "@/components/games/spelling-bee/rankingBar";
 import ConnectedButton from "@/components/general/connectedButtons";
+import RankingBar from "@/components/games/spelling-bee/rankingBar";
 import isValidGuess from "@/utils/games/spelling-bee/isValidGuess";
 import Notification from "@/components/general/notification";
-import isPangram from "@/utils/games/spelling-bee/isPangram";
 import loadWords from "@/utils/games/spelling-bee/loadWords";
-import { Word } from "@/utils/games/spelling-bee/loadWords";
+import isPangram from "@/utils/games/spelling-bee/isPangram";
 import { useAuthContext } from "@/lib/contexts/authContext";
+import { Word } from "@/utils/games/spelling-bee/loadWords";
 import Hive from "@/components/games/spelling-bee/hive";
 import TextInput from "@/components/general/TextInput";
 import Button from "@/components/general/button";
-import { useState, useEffect } from "react";
-import formatDate from "@/utils/formatDate";
 import { useRouter } from "next/navigation";
+import formatDate from "@/utils/formatDate";
+import { useState, useEffect } from "react";
 
 export type SpellingBee = {
   center: string;
@@ -82,18 +79,11 @@ export default function SpellingBee() {
   const [currentGuess, setCurrentGuess] = useState<string>("-");
   const [foundWords, setFoundWords] = useState<string[]>([]);
   const [points, setPoints] = useState<number>(0);
-  const [pangramsThisGame, setPangramsThisGame] = useState<number>(0);
 
   const [cutOffModal, setCutOffModal] = useState<boolean>(false);
 
   const [won, setWon] = useState<boolean>(false);
   const [winModal, setWinModal] = useState<boolean>(false);
-
-  useEffect(() => {
-    if (!user) return;
-    window.addEventListener("beforeunload", () => updateDB());
-    return () => window.removeEventListener("beforeunload", () => updateDB());
-  });
 
   useEffect(() => {
     if (currentSpellingBee == undefined || currentMode == "today") {
@@ -145,13 +135,6 @@ export default function SpellingBee() {
     setNotificationTitle(title);
     setNotificationType(type);
     setNotificationMessage(message);
-  }
-
-  function updateDB() {
-    if (!user) return;
-    console.log("TODO");
-    //TODO: update with guessed words only
-    //Keep track of high score, and longest word, and most words, and pangrams found, and solves
   }
 
   useEffect(() => {
@@ -245,14 +228,10 @@ export default function SpellingBee() {
       currentGuess,
     );
     if (pangram) {
-      setPangramsThisGame(pangramsThisGame + 1);
-      setPangramsThisGame(pangramsThisGame + 1);
       pointsEarned += 7;
     }
     setFoundWords([...foundWords, currentGuess]);
-    if (user) {
-      updateDB();
-    }
+
     setCurrentGuess("-");
     if (points + pointsEarned >= cutOffs.genius) {
       setWon(true);
