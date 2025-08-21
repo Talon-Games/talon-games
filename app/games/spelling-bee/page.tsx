@@ -460,8 +460,8 @@ export default function SpellingBee() {
   return (
     <>
       {mode == "play" ? (
-        <div className="flex gap-2 items-center justify-center mt-10">
-          <section className="flex flex-col justify-center items-center  w-1/2">
+        <div className="flex gap-2 items-center justify-center mt-10 max-md:flex max-md:flex-col">
+          <section className="flex flex-col justify-center items-center w-1/2 max-md:w-full">
             {loadedSpellingBee && (
               <div
                 className={`uppercase flex p-5 -mb-20 text-2xl font-semibold ${currentGuess == "-" ? "text-white/0" : ""}`}
@@ -508,7 +508,7 @@ export default function SpellingBee() {
               />
             </div>
           </section>
-          <section className="w-5/12 flex flex-col gap-2">
+          <section className="w-5/12 flex flex-col gap-2 max-md:w-full">
             {cutOffs && (
               <RankingBar
                 cutOffs={cutOffs}

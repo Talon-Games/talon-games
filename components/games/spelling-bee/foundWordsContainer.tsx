@@ -10,7 +10,7 @@ export default function FoundWordsContainer({
 }) {
   if (!spellingBee) return null;
   return (
-    <section className="border-black border-2 rounded w-full h-[40rem] flex flex-col p-2">
+    <section className="border-black border-2 rounded w-full h-[40rem] max-lg:h-[30rem] flex flex-col p-2">
       <div className="flex gap-1">
         You have found{" "}
         <p className="text-secondary-400 font-semibold">{foundWords.length}</p>{" "}

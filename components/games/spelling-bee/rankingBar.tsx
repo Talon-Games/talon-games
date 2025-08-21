@@ -37,7 +37,7 @@ export default function RankingBar({
   const rank = getRankFromCutoff(points, cutOffs);
   return (
     <section
-      className="flex justify-between gap-1 cursor-pointer"
+      className="flex justify-between gap-1 cursor-pointer max-lg:flex-col"
       onClick={toggleModal}
     >
       <p className="font-semibold text-lg w-1/4">{rankToString(rank)}</p>
